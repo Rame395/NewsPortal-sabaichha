@@ -62,6 +62,12 @@ export default async function ArticleDetailPage({ params }: PageProps) {
       tags: {
         include: { tag: true },
       },
+      liveUpdates: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: { select: { fullName: true, avatarUrl: true } },
+        },
+      },
     },
   })
 
@@ -101,9 +107,20 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     }),
   ])
 
+  const serializedArticle = {
+    ...article,
+    publishedAt: article.publishedAt ? article.publishedAt.toISOString() : null,
+    createdAt: article.createdAt.toISOString(),
+    updatedAt: article.updatedAt.toISOString(),
+    liveUpdates: article.liveUpdates.map((u) => ({
+      ...u,
+      createdAt: u.createdAt.toISOString(),
+    })),
+  }
+
   return (
     <ArticleReader
-      article={article}
+      article={serializedArticle}
       categories={categories}
       relatedArticles={relatedArticles}
     />

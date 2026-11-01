@@ -23,6 +23,7 @@ import {
   Italic,
   ExternalLink,
 } from 'lucide-react'
+import { MediaPickerModal } from '@/components/admin/media-picker-modal'
 
 interface CategoryOption {
   id: number
@@ -86,6 +87,7 @@ export function ArticleForm({
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = React.useState(false)
 
   // Fetch categories and tags
   React.useEffect(() => {
@@ -571,14 +573,24 @@ export function ArticleForm({
             )}
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                Image URL (Unsplash or CDN link)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                  Image URL (Unsplash, CDN or Upload)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsMediaPickerOpen(true)}
+                  className="text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 flex items-center gap-1 cursor-pointer"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>{language === 'ne' ? 'मिडिया लाइब्रेरीबाट छान्नुहोस्' : 'Browse Media'}</span>
+                </button>
+              </div>
               <input
                 type="url"
                 value={featuredImage}
                 onChange={(e) => setFeaturedImage(e.target.value)}
-                placeholder="https://images.unsplash.com/photo-..."
+                placeholder="https://... or /uploads/..."
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
               />
             </div>
@@ -642,6 +654,17 @@ export function ArticleForm({
           </div>
         </div>
       </div>
+
+      <MediaPickerModal
+        isOpen={isMediaPickerOpen}
+        onClose={() => setIsMediaPickerOpen(false)}
+        onSelect={(url, alt) => {
+          setFeaturedImage(url)
+          if (alt && !imageCaption) {
+            setImageCaption(alt)
+          }
+        }}
+      />
     </form>
   )
 }

@@ -1,8 +1,8 @@
 import { getCurrentUser } from '@/lib/auth/session'
-import prisma from '@/lib/prisma'
+import prisma, { CommentStatus } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Users, FolderTree, FileText, Shield, ArrowRight, Activity, Clock } from 'lucide-react'
+import { Users, FolderTree, FileText, Shield, ArrowRight, Activity, Clock, MessageSquare } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,10 +18,11 @@ export default async function AdminDashboardPage() {
   }
 
   // Fetch quick metrics from local PostgreSQL
-  const [userCount, categoryCount, articleCount, recentLogs] = await Promise.all([
+  const [userCount, categoryCount, articleCount, pendingCommentCount, recentLogs] = await Promise.all([
     prisma.user.count(),
     prisma.category.count(),
     prisma.article.count(),
+    prisma.comment.count({ where: { status: CommentStatus.PENDING } }),
     prisma.auditLog.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -52,7 +53,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -88,6 +89,28 @@ export default async function AdminDashboardPage() {
             <FileText className="w-5 h-5" />
           </div>
         </div>
+
+        <Link
+          href="/admin/comments"
+          className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between hover:border-red-500 transition group"
+        >
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Pending Comments
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{pendingCommentCount}</span>
+              {pendingCommentCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-600 dark:bg-red-950/60 dark:text-red-400 animate-pulse">
+                  Action
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+        </Link>
       </div>
 
       {/* Permissions Breakdown & Quick Links */}

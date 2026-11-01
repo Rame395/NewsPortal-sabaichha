@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   FileText,
   FolderTree,
+  Image as ImageIcon,
   MessageSquare,
   Users,
   ShieldAlert,
@@ -75,6 +76,18 @@ export function AdminNav({
       href: '/admin/articles',
       icon: FileText,
       allowed: hasPermission(currentUser.role, currentUser.permissions, [
+        'articles:create',
+        'articles:edit_own',
+        'articles:edit_all',
+      ]),
+    },
+    {
+      nameEn: 'Media Library',
+      nameNe: 'मिडिया ग्यालरी',
+      href: '/admin/media',
+      icon: ImageIcon,
+      allowed: hasPermission(currentUser.role, currentUser.permissions, [
+        'media:upload',
         'articles:create',
         'articles:edit_own',
         'articles:edit_all',

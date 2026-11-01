@@ -19,6 +19,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  Radio,
 } from 'lucide-react'
 
 interface ArticleItem {
@@ -354,6 +355,13 @@ export default function ArticlesListPage() {
                       {/* Actions */}
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/admin/articles/${art.id}/live`}
+                            className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                            title={language === 'ne' ? 'प्रत्यक्ष कभरेज' : 'Live Updates'}
+                          >
+                            <Radio className="w-4 h-4" />
+                          </Link>
                           <Link
                             href={`/admin/articles/${art.id}/edit`}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"

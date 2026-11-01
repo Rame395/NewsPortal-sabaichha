@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { useLanguage } from '@/context/language-context'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
+import { CommentSection } from '@/components/article/comment-section'
+import { LiveTimeline } from '@/components/article/live-timeline'
 import {
   Calendar,
   Clock,
@@ -52,6 +54,16 @@ interface ArticleDetail {
     slug: string
   }
   tags: { tag: { id: number; name: string; slug: string } }[]
+  liveUpdates?: {
+    id: string
+    headline: string
+    content: string
+    createdAt: string
+    author: {
+      fullName: string
+      avatarUrl?: string | null
+    }
+  }[]
 }
 
 interface RelatedArticle {
@@ -291,6 +303,9 @@ export function ArticleReader({
           </div>
         )}
 
+        {/* Live-Blogging Event Timeline */}
+        <LiveTimeline articleId={article.id} initialUpdates={article.liveUpdates} />
+
         {/* Article Body Content */}
         <article
           className={`font-serif text-slate-900 dark:text-slate-100 whitespace-pre-line ${
@@ -314,6 +329,9 @@ export function ArticleReader({
             ))}
           </div>
         )}
+
+        {/* Reader Comments */}
+        <CommentSection articleId={article.id} articleTitle={article.title} />
 
         {/* Related Articles Section */}
         {relatedArticles.length > 0 && (
