@@ -10,6 +10,7 @@ export type PermissionKey =
   | 'media:upload'
   | 'users:manage'
   | 'audit:view'
+  | 'settings:manage'
 
 export interface PermissionDefinition {
   key: PermissionKey
@@ -109,6 +110,14 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     descriptionEn: 'Inspect editorial changes, logins, and system activity logs.',
     descriptionNe: 'सम्पादकीय परिवर्तनहरू र प्रणाली लगहरू अनुगमन गर्ने।',
   },
+  {
+    key: 'settings:manage',
+    group: 'Administration',
+    labelEn: 'Manage Site Settings',
+    labelNe: 'साइट सेटिङ्स व्यवस्थापन',
+    descriptionEn: 'Configure footer details, social media handles, and live market tickers.',
+    descriptionNe: 'फुटर विवरण, सामाजिक सञ्जाल र बजार दर तथा मौसम सेटिङ्स व्यवस्थापन गर्ने।',
+  },
 ]
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, PermissionKey[]> = {
@@ -124,6 +133,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, PermissionKey[]> = {
     'comments:moderate',
     'media:upload',
     'audit:view',
+    'settings:manage',
   ],
   EDITOR: [
     'articles:create',

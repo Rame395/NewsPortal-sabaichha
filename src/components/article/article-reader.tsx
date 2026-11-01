@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { useLanguage } from '@/context/language-context'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
 import { CommentSection } from '@/components/article/comment-section'
@@ -379,10 +380,8 @@ export function ArticleReader({
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 text-center text-xs text-slate-500">
-        <p>© 2026 SabaiChha.com. All rights reserved.</p>
-      </footer>
+      {/* Dynamic Footer */}
+      <Footer categories={categories} />
     </div>
   )
 }

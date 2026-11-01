@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { BreakingTicker } from '@/components/home/breaking-ticker'
 import { useLanguage } from '@/context/language-context'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
@@ -422,73 +423,8 @@ export function PublicHomepage({
       </main>
 
       {/* ========================================================= */}
-      {/* PUBLIC FOOTER (Official Credentials & Brand Footer) */}
-      {/* ========================================================= */}
-      <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-16 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-10 sm:py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-100 dark:border-slate-800">
-            {/* Brand column */}
-            <div className="md:col-span-2 space-y-4">
-              <div className="relative h-14 w-60 bg-white rounded-lg p-1 flex items-center">
-                <Image
-                  src="/logo.jpg"
-                  alt="SabaiChha.com"
-                  width={240}
-                  height={56}
-                  className="object-contain max-h-14 w-auto"
-                />
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
-                {language === 'ne'
-                  ? '“सूचना संवाद र मनोरञ्जनको संगम, सबै छ डट कम” — निष्पक्ष, सत्य र समयसापेक्ष समाचार सम्प्रेषण गर्ने नेपालको अग्रणी डिजिटल समाचार पोर्टल।'
-                  : '“The confluence of information, dialogue, and entertainment” — Authentic, independent digital journalism in Nepal.'}
-              </p>
-              <div className="text-[11px] text-slate-500 font-mono space-y-1">
-                <p>सूचना तथा प्रसारण विभाग दर्ता नं.: ०१-२०८१/०८२ (प्रस्तावित)</p>
-                <p>प्रेस काउन्सिल सूचीकरण नं.: १००-२०८१ (प्रस्तावित)</p>
-              </div>
-            </div>
-
-            {/* Quick Categories */}
-            <div>
-              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3">
-                {language === 'ne' ? 'मुख्य विधाहरू' : 'Categories'}
-              </h4>
-              <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                {categories.map((c) => (
-                  <li key={c.id}>
-                    <Link href={`/category/${c.slug}`} className="hover:text-red-600 dark:hover:text-red-400 transition">
-                      {language === 'ne' ? c.nameNe : c.nameEn}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Editorial Contact */}
-            <div>
-              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3">
-                {language === 'ne' ? 'सम्पर्क तथा सम्पादकीय' : 'Editorial Office'}
-              </h4>
-              <div className="text-xs text-slate-600 dark:text-slate-400 space-y-2 leading-relaxed">
-                <p>सबै छ मिडिया प्रा.लि.</p>
-                <p>काठमाडौं, नेपाल</p>
-                <p className="font-mono text-[11px]">इमेल: info@sabaichha.com</p>
-                <p className="font-mono text-[11px]">वेबसाइट: https://sabaichha.com</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-4">
-            <p>© 2026 SabaiChha.com. All rights reserved.</p>
-            <div className="flex items-center gap-4 text-[11px]">
-              <Link href="/admin/login" className="hover:text-red-600 transition flex items-center gap-1">
-                <span>कर्मचारी लगइन (Staff Portal)</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* DYNAMIC FOOTER (Times of India style & Legal Details) */}
+      <Footer categories={categories} />
     </div>
   )
 }

@@ -21,6 +21,7 @@ import {
   X,
   ExternalLink,
   Shield,
+  Settings as SettingsIcon,
 } from 'lucide-react'
 
 interface CurrentUser {
@@ -120,6 +121,13 @@ export function AdminNav({
       href: '/admin/audit',
       icon: ShieldAlert,
       allowed: hasPermission(currentUser.role, currentUser.permissions, 'audit:view'),
+    },
+    {
+      nameEn: 'Site Settings',
+      nameNe: 'साइट सेटिङ्स',
+      href: '/admin/settings',
+      icon: SettingsIcon,
+      allowed: hasPermission(currentUser.role, currentUser.permissions, 'settings:manage'),
     },
   ]
 
