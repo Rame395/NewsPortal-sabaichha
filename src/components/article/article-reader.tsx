@@ -307,13 +307,20 @@ export function ArticleReader({
         <LiveTimeline articleId={article.id} initialUpdates={article.liveUpdates} />
 
         {/* Article Body Content */}
-        <article
-          className={`font-serif text-slate-900 dark:text-slate-100 whitespace-pre-line ${
-            fontClasses[fontSize]
-          }`}
-        >
-          {article.content}
-        </article>
+        {/<[a-z][\s\S]*>/i.test(article.content) ? (
+          <article
+            className={`font-serif text-slate-900 dark:text-slate-100 leading-relaxed ${fontClasses[fontSize]} space-y-4 [&_h1]:text-2xl sm:[&_h1]:text-3xl [&_h1]:font-black [&_h1]:my-4 [&_h1]:text-slate-950 dark:[&_h1]:text-white [&_h2]:text-xl sm:[&_h2]:text-2xl [&_h2]:font-black [&_h2]:my-4 [&_h2]:text-slate-900 dark:[&_h2]:text-white [&_h3]:text-lg sm:[&_h3]:text-xl [&_h3]:font-bold [&_h3]:my-3 [&_p]:my-3.5 [&_p]:leading-relaxed [&_blockquote]:border-l-4 [&_blockquote]:border-red-600 [&_blockquote]:bg-red-50/60 dark:[&_blockquote]:bg-red-950/20 [&_blockquote]:p-4 sm:[&_blockquote]:p-5 [&_blockquote]:my-6 [&_blockquote]:rounded-r-2xl [&_blockquote]:italic [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_li]:my-1.5 [&_a]:text-red-600 [&_a]:underline [&_a]:font-semibold hover:[&_a]:text-red-700 [&_table]:w-full [&_table]:border-collapse [&_table]:my-6 [&_th]:border [&_th]:border-slate-300 dark:[&_th]:border-slate-700 [&_th]:p-2.5 [&_th]:bg-slate-100 dark:[&_th]:bg-slate-800 [&_th]:font-bold [&_th]:text-left [&_td]:border [&_td]:border-slate-300 dark:[&_td]:border-slate-700 [&_td]:p-2.5 [&_img]:rounded-2xl [&_img]:my-6 [&_img]:max-w-full [&_img]:h-auto [&_img]:mx-auto [&_img]:shadow-sm [&_hr]:my-8 [&_hr]:border-slate-200 dark:[&_hr]:border-slate-800`}
+            dangerouslySetInnerHTML={{ __html: article.content }}
+          />
+        ) : (
+          <article
+            className={`font-serif text-slate-900 dark:text-slate-100 whitespace-pre-line leading-relaxed ${
+              fontClasses[fontSize]
+            }`}
+          >
+            {article.content}
+          </article>
+        )}
 
         {/* Tags */}
         {article.tags && article.tags.length > 0 && (

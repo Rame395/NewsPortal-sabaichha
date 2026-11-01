@@ -24,6 +24,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { MediaPickerModal } from '@/components/admin/media-picker-modal'
+import { RichTextEditor } from '@/components/admin/rich-text-editor'
 
 interface CategoryOption {
   id: number
@@ -163,25 +164,6 @@ export function ArticleForm({
     } else {
       setSelectedTagIds([...selectedTagIds, id])
     }
-  }
-
-  // Content formatting helper
-  const insertFormatting = (prefix: string, suffix: string = '') => {
-    const textarea = document.getElementById('article-content-area') as HTMLTextAreaElement
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selected = content.substring(start, end)
-    const replacement = `${prefix}${selected}${suffix}`
-
-    const newContent = content.substring(0, start) + replacement + content.substring(end)
-    setContent(newContent)
-
-    setTimeout(() => {
-      textarea.focus()
-      textarea.setSelectionRange(start + prefix.length, end + prefix.length)
-    }, 10)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -388,66 +370,22 @@ export function ArticleForm({
             />
           </div>
 
-          {/* Rich Content Editor Area */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
-                {language === 'ne' ? 'समाचार विवरण (Article Body)' : 'Article Body Content'} *
+          {/* Advanced Google Docs-style Rich Text Editor */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-600"></span>
+                <span>{language === 'ne' ? 'समाचारको पूर्ण विवरण (Google Docs सम्पादक) *' : 'Article Body Content (Google Docs Editor) *'}</span>
               </label>
-
-              {/* Formatting Toolbar */}
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => insertFormatting('**', '**')}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                  title="Bold"
-                >
-                  <Bold className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting('*', '*')}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                  title="Italic"
-                >
-                  <Italic className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting('\n## ', '\n')}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                  title="Heading 2"
-                >
-                  <Heading1 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting('\n### ', '\n')}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                  title="Heading 3"
-                >
-                  <Heading2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => insertFormatting('\n> ', '\n')}
-                  className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                  title="Quote"
-                >
-                  <Quote className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              <span className="text-[11px] text-slate-400">
+                {language === 'ne' ? 'फोटो, तालिका, लिङ्क तथा ढाँचा सहित' : 'Rich text, tables, images & formatting'}
+              </span>
             </div>
 
-            <textarea
-              id="article-content-area"
-              rows={16}
-              required
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder={language === 'ne' ? 'यहाँ समाचारको पूर्ण विवरण लेख्नुहोस्...' : 'Write the comprehensive story here...'}
-              className="w-full p-4 text-sm leading-relaxed rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-serif focus:outline-none focus:ring-2 focus:ring-red-500"
             />
           </div>
         </div>
