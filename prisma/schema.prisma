@@ -1,0 +1,205 @@
+// Prisma Schema for Full-Stack News Portal (SabaiChha.com)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  JOURNALIST
+  MODERATOR
+  CUSTOM
+}
+
+enum ArticleStatus {
+  DRAFT
+  REVIEW
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  SPAM
+}
+
+model User {
+  id                 String       @id @default(uuid())
+  fullName           String       @map("full_name")
+  email              String       @unique
+  passwordHash       String       @map("password_hash")
+  role               Role         @default(JOURNALIST)
+  permissions        String[]     @default([])
+  mustChangePassword Boolean      @default(true) @map("must_change_password")
+  bio                String?
+  avatarUrl          String?      @map("avatar_url")
+  isActive           Boolean      @default(true) @map("is_active")
+  lastLoginAt        DateTime?    @map("last_login_at")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  sessions           Session[]
+  articles           Article[]
+  mediaUploads       Media[]
+  liveUpdates        LiveUpdate[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("sessions")
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  nameEn      String     @map("name_en")
+  nameNe      String     @map("name_ne")
+  slug        String     @unique
+  description String?
+  orderIndex  Int        @default(0) @map("order_index")
+  showInMenu  Boolean    @default(true) @map("show_in_menu")
+  parentId    Int?       @map("parent_id")
+  parent      Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("SubCategories")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  articles    Article[]
+
+  @@map("categories")
+}
+
+model Article {
+  id              String        @id @default(uuid())
+  title           String
+  slug            String        @unique
+  subtitle        String?
+  content         String        @db.Text
+  excerpt         String?       @db.Text
+  featuredImage   String?       @map("featured_image")
+  imageCaption    String?       @map("image_caption")
+  status          ArticleStatus @default(DRAFT)
+  isBreaking      Boolean       @default(false) @map("is_breaking")
+  isFeatured      Boolean       @default(false) @map("is_featured")
+  viewCount       Int           @default(0) @map("view_count")
+  readTimeMinutes Int           @default(3) @map("read_time_minutes")
+  
+  authorId        String        @map("author_id")
+  author          User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  categoryId      Int           @map("category_id")
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  publishedAt     DateTime?     @map("published_at")
+  scheduledFor    DateTime?     @map("scheduled_for")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  tags            ArticleTag[]
+  comments        Comment[]
+  liveUpdates     LiveUpdate[]
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([categoryId, publishedAt(sort: Desc)])
+  @@index([isBreaking, publishedAt(sort: Desc)])
+  @@map("articles")
+}
+
+model Tag {
+  id        Int          @id @default(autoincrement())
+  name      String
+  slug      String       @unique
+  articles  ArticleTag[]
+
+  @@map("tags")
+}
+
+model ArticleTag {
+  articleId String  @map("article_id")
+  tagId     Int     @map("tag_id")
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@map("article_tags")
+}
+
+model Comment {
+  id          String        @id @default(uuid())
+  articleId   String        @map("article_id")
+  article     Article       @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  authorName  String        @map("author_name")
+  authorEmail String        @map("author_email")
+  content     String        @db.Text
+  status      CommentStatus @default(PENDING)
+  parentId    String?       @map("parent_id")
+  parent      Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[]     @relation("CommentReplies")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@index([articleId, status, createdAt(sort: Desc)])
+  @@map("comments")
+}
+
+model LiveUpdate {
+  id        String   @id @default(uuid())
+  articleId String   @map("article_id")
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  headline  String
+  content   String   @db.Text
+  authorId  String   @map("author_id")
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([articleId, createdAt(sort: Desc)])
+  @@map("live_updates")
+}
+
+model Media {
+  id          String   @id @default(uuid())
+  fileName    String   @map("file_name")
+  fileUrl     String   @map("file_url")
+  mimeType    String   @map("mime_type")
+  fileSize    Int      @map("file_size")
+  altText     String?  @map("alt_text")
+  uploadedBy  String   @map("uploaded_by")
+  uploader    User     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("media")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  targetType String   @map("target_type")
+  targetId   String?  @map("target_id")
+  details    String?  @db.Text
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
