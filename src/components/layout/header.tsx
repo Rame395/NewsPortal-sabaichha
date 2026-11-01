@@ -3,51 +3,86 @@
 import * as React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/language-context'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
-import { Calendar, Search, Shield } from 'lucide-react'
+import { formatBikramSambat } from '@/lib/date/nepali-calendar'
+import { Calendar, Search, Shield, ChevronRight } from 'lucide-react'
 
-export function Header() {
+interface CategoryNav {
+  id: number
+  nameEn: string
+  nameNe: string
+  slug: string
+}
+
+export function Header({
+  categories = [],
+}: {
+  categories?: CategoryNav[]
+}) {
+  const router = useRouter()
   const { language, t } = useLanguage()
 
-  const [formattedDate, setFormattedDate] = React.useState<string>('')
+  const [dateDisplay, setDateDisplay] = React.useState<{
+    nepali: string
+    english: string
+  }>({
+    nepali: '',
+    english: '',
+  })
+  const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
-    const today = new Date()
-    setFormattedDate(
-      today.toLocaleDateString(language === 'ne' ? 'ne-NP' : 'en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    )
-  }, [language])
+    const bs = formatBikramSambat(new Date())
+    setDateDisplay({
+      nepali: bs.fullNepaliDate,
+      english: bs.fullEnglishDate,
+    })
+  }, [])
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+  }
+
+  // Fallback categories if not passed
+  const navCategories = categories.length > 0 ? categories : [
+    { id: 1, nameEn: 'Politics', nameNe: 'राजनीति', slug: 'politics' },
+    { id: 2, nameEn: 'Society', nameNe: 'समाज', slug: 'society' },
+    { id: 3, nameEn: 'Economy', nameNe: 'अर्थ', slug: 'economy' },
+    { id: 4, nameEn: 'Opinion', nameNe: 'विचार', slug: 'opinion' },
+    { id: 5, nameEn: 'Sports', nameNe: 'खेलकुद', slug: 'sports' },
+    { id: 6, nameEn: 'Video', nameNe: 'भिडियो', slug: 'video' },
+  ]
 
   return (
-    <header className="w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors">
-      {/* Top Utility Bar */}
-      <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 py-1.5 px-4 sm:px-8">
+    <header className="w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors">
+      {/* 1. Top Utility Bar */}
+      <div className="bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 py-2 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 font-medium">
+          <div className="flex items-center gap-3 font-medium">
+            <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-              <span>{formattedDate || '—'}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {language === 'ne' ? dateDisplay.nepali : dateDisplay.english}
+              </span>
             </div>
             <span className="hidden sm:inline text-slate-300 dark:text-slate-700">|</span>
-            <div className="hidden sm:flex items-center gap-2 text-slate-500 dark:text-slate-400">
-              <span>{language === 'ne' ? 'काठमाडौं, नेपाल' : 'Kathmandu, Nepal'}</span>
+            <div className="hidden sm:flex items-center gap-1.5 text-slate-500 text-[11px]">
+              <span>काठमाडौं, नेपाल</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/admin/login"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition"
-              title={language === 'ne' ? 'कर्मचारी लगइन' : 'Staff Sign In'}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xs hover:shadow-xs transition"
+              title="Editorial Staff Portal"
             >
-              <Shield className="w-3.5 h-3.5 text-red-500" />
+              <Shield className="w-3 h-3 text-red-600" />
               <span>{t('login')}</span>
             </Link>
             <LanguageToggle />
@@ -56,10 +91,11 @@ export function Header() {
         </div>
       </div>
 
-      {/* Main Branding Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* 2. Main Branding Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Logo & Tagline */}
         <Link href="/" className="flex items-center gap-4 group">
-          <div className="relative h-14 w-60 sm:h-16 sm:w-72 bg-white rounded-lg p-1 shadow-sm">
+          <div className="relative h-14 w-60 sm:h-16 sm:w-72 bg-white rounded-lg p-1">
             <Image
               src="/logo.jpg"
               alt="SabaiChha.com - सबै छ डट कम"
@@ -68,74 +104,50 @@ export function Header() {
               priority
             />
           </div>
-          <div className="hidden lg:block border-l border-slate-200 dark:border-slate-800 pl-4">
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="hidden lg:block border-l-2 border-red-600 pl-4">
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight">
               {language === 'ne'
                 ? '“सूचना संवाद र मनोरञ्जनको संगम, सबै छ डट कम”'
                 : '“The confluence of information, dialogue, and entertainment”'}
             </p>
-            <p className="text-[11px] text-slate-500 font-mono">
+            <p className="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">
               https://sabaichha.com
             </p>
           </div>
         </Link>
 
-        {/* Quick Search Bar preview */}
-        <div className="w-full md:w-72 relative">
+        {/* Global Search Input */}
+        <form onSubmit={handleSearchSubmit} className="w-full md:w-80 relative">
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('searchPlaceholder')}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-full border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+            className="w-full pl-9 pr-4 py-2.5 text-xs rounded-full border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition shadow-2xs"
           />
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-        </div>
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+        </form>
       </div>
 
-      {/* Primary Category Navigation Bar */}
-      <nav className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-x-auto scrollbar-none">
+      {/* 3. Primary Red & White Category Navigation Bar */}
+      <nav className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-x-auto scrollbar-none shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center gap-1 sm:gap-2">
           <Link
             href="/"
-            className="px-3 py-2.5 text-sm font-bold text-red-600 dark:text-red-400 border-b-2 border-red-600 dark:border-red-400 whitespace-nowrap"
+            className="px-3.5 py-3 text-sm font-extrabold text-red-600 dark:text-red-400 border-b-2 border-red-600 whitespace-nowrap transition"
           >
             {t('home')}
           </Link>
-          <Link
-            href="/category/politics"
-            className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition whitespace-nowrap"
-          >
-            {t('politics')}
-          </Link>
-          <Link
-            href="/category/society"
-            className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition whitespace-nowrap"
-          >
-            {t('society')}
-          </Link>
-          <Link
-            href="/category/economy"
-            className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition whitespace-nowrap"
-          >
-            {t('economy')}
-          </Link>
-          <Link
-            href="/category/opinion"
-            className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition whitespace-nowrap"
-          >
-            {t('opinion')}
-          </Link>
-          <Link
-            href="/category/sports"
-            className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition whitespace-nowrap"
-          >
-            {t('sports')}
-          </Link>
-          <Link
-            href="/category/video"
-            className="px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition whitespace-nowrap"
-          >
-            {t('video')}
-          </Link>
+
+          {navCategories.map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/category/${cat.slug}`}
+              className="px-3.5 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:border-b-2 hover:border-red-600 transition whitespace-nowrap"
+            >
+              {language === 'ne' ? cat.nameNe : cat.nameEn}
+            </Link>
+          ))}
         </div>
       </nav>
     </header>
