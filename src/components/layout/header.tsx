@@ -94,13 +94,14 @@ export function Header({
       {/* 2. Main Branding Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Logo & Tagline */}
-        <Link href="/" className="flex items-center gap-4 group">
-          <div className="relative h-14 w-60 sm:h-16 sm:w-72 bg-white rounded-lg p-1">
+        <Link href="/" className="flex items-center gap-4 group shrink-0">
+          <div className="relative h-14 w-60 sm:h-16 sm:w-72 bg-white rounded-lg p-1 shrink-0 flex items-center">
             <Image
               src="/logo.jpg"
               alt="SabaiChha.com - सबै छ डट कम"
-              fill
-              className="object-contain"
+              width={288}
+              height={64}
+              className="object-contain max-h-14 sm:max-h-16 w-auto"
               priority
             />
           </div>

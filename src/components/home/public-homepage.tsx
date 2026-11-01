@@ -428,8 +428,14 @@ export function PublicHomepage({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-100 dark:border-slate-800">
             {/* Brand column */}
             <div className="md:col-span-2 space-y-4">
-              <div className="relative h-14 w-60">
-                <Image src="/logo.jpg" alt="SabaiChha.com" fill className="object-contain" />
+              <div className="relative h-14 w-60 bg-white rounded-lg p-1 flex items-center">
+                <Image
+                  src="/logo.jpg"
+                  alt="SabaiChha.com"
+                  width={240}
+                  height={56}
+                  className="object-contain max-h-14 w-auto"
+                />
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
                 {language === 'ne'
