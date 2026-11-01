@@ -28,9 +28,12 @@ export function Header({
   const [dateDisplay, setDateDisplay] = React.useState<{
     nepali: string
     english: string
-  }>({
-    nepali: '',
-    english: '',
+  }>(() => {
+    const bs = formatBikramSambat(new Date())
+    return {
+      nepali: bs.fullNepaliDate,
+      english: bs.fullEnglishDate,
+    }
   })
   const [searchQuery, setSearchQuery] = React.useState('')
 
@@ -66,7 +69,7 @@ export function Header({
           <div className="flex items-center gap-3 font-medium">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-              <span className="font-semibold text-slate-800 dark:text-slate-200">
+              <span suppressHydrationWarning className="font-semibold text-slate-800 dark:text-slate-200">
                 {language === 'ne' ? dateDisplay.nepali : dateDisplay.english}
               </span>
             </div>
@@ -108,8 +111,8 @@ export function Header({
           <div className="hidden lg:block border-l-2 border-red-600 pl-4">
             <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight">
               {language === 'ne'
-                ? '“सूचना संवाद र मनोरञ्जनको संगम, सबै छ डट कम”'
-                : '“The confluence of information, dialogue, and entertainment”'}
+                ? 'नेपालको आधिकारिक डिजिटल अनलाइन पत्रिका'
+                : 'Nepal’s Leading Digital News Portal'}
             </p>
             <p className="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">
               https://sabaichha.com
