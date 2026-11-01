@@ -2,12 +2,13 @@
 
 import * as React from 'react'
 
-type Theme = 'light' | 'dark' | 'system'
+export type Theme = 'light' | 'dark'
 
 interface ThemeContextType {
   theme: Theme
-  resolvedTheme: 'light' | 'dark'
+  resolvedTheme: Theme
   setTheme: (theme: Theme | string) => void
+  toggleTheme: () => void
 }
 
 const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined)
@@ -17,46 +18,53 @@ export function ThemeProvider({
   defaultTheme = 'light',
 }: {
   children: React.ReactNode
-  attribute?: string
   defaultTheme?: string
+  attribute?: string
   enableSystem?: boolean
   disableTransitionOnChange?: boolean
 }) {
   const [theme, setThemeState] = React.useState<Theme>('light')
-  const [resolvedTheme, setResolvedTheme] = React.useState<'light' | 'dark'>('light')
+  const [resolvedTheme, setResolvedTheme] = React.useState<Theme>('light')
 
-  React.useEffect(() => {
-    const saved = (localStorage.getItem('sabaichha_theme') as Theme) || (defaultTheme as Theme) || 'light'
-    setThemeState(saved)
-    applyTheme(saved)
-  }, [defaultTheme])
-
-  const applyTheme = (t: Theme) => {
-    let resolved: 'light' | 'dark' = 'light'
-    if (t === 'system') {
-      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    } else {
-      resolved = t === 'dark' ? 'dark' : 'light'
-    }
-
-    setResolvedTheme(resolved)
-
-    if (resolved === 'dark') {
+  const applyClass = (t: Theme) => {
+    if (typeof document === 'undefined') return
+    if (t === 'dark') {
       document.documentElement.classList.add('dark')
+      if (document.body) {
+        document.body.classList.add('dark')
+      }
     } else {
       document.documentElement.classList.remove('dark')
+      if (document.body) {
+        document.body.classList.remove('dark')
+      }
     }
   }
 
+  React.useEffect(() => {
+    const saved = (localStorage.getItem('sabaichha_theme') as Theme) || (defaultTheme === 'dark' ? 'dark' : 'light')
+    setThemeState(saved)
+    setResolvedTheme(saved)
+    applyClass(saved)
+  }, [defaultTheme])
+
   const setTheme = (newTheme: Theme | string) => {
-    const valid = (newTheme === 'dark' || newTheme === 'light' || newTheme === 'system') ? newTheme : 'light'
+    const valid: Theme = newTheme === 'dark' ? 'dark' : 'light'
     setThemeState(valid)
-    localStorage.setItem('sabaichha_theme', valid)
-    applyTheme(valid)
+    setResolvedTheme(valid)
+    try {
+      localStorage.setItem('sabaichha_theme', valid)
+    } catch {}
+    applyClass(valid)
+  }
+
+  const toggleTheme = () => {
+    const next: Theme = resolvedTheme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   )
@@ -67,8 +75,9 @@ export function useTheme() {
   if (!context) {
     return {
       theme: 'light' as Theme,
-      resolvedTheme: 'light' as const,
+      resolvedTheme: 'light' as Theme,
       setTheme: () => {},
+      toggleTheme: () => {},
     }
   }
   return context

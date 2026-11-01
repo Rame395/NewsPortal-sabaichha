@@ -1,4 +1,4 @@
-// Native Nepali Bikram Sambat (वि.सं.) & Date Utility for SabaiChha.com
+// Native Nepali Bikram Sambat (वि.सं.) & Date/Time Utility for SabaiChha.com
 
 const NEPALI_NUMERALS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
 
@@ -9,7 +9,7 @@ const NEPALI_MONTHS = [
   'साउन',
   'भदौ',
   'असोज',
-  'कात्तिक',
+  'कार्तिक',
   'मंसिर',
   'पुस',
   'माघ',
@@ -61,15 +61,16 @@ export function formatBikramSambat(date: Date = new Date()): {
     bsYear = gYear + 57
   }
 
-  // Nepali day calculation
-  let bsDay = (gDate + 16) % 30 || 30
+  // Nepali day calculation (e.g. Nov 1 -> Kartik 16)
+  let bsDay = (gDate + 15) % 30 || 30
 
   const weekday = NEPALI_DAYS[gDay]
   const month = NEPALI_MONTHS[bsMonthIndex]
   const yearStr = toNepaliNumerals(bsYear)
   const dayStr = toNepaliNumerals(bsDay)
 
-  const fullNepaliDate = `${weekday}, ${dayStr} ${month} ${yearStr} वि.सं.`
+  // Matches exact format: आइतबार, कार्तिक १६, २०८३
+  const fullNepaliDate = `${weekday}, ${month} ${dayStr}, ${yearStr}`
 
   const fullEnglishDate = date.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -85,5 +86,22 @@ export function formatBikramSambat(date: Date = new Date()): {
     weekday,
     fullNepaliDate,
     fullEnglishDate,
+  }
+}
+
+/**
+ * Format live 24-hour time in Nepali and English numerals (HH:MM:SS)
+ */
+export function formatNepaliTime(date: Date = new Date()): {
+  nepali: string
+  english: string
+} {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const h = pad(date.getHours())
+  const m = pad(date.getMinutes())
+  const s = pad(date.getSeconds())
+  return {
+    nepali: toNepaliNumerals(`${h}:${m}:${s}`),
+    english: `${h}:${m}:${s}`,
   }
 }

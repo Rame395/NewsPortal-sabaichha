@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/language-context'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
-import { formatBikramSambat } from '@/lib/date/nepali-calendar'
-import { Calendar, Search, Shield, ChevronRight } from 'lucide-react'
+import { formatBikramSambat, formatNepaliTime } from '@/lib/date/nepali-calendar'
+import { Calendar, Clock, Search, Shield, ChevronRight } from 'lucide-react'
 
 interface CategoryNav {
   id: number
@@ -35,7 +35,19 @@ export function Header({
       english: bs.fullEnglishDate,
     }
   })
+  const [liveTime, setLiveTime] = React.useState<{
+    nepali: string
+    english: string
+  }>(() => formatNepaliTime(new Date()))
   const [searchQuery, setSearchQuery] = React.useState('')
+
+  React.useEffect(() => {
+    const updateTime = () => {
+      setLiveTime(formatNepaliTime(new Date()))
+    }
+    const timer = setInterval(updateTime, 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   React.useEffect(() => {
     const bs = formatBikramSambat(new Date())
@@ -66,16 +78,24 @@ export function Header({
       {/* 1. Top Utility Bar */}
       <div className="bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 py-2 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 font-medium">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 font-medium">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
               <span suppressHydrationWarning className="font-semibold text-slate-800 dark:text-slate-200">
                 {language === 'ne' ? dateDisplay.nepali : dateDisplay.english}
               </span>
             </div>
+
+            <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-mono text-xs">
+              <Clock className="w-3.5 h-3.5" />
+              <span suppressHydrationWarning className="font-bold text-slate-800 dark:text-slate-200">
+                {language === 'ne' ? liveTime.nepali : liveTime.english}
+              </span>
+            </div>
+
             <span className="hidden sm:inline text-slate-300 dark:text-slate-700">|</span>
             <div className="hidden sm:flex items-center gap-1.5 text-slate-500 text-[11px]">
-              <span>काठमाडौं, नेपाल</span>
+              <span>{language === 'ne' ? 'काठमाडौं, नेपाल' : 'Kathmandu, Nepal'}</span>
             </div>
           </div>
 

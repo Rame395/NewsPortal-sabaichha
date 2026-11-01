@@ -2,6 +2,12 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html.dark,
+html.dark body {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
 /* Custom scrollbar utility */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
