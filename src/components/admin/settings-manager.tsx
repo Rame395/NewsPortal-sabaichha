@@ -467,10 +467,16 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
               {/* Gold & Silver */}
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <Coins className="w-4 h-4 text-amber-500" />
-                    <span>{language === 'ne' ? 'सुन / चाँदीको दर (Gold & Silver)' : 'Bullion Rates'}</span>
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Coins className="w-4 h-4 text-amber-500" />
+                      <span>{language === 'ne' ? 'सुन / चाँदीको दर' : 'Bullion Rates'}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Live API</span>
+                    </span>
+                  </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -486,6 +492,12 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                     <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                   </label>
                 </div>
+
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {language === 'ne'
+                    ? 'लाइभ बुलियन दर स्वतः सिंक हुन्छ। आवश्यक परे तल म्यानुअल ओभरराइड गर्नुहोस्:'
+                    : 'Auto-synced from live bullion market. Enter custom numbers below as manual override:'}
+                </p>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -526,10 +538,16 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
               {/* NEPSE Stock Market */}
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <TrendingUp className="w-4 h-4 text-emerald-500" />
-                    <span>{language === 'ne' ? 'नेप्से सेयर बजार (NEPSE Stock)' : 'NEPSE Stock Market'}</span>
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <TrendingUp className="w-4 h-4 text-emerald-500" />
+                      <span>{language === 'ne' ? 'नेप्से सेयर बजार' : 'NEPSE Stock Market'}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Live Feed</span>
+                    </span>
+                  </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -545,6 +563,12 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                     <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                   </label>
                 </div>
+
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {language === 'ne'
+                    ? 'प्रत्यक्ष कारोबार समयमा स्वतः अपडेट हुन्छ। वा म्यानुअल ओभरराइड गर्नुहोस्:'
+                    : 'Auto-updates during live market sessions. Or enter custom override below:'}
+                </p>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -585,10 +609,16 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
               {/* Forex (USD) */}
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <DollarSign className="w-4 h-4 text-blue-500" />
-                    <span>{language === 'ne' ? 'मुद्रा विनिमय दर (USD Forex)' : 'Forex Exchange Rate'}</span>
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <DollarSign className="w-4 h-4 text-blue-500" />
+                      <span>{language === 'ne' ? 'डलर विनिमय दर' : 'Forex Rate (USD)'}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Live NRB/Exchange API</span>
+                    </span>
+                  </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -604,6 +634,12 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                     <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
                   </label>
                 </div>
+
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {language === 'ne'
+                    ? 'दैनिक अन्तर्राष्ट्रिय तथा नेपाल राष्ट्र बैंक विनिमय API बाट सिंक हुन्छ:'
+                    : 'Auto-fetched from live global & Nepal Rastra Bank forex exchange API:'}
+                </p>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
