@@ -3,6 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/language-context'
+import { getLocalizedTitle } from '@/lib/data/translations'
 import { Flame, ChevronRight, Zap } from 'lucide-react'
 
 interface BreakingStory {
@@ -54,7 +55,7 @@ export function BreakingTicker({
             className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 transition truncate flex items-center gap-2 group"
           >
             <span className="group-hover:translate-x-0.5 transition-transform">
-              {currentStory.title}
+              {getLocalizedTitle(currentStory, language)}
             </span>
           </Link>
 

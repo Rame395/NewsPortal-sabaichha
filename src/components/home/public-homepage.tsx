@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { BreakingTicker } from '@/components/home/breaking-ticker'
 import { useLanguage } from '@/context/language-context'
+import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
 import {
   Clock,
   Flame,
@@ -116,14 +117,14 @@ export function PublicHomepage({
                   {/* Headline */}
                   <Link href={`/news/${featuredLead.slug}`} className="group block">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition leading-tight tracking-tight">
-                      {featuredLead.title}
+                      {getLocalizedTitle(featuredLead, language)}
                     </h2>
                   </Link>
 
                   {/* Subtitle */}
                   {featuredLead.subtitle && (
                     <p className="text-sm sm:text-base font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {featuredLead.subtitle}
+                      {getLocalizedSubtitle(featuredLead, language)}
                     </p>
                   )}
 
@@ -134,7 +135,7 @@ export function PublicHomepage({
                         <ListPlus className="w-3.5 h-3.5" />
                         <span>{language === 'ne' ? 'मुख्य बुँदाहरू' : 'Key Takeaways'}</span>
                       </div>
-                      {featuredLead.excerpt}
+                      {getLocalizedExcerpt(featuredLead, language)}
                     </div>
                   )}
 
@@ -194,7 +195,7 @@ export function PublicHomepage({
                       href={`/news/${story.slug}`}
                       className="block text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug mt-0.5"
                     >
-                      {story.title}
+                      {getLocalizedTitle(story, language)}
                     </Link>
                     <span className="text-[10px] text-slate-400 mt-1 block">
                       {formatTimeAgo(story.publishedAt)}
@@ -253,11 +254,11 @@ export function PublicHomepage({
                         href={`/news/${art.slug}`}
                         className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
                       >
-                        {art.title}
+                        {getLocalizedTitle(art, language)}
                       </Link>
                       {art.subtitle && (
                         <p className="text-xs text-slate-500 line-clamp-2 mt-1 leading-relaxed">
-                          {art.subtitle}
+                          {getLocalizedSubtitle(art, language)}
                         </p>
                       )}
                     </div>
@@ -315,11 +316,11 @@ export function PublicHomepage({
                       href={`/news/${art.slug}`}
                       className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
                     >
-                      {art.title}
+                      {getLocalizedTitle(art, language)}
                     </Link>
                     {art.subtitle && (
                       <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                        {art.subtitle}
+                        {getLocalizedSubtitle(art, language)}
                       </p>
                     )}
                     <span className="text-[11px] text-slate-400 block pt-1">
@@ -351,7 +352,7 @@ export function PublicHomepage({
                       href={`/news/${story.slug}`}
                       className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
                     >
-                      {story.title}
+                      {getLocalizedTitle(story, language)}
                     </Link>
                     <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
                       <span className="flex items-center gap-1">
@@ -408,7 +409,7 @@ export function PublicHomepage({
                     href={`/news/${art.slug}`}
                     className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
                   >
-                    {art.title}
+                    {getLocalizedTitle(art, language)}
                   </Link>
                   <span className="text-[11px] text-slate-400 pt-1 block">
                     {formatTimeAgo(art.publishedAt)}

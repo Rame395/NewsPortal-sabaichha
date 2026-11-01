@@ -25,37 +25,23 @@ export function Header({
   const router = useRouter()
   const { language, t } = useLanguage()
 
-  const [dateDisplay, setDateDisplay] = React.useState<{
-    nepali: string
-    english: string
-  }>(() => {
-    const bs = formatBikramSambat(new Date())
-    return {
-      nepali: bs.fullNepaliDate,
-      english: bs.fullEnglishDate,
-    }
-  })
-  const [liveTime, setLiveTime] = React.useState<{
-    nepali: string
-    english: string
-  }>(() => formatNepaliTime(new Date()))
+  const [dateDisplay, setDateDisplay] = React.useState<string>('आइतबार, कार्तिक १६, २०८३')
+  const [liveTime, setLiveTime] = React.useState<string>('२२:५५:४१')
   const [searchQuery, setSearchQuery] = React.useState('')
 
   React.useEffect(() => {
-    const updateTime = () => {
-      setLiveTime(formatNepaliTime(new Date()))
+    const tick = () => {
+      const now = new Date()
+      const bs = formatBikramSambat(now)
+      const tm = formatNepaliTime(now)
+      setDateDisplay(language === 'ne' ? bs.fullNepaliDate : bs.fullEnglishDate)
+      setLiveTime(language === 'ne' ? tm.nepali : tm.english)
     }
-    const timer = setInterval(updateTime, 1000)
-    return () => clearInterval(timer)
-  }, [])
 
-  React.useEffect(() => {
-    const bs = formatBikramSambat(new Date())
-    setDateDisplay({
-      nepali: bs.fullNepaliDate,
-      english: bs.fullEnglishDate,
-    })
-  }, [])
+    tick()
+    const timer = setInterval(tick, 1000)
+    return () => clearInterval(timer)
+  }, [language])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,14 +68,14 @@ export function Header({
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
               <span suppressHydrationWarning className="font-semibold text-slate-800 dark:text-slate-200">
-                {language === 'ne' ? dateDisplay.nepali : dateDisplay.english}
+                {dateDisplay}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400 font-mono text-xs">
               <Clock className="w-3.5 h-3.5" />
-              <span suppressHydrationWarning className="font-bold text-slate-800 dark:text-slate-200">
-                {language === 'ne' ? liveTime.nepali : liveTime.english}
+              <span suppressHydrationWarning className="font-bold text-slate-800 dark:text-slate-200 min-w-[62px]">
+                {liveTime}
               </span>
             </div>
 

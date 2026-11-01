@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Header } from '@/components/layout/header'
 import { useLanguage } from '@/context/language-context'
+import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
 import {
   Calendar,
   Clock,
@@ -168,12 +169,12 @@ export function ArticleReader({
           </div>
 
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-950 dark:text-white leading-tight tracking-tight">
-            {article.title}
+            {getLocalizedTitle(article, language)}
           </h1>
 
           {article.subtitle && (
             <p className="text-base sm:text-xl font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
-              {article.subtitle}
+              {getLocalizedSubtitle(article, language)}
             </p>
           )}
 
@@ -265,7 +266,7 @@ export function ArticleReader({
               <span>{language === 'ne' ? 'समाचारका मुख्य बुँदाहरू (Key Takeaways)' : 'Executive Summary / Key Takeaways'}</span>
             </div>
             <div className="text-sm sm:text-base font-medium text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
-              {article.excerpt}
+              {getLocalizedExcerpt(article, language)}
             </div>
           </div>
         )}
@@ -340,7 +341,7 @@ export function ArticleReader({
                   )}
                   <div className="p-3.5 flex-1 flex flex-col justify-between">
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug">
-                      {rel.title}
+                      {getLocalizedTitle(rel, language)}
                     </h4>
                     <span className="text-[10px] text-slate-400 mt-2 block">
                       {rel.readTimeMinutes} {t('readTime')}
