@@ -4,12 +4,30 @@ export const ARTICLE_TRANSLATIONS: Record<
   string,
   { title: string; subtitle?: string; excerpt?: string }
 > = {
+  // Slug in DB: national-economic-reform-plan-passed
+  'national-economic-reform-plan-passed': {
+    title: 'Cabinet Endorses New National Economic Reform Action Plan',
+    subtitle:
+      'Strategic priorities placed on domestic employment generation, industry revitalization, and digital economic governance.',
+    excerpt:
+      '• Comprehensive stimulus package for domestic manufacturing and SMEs.\n• Integrated one-stop digital window for national infrastructure investments.\n• Targeted inflation control mechanisms and fiscal discipline standards.',
+  },
   'cabinet-economic-reform-plan': {
     title: 'Cabinet Endorses New National Economic Reform Action Plan',
     subtitle:
       'Strategic priorities placed on domestic employment generation, industry revitalization, and digital economic governance.',
     excerpt:
       '• Comprehensive stimulus package for domestic manufacturing and SMEs.\n• Integrated one-stop digital window for national infrastructure investments.\n• Targeted inflation control mechanisms and fiscal discipline standards.',
+  },
+
+  // Slug in DB: hydropower-export-record-growth
+  'hydropower-export-record-growth': {
+    title:
+      'Historic Revenue from Hydropower Export Bolsters Nepal’s Foreign Exchange Reserves',
+    subtitle:
+      'Cross-border electricity trading with regional partners achieves record-breaking growth.',
+    excerpt:
+      '• Nepal Electricity Authority records unprecedented surplus revenue from monsoon exports.\n• Long-term bilateral energy agreements ensure sustainable foreign currency inflows.\n• Domestic grid modernization underway to support transmission capacity.',
   },
   'hydropower-export-record-forex': {
     title:
@@ -19,6 +37,8 @@ export const ARTICLE_TRANSLATIONS: Record<
     excerpt:
       '• Nepal Electricity Authority records unprecedented surplus revenue from monsoon exports.\n• Long-term bilateral energy agreements ensure sustainable foreign currency inflows.\n• Domestic grid modernization underway to support transmission capacity.',
   },
+
+  // Slug in DB: nepal-cricket-historic-series-win
   'nepal-cricket-historic-series-win': {
     title:
       'Nepal National Cricket Team Secures Historic International Series Triumph',

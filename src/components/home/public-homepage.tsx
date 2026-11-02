@@ -8,6 +8,9 @@ import { Footer } from '@/components/layout/footer'
 import { BreakingTicker } from '@/components/home/breaking-ticker'
 import { useLanguage } from '@/context/language-context'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
+import { AdBanner } from '@/components/ads/ad-banner'
+import { NewsletterBox } from '@/components/newsletter/newsletter-box'
+import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import {
   Clock,
   Flame,
@@ -150,13 +153,24 @@ export function PublicHomepage({
                       <span>{formatTimeAgo(featuredLead.publishedAt)}</span>
                     </div>
 
-                    <Link
-                      href={`/news/${featuredLead.slug}`}
-                      className="inline-flex items-center gap-1 font-bold text-red-600 dark:text-red-400 hover:underline"
-                    >
-                      <span>{language === 'ne' ? 'पूरा पढ्नुहोस्' : 'Read Full Story'}</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
+                    <div className="flex items-center gap-2.5">
+                      <BookmarkButton
+                        article={{
+                          id: featuredLead.id,
+                          title: featuredLead.title,
+                          slug: featuredLead.slug,
+                          featuredImage: featuredLead.featuredImage,
+                          categoryName: language === 'ne' ? featuredLead.category.nameNe : featuredLead.category.nameEn,
+                        }}
+                      />
+                      <Link
+                        href={`/news/${featuredLead.slug}`}
+                        className="inline-flex items-center gap-1 font-bold text-red-600 dark:text-red-400 hover:underline"
+                      >
+                        <span>{language === 'ne' ? 'पूरा पढ्नुहोस्' : 'Read Full Story'}</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -207,6 +221,9 @@ export function PublicHomepage({
             </div>
           </div>
         </section>
+
+        {/* Phase 6: Homepage Billboard Ad Slot (970x250) */}
+        <AdBanner placement="HOMEPAGE_BILLBOARD" />
 
         {/* ========================================================= */}
         {/* POLITICS CATEGORY MODULE (राजनीति) */}
@@ -273,6 +290,9 @@ export function PublicHomepage({
             )}
           </div>
         </section>
+
+        {/* Phase 6: Homepage Billboard Ad Slot (970x250) */}
+        <AdBanner placement="HOMEPAGE_BILLBOARD" />
 
         {/* ========================================================= */}
         {/* ECONOMY & TRENDING 2-COLUMN SECTION */}
@@ -365,9 +385,16 @@ export function PublicHomepage({
                   </div>
                 </div>
               ))}
+              {/* Phase 6: Sidebar Rectangle Ad Slot (300x250) */}
+              <div className="pt-2">
+                <AdBanner placement="SIDEBAR_RECTANGLE" />
+              </div>
             </div>
           </div>
         </section>
+
+        {/* Phase 6: Daily Morning Briefing Newsletter Subscription Box */}
+        <NewsletterBox />
 
         {/* ========================================================= */}
         {/* SPORTS CATEGORY MODULE (खेलकुद) */}
@@ -421,6 +448,9 @@ export function PublicHomepage({
           </div>
         </section>
       </main>
+
+      {/* Phase 6: Sticky Bottom Floating Ad Banner */}
+      <AdBanner placement="STICKY_FOOTER" />
 
       {/* ========================================================= */}
       {/* DYNAMIC FOOTER (Times of India style & Legal Details) */}

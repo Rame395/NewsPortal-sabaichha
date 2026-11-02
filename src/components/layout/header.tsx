@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/context/language-context'
 import { TopUtilityBar } from '@/components/layout/top-utility-bar'
+import { SavedArticlesModal } from '@/components/bookmarks/saved-articles-modal'
+import { AdBanner } from '@/components/ads/ad-banner'
 import { Search, ChevronRight } from 'lucide-react'
 
 interface CategoryNav {
@@ -47,7 +49,7 @@ export function Header({
       <TopUtilityBar />
 
       {/* 2. Main Branding Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-5 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 sm:py-4 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Logo & Tagline */}
         <Link href="/" className="flex items-center gap-4 group shrink-0">
           <div className="relative h-14 w-60 sm:h-16 sm:w-72 bg-white rounded-lg p-1 shrink-0 flex items-center">
@@ -72,20 +74,30 @@ export function Header({
           </div>
         </Link>
 
-        {/* Global Search Input */}
-        <form onSubmit={handleSearchSubmit} className="w-full md:w-80 relative">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            className="w-full pl-9 pr-4 py-2.5 text-xs rounded-full border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition shadow-2xs"
-          />
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-        </form>
+        {/* Global Search & Saved Articles Drawer */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+          <form onSubmit={handleSearchSubmit} className="w-full md:w-72 relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('searchPlaceholder')}
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-full border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 transition shadow-2xs"
+            />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          </form>
+
+          {/* Reader Saved Articles Button */}
+          <SavedArticlesModal />
+        </div>
       </div>
 
-      {/* 3. Primary Red & White Category Navigation Bar */}
+      {/* 3. Header Leaderboard Ad Banner Slot (728x90) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 pb-3 hidden md:block">
+        <AdBanner placement="HEADER_LEADERBOARD" />
+      </div>
+
+      {/* 4. Primary Red & White Category Navigation Bar */}
       <nav className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-x-auto scrollbar-none shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 flex items-center gap-1 sm:gap-2">
           <Link
@@ -99,7 +111,7 @@ export function Header({
             <Link
               key={cat.id}
               href={`/category/${cat.slug}`}
-              className="px-3.5 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:border-b-2 hover:border-red-600 transition whitespace-nowrap"
+              className="px-3.5 py-3 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap transition"
             >
               {language === 'ne' ? cat.nameNe : cat.nameEn}
             </Link>

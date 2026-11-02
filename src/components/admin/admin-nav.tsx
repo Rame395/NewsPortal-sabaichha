@@ -22,6 +22,8 @@ import {
   ExternalLink,
   Shield,
   Settings as SettingsIcon,
+  Megaphone,
+  Mail,
 } from 'lucide-react'
 
 interface CurrentUser {
@@ -107,6 +109,26 @@ export function AdminNav({
       href: '/admin/comments',
       icon: MessageSquare,
       allowed: hasPermission(currentUser.role, currentUser.permissions, 'comments:moderate'),
+    },
+    {
+      nameEn: 'Advertisements',
+      nameNe: 'विज्ञापन व्यवस्थापन',
+      href: '/admin/ads',
+      icon: Megaphone,
+      allowed: hasPermission(currentUser.role, currentUser.permissions, [
+        'articles:create',
+        'articles:edit_all',
+      ]),
+    },
+    {
+      nameEn: 'Newsletter',
+      nameNe: 'इमेल बुलेटिन',
+      href: '/admin/newsletter',
+      icon: Mail,
+      allowed: hasPermission(currentUser.role, currentUser.permissions, [
+        'articles:create',
+        'articles:edit_all',
+      ]),
     },
     {
       nameEn: 'Staff & Roles',

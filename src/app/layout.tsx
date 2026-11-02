@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { LanguageProvider } from '@/context/language-context'
+import { GoogleTranslator } from '@/components/google-translator'
 
 export const metadata: Metadata = {
   title: 'सबै छ डट कम | SabaiChha.com - Full-Stack Dynamic News Portal',
@@ -19,6 +20,8 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="light">
           <LanguageProvider>
             {children}
+            {/* Google Website Translator Widget */}
+            <GoogleTranslator />
           </LanguageProvider>
         </ThemeProvider>
       </body>

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (.dark &, &.dark);
+@variant dark (&:where(.dark, .dark *));
 
 html.dark,
 html.dark body {
@@ -15,4 +15,61 @@ html.dark body {
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ========================================================= */
+/* Google Translate Widget Cleanups                          */
+/* Completely hide floating G-badge, top iframe, & tooltips  */
+/* ========================================================= */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame,
+.skiptranslate iframe,
+iframe.goog-te-banner-frame,
+iframe.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+/* Hide floating Google circle badge that covers the left side of the screen */
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc,
+.VIpgJd-ZVi9od-OR9afb-wOHMyf,
+.VIpgJd-yAWdhb-VIpgJd,
+.VIpgJd-ZVi9od-xl07Ob-OEVmcd,
+.goog-te-gadget-icon,
+.goog-logo-link,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  overflow: hidden !important;
+}
+
+#google_translate_element {
+  display: none !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+font {
+  background-color: transparent !important;
+  box-shadow: none !important;
 }

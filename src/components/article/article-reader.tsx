@@ -9,6 +9,9 @@ import { useLanguage } from '@/context/language-context'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
 import { CommentSection } from '@/components/article/comment-section'
 import { LiveTimeline } from '@/components/article/live-timeline'
+import { AdBanner } from '@/components/ads/ad-banner'
+import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
+import { NewsletterBox } from '@/components/newsletter/newsletter-box'
 import {
   Calendar,
   Clock,
@@ -268,6 +271,18 @@ export function ArticleReader({
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : null}
               <span>{copied ? (language === 'ne' ? 'कपी भयो!' : 'Copied!') : (language === 'ne' ? 'लिङ्क कपी' : 'Copy Link')}</span>
             </button>
+
+            {/* Bookmark button */}
+            <BookmarkButton
+              article={{
+                id: article.id,
+                title: article.title,
+                slug: article.slug,
+                featuredImage: article.featuredImage,
+                categoryName: language === 'ne' ? article.category.nameNe : article.category.nameEn,
+              }}
+              size="sm"
+            />
           </div>
         </div>
 
@@ -323,6 +338,9 @@ export function ArticleReader({
           </article>
         )}
 
+        {/* Phase 6: In-Article Inline Ad Slot */}
+        <AdBanner placement="ARTICLE_INLINE" className="my-6" />
+
         {/* Tags */}
         {article.tags && article.tags.length > 0 && (
           <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center gap-2">
@@ -340,6 +358,11 @@ export function ArticleReader({
 
         {/* Reader Comments */}
         <CommentSection articleId={article.id} articleTitle={article.title} />
+
+        {/* Phase 6: Daily Newsletter Briefing */}
+        <div className="pt-6">
+          <NewsletterBox />
+        </div>
 
         {/* Related Articles Section */}
         {relatedArticles.length > 0 && (
