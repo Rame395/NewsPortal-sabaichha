@@ -222,8 +222,8 @@ export function Footer({ categories = [] }: FooterProps) {
           </div>
         </div>
 
-        {/* 4-Column Grid: About, Categories, Contact & Legal */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 py-10 border-b border-slate-800 text-xs">
+        {/* 5-Column Grid: About, Categories, Utility Tools, Legal & Contact */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 py-10 border-b border-slate-800 text-xs">
           {/* Col 1: About SabaiChha */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -249,8 +249,8 @@ export function Footer({ categories = [] }: FooterProps) {
               <span className="w-2 h-2 rounded-full bg-red-600"></span>
               <span>{language === 'ne' ? 'प्रमुख विधाहरू' : 'News Categories'}</span>
             </h4>
-            <ul className="grid grid-cols-2 gap-2 text-slate-400">
-              {defaultCategories.map((c) => (
+            <ul className="space-y-1.5 text-slate-400">
+              {defaultCategories.slice(0, 6).map((c) => (
                 <li key={c.id}>
                   <Link
                     href={`/category/${c.slug}`}
@@ -261,6 +261,46 @@ export function Footer({ categories = [] }: FooterProps) {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Col 3: Utility Tools (SEO Powerhouse) */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>{language === 'ne' ? 'उपयोगी टुल्स' : 'Utility Tools'}</span>
+            </h4>
+            <ul className="space-y-1.5 text-slate-400">
+              <li>
+                <Link href="/tools/gold-silver-rate" className="hover:text-amber-400 transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-amber-500" />
+                  <span>{language === 'ne' ? 'सुनचाँदीको भाउ' : 'Gold & Silver Rates'}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/tools/date-converter" className="hover:text-amber-400 transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-amber-500" />
+                  <span>{language === 'ne' ? 'नेपाली मिति रूपान्तरक' : 'Date Converter'}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/tools/forex-converter" className="hover:text-amber-400 transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-amber-500" />
+                  <span>{language === 'ne' ? 'विदेशी मुद्रा विनिमय' : 'Forex Rates'}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/tools/nepali-unicode" className="hover:text-amber-400 transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-amber-500" />
+                  <span>{language === 'ne' ? 'नेपाली युनिकोड' : 'Nepali Unicode'}</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/rashifal" className="hover:text-amber-400 transition flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3 text-amber-500" />
+                  <span>{language === 'ne' ? 'दैनिक राशिफल' : 'Daily Horoscope'}</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -322,10 +362,6 @@ export function Footer({ categories = [] }: FooterProps) {
             <span>•</span>
             <Link href="/terms" className="hover:text-slate-300 transition">
               नियम तथा सर्तहरू (Terms)
-            </Link>
-            <span>•</span>
-            <Link href="/admin/login" className="hover:text-red-400 transition">
-              कर्मचारी कक्ष (Staff Portal)
             </Link>
           </div>
         </div>

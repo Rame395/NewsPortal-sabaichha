@@ -23,29 +23,41 @@ export function ThemeProvider({
   enableSystem?: boolean
   disableTransitionOnChange?: boolean
 }) {
-  const [theme, setThemeState] = React.useState<Theme>('light')
-  const [resolvedTheme, setResolvedTheme] = React.useState<Theme>('light')
+  const [theme, setThemeState] = React.useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('sabaichha_theme') as Theme
+        if (saved === 'dark' || saved === 'light') return saved
+        if (document.documentElement.classList.contains('dark')) return 'dark'
+      } catch {}
+    }
+    return defaultTheme === 'dark' ? 'dark' : 'light'
+  })
 
-  const applyClass = (t: Theme) => {
+  const [resolvedTheme, setResolvedTheme] = React.useState<Theme>(theme)
+
+  const applyTheme = (t: Theme) => {
     if (typeof document === 'undefined') return
     if (t === 'dark') {
       document.documentElement.classList.add('dark')
-      if (document.body) {
-        document.body.classList.add('dark')
-      }
+      document.documentElement.style.colorScheme = 'dark'
+      if (document.body) document.body.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
-      if (document.body) {
-        document.body.classList.remove('dark')
-      }
+      document.documentElement.style.colorScheme = 'light'
+      if (document.body) document.body.classList.remove('dark')
     }
   }
 
+  // Ensure theme is applied on initial mount
   React.useEffect(() => {
-    const saved = (localStorage.getItem('sabaichha_theme') as Theme) || (defaultTheme === 'dark' ? 'dark' : 'light')
-    setThemeState(saved)
-    setResolvedTheme(saved)
-    applyClass(saved)
+    try {
+      const saved = localStorage.getItem('sabaichha_theme') as Theme
+      const active = saved === 'dark' || saved === 'light' ? saved : defaultTheme === 'dark' ? 'dark' : 'light'
+      setThemeState(active)
+      setResolvedTheme(active)
+      applyTheme(active)
+    } catch {}
   }, [defaultTheme])
 
   const setTheme = (newTheme: Theme | string) => {
@@ -54,8 +66,10 @@ export function ThemeProvider({
     setResolvedTheme(valid)
     try {
       localStorage.setItem('sabaichha_theme', valid)
+      // Also store cookie so server knows if needed
+      document.cookie = `sabaichha_theme=${valid}; path=/; max-age=31536000; SameSite=Lax`
     } catch {}
-    applyClass(valid)
+    applyTheme(valid)
   }
 
   const toggleTheme = () => {

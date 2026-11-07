@@ -47,7 +47,9 @@ export function formatBikramSambat(date: Date = new Date()): {
   day: string
   weekday: string
   fullNepaliDate: string
+  shortNepaliDate: string
   fullEnglishDate: string
+  shortEnglishDate: string
 } {
   const gYear = date.getFullYear()
   const gMonth = date.getMonth() // 0-indexed
@@ -71,11 +73,18 @@ export function formatBikramSambat(date: Date = new Date()): {
 
   // Matches exact format: आइतबार, कार्तिक १६, २०८३
   const fullNepaliDate = `${weekday}, ${month} ${dayStr}, ${yearStr}`
+  const shortNepaliDate = `${month} ${dayStr}, ${yearStr}`
 
   const fullEnglishDate = date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
+    day: 'numeric',
+  })
+
+  const shortEnglishDate = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
   })
 
@@ -85,7 +94,9 @@ export function formatBikramSambat(date: Date = new Date()): {
     day: dayStr,
     weekday,
     fullNepaliDate,
+    shortNepaliDate,
     fullEnglishDate,
+    shortEnglishDate,
   }
 }
 

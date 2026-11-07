@@ -22,12 +22,25 @@ export function changeGoogleTranslateLanguage(lang: string) {
   document.cookie = `googtrans=${cookieVal}; path=/;`
   document.cookie = `googtrans=${cookieVal}; path=/; domain=${window.location.hostname}`
 
-  const select = document.querySelector<HTMLSelectElement>('.goog-te-combo')
-  if (select) {
-    select.value = lang
-    select.dispatchEvent(new Event('change'))
-  } else {
-    window.location.reload()
+  const applyToSelect = () => {
+    const select = document.querySelector<HTMLSelectElement>('.goog-te-combo')
+    if (select) {
+      select.value = lang
+      select.dispatchEvent(new Event('change'))
+      return true
+    }
+    return false
+  }
+
+  // Try applying immediately, or poll for up to 2 seconds if script is still initializing
+  if (!applyToSelect()) {
+    let attempts = 0
+    const interval = setInterval(() => {
+      attempts++
+      if (applyToSelect() || attempts >= 10) {
+        clearInterval(interval)
+      }
+    }, 200)
   }
 }
 

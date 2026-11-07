@@ -39,15 +39,6 @@ export function LanguageToggle() {
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
-  // Quick 1-click toggle between Nepali and English
-  const handleQuickToggle = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const nextLang = activeLang === 'ne' ? 'en' : 'ne'
-    setActiveLang(nextLang)
-    setLanguage(nextLang)
-    changeGoogleTranslateLanguage(nextLang)
-  }
-
   // Select language from dropdown
   const handleSelectLanguage = (code: string) => {
     setActiveLang(code)
@@ -68,46 +59,38 @@ export function LanguageToggle() {
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
-      <div className="inline-flex items-center rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xs hover:border-red-500/50 transition">
-        {/* Main 1-click toggle button */}
-        <button
-          type="button"
-          onClick={handleQuickToggle}
-          className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 text-[11px] font-semibold text-slate-800 dark:text-slate-100 hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer"
-          title="Click to switch Nepali / English (Google Translate)"
-          aria-label="Toggle language"
-          suppressHydrationWarning
-        >
-          <Globe className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
-          <span suppressHydrationWarning>{currentDisplay}</span>
-        </button>
+      {/* Unified Single-Click Dropdown Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-2xs hover:border-red-500/60 transition cursor-pointer select-none text-[10px] sm:text-[11px] font-bold text-slate-800 dark:text-slate-100 hover:text-red-600 dark:hover:text-red-400"
+        title="Choose website language / भाषा छान्नुहोस्"
+        aria-label="Language selection"
+        aria-expanded={isOpen}
+      >
+        <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-red-600 dark:text-red-400 shrink-0" />
+        <span suppressHydrationWarning>{currentDisplay}</span>
+        <ChevronDown
+          className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${
+            isOpen ? 'rotate-180 text-red-600' : ''
+          }`}
+        />
+      </button>
 
-        {/* Dropdown arrow for other languages */}
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="pr-2 pl-0.5 py-1 text-slate-400 hover:text-slate-700 dark:hover:text-white transition cursor-pointer border-l border-slate-200 dark:border-slate-700"
-          title="More languages (Google Translate)"
-          aria-label="Select language from list"
-        >
-          <ChevronDown className="w-3 h-3" />
-        </button>
-      </div>
-
-      {/* Language Dropdown Menu */}
+      {/* Floating Language Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 mt-1.5 w-48 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-2 z-50 animate-in fade-in zoom-in-95">
-          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+        <div className="absolute top-full left-0 mt-1.5 w-52 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95">
+          <div className="px-3.5 py-1.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-bold">
             <span className="flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-red-500" />
-              <span>Google Translate</span>
+              <span>भाषा छान्नुहोस्</span>
             </span>
-            <span className="text-[9px] bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 px-1.5 py-0.2 rounded font-bold">
+            <span className="text-[9px] bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded font-extrabold uppercase">
               Instant
             </span>
           </div>
 
-          <div className="max-h-60 overflow-y-auto py-1 scrollbar-none">
+          <div className="max-h-64 overflow-y-auto py-1 scrollbar-none">
             {LANGUAGES.map((lang) => {
               const isSelected = activeLang === lang.code
               return (
@@ -115,20 +98,20 @@ export function LanguageToggle() {
                   key={lang.code}
                   type="button"
                   onClick={() => handleSelectLanguage(lang.code)}
-                  className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer ${
+                  className={`w-full px-3.5 py-2 text-left text-xs flex items-center justify-between hover:bg-red-50/60 dark:hover:bg-slate-800/80 transition cursor-pointer ${
                     isSelected
-                      ? 'text-red-600 dark:text-red-400 font-bold bg-red-50/50 dark:bg-red-950/20'
-                      : 'text-slate-700 dark:text-slate-300'
+                      ? 'text-red-600 dark:text-red-400 font-extrabold bg-red-50/70 dark:bg-red-950/30'
+                      : 'text-slate-700 dark:text-slate-200'
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span>{lang.flag}</span>
-                    <span>{lang.name}</span>
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-sm">{lang.flag}</span>
+                    <span className="font-semibold">{lang.name}</span>
                     {lang.code !== 'ne' && lang.code !== 'en' && (
                       <span className="text-[10px] text-slate-400">({lang.englishName})</span>
                     )}
                   </span>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-red-600" />}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-red-600 shrink-0" />}
                 </button>
               )
             })}
