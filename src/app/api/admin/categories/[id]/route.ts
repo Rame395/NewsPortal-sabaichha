@@ -21,7 +21,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { nameEn, nameNe, slug, description, parentId, orderIndex, showInMenu } = body
+    const { nameEn, nameNe, slug, description, parentId, orderIndex, showInMenu, layoutStyle } = body
 
     const updateData: Record<string, unknown> = {}
 
@@ -46,6 +46,7 @@ export async function PATCH(
     if (parentId !== undefined) updateData.parentId = parentId ? Number(parentId) : null
     if (orderIndex !== undefined) updateData.orderIndex = Number(orderIndex)
     if (showInMenu !== undefined) updateData.showInMenu = Boolean(showInMenu)
+    if (layoutStyle !== undefined) updateData.layoutStyle = String(layoutStyle)
 
     const updated = await prisma.category.update({
       where: { id: categoryId },

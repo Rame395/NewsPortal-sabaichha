@@ -2,38 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { createSession } from '@/lib/auth/session'
-
-// Simple in-memory rate limiting tracker: IP -> { count, expiresAt }
-const rateLimitMap = new Map<string, { count: number; expiresAt: number }>()
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-
-  if (!entry || entry.expiresAt < now) {
-    rateLimitMap.set(ip, { count: 1, expiresAt: now + 15 * 60 * 1000 })
-    return true
-  }
-
-  if (entry.count >= 5) {
-    return false
-  }
-
-  entry.count += 1
-  return true
-}
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
-    const userAgent = request.headers.get('user-agent') || 'unknown'
+    // Brute-force protection: Max 5 login attempts per 15 minutes per IP
+    const rateLimitResponse = checkRateLimit(request, 'auth_login', {
+      maxRequests: 5,
+      windowMs: 15 * 60 * 1000,
+      messageEn: 'Too many failed login attempts. Please try again after 15 minutes.',
+      messageNe: 'धेरै पटक लगइन प्रयास गरियो। कृपया १५ मिनेटपछि पुन: प्रयास गर्नुहोस्।',
+    })
 
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json(
-        { error: 'Too many failed login attempts. Please try again after 15 minutes.' },
-        { status: 429 }
-      )
+    if (rateLimitResponse) {
+      return rateLimitResponse
     }
+
+    const ip = getClientIp(request)
+    const userAgent = request.headers.get('user-agent') || 'unknown'
 
     const body = await request.json()
     const { email, password } = body

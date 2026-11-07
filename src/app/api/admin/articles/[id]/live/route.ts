@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
+import { sanitizeArticleHtml, sanitizePlainText } from '@/lib/security/sanitizer'
 
 export async function GET(
   request: NextRequest,
@@ -111,19 +112,31 @@ export async function POST(
 
     const article = await prisma.article.findUnique({
       where: { id },
-      select: { id: true, title: true, isBreaking: true },
+      select: { id: true, title: true, isBreaking: true, authorId: true },
     })
 
     if (!article) {
       return NextResponse.json({ error: 'Article not found.' }, { status: 404 })
     }
 
-    // Create live update
+    // Author scoping: users without edit_all or breaking:manage can only post live updates on their own articles
+    const canManageAny = hasPermission(currentUser.role, currentUser.permissions, [
+      'articles:edit_all',
+      'breaking:manage',
+    ])
+    if (!canManageAny && article.authorId !== currentUser.id) {
+      return NextResponse.json(
+        { error: 'Forbidden. You can only post live updates on your own articles.' },
+        { status: 403 }
+      )
+    }
+
+    // Create sanitized live update
     const liveUpdate = await prisma.liveUpdate.create({
       data: {
         articleId: id,
-        headline: trimmedHeadline,
-        content: trimmedContent,
+        headline: sanitizePlainText(trimmedHeadline),
+        content: sanitizeArticleHtml(trimmedContent),
         authorId: currentUser.id,
       },
       include: {
@@ -133,11 +146,18 @@ export async function POST(
       },
     })
 
-    // Optionally update article breaking flag and touch updatedAt
+    // Only users with breaking:manage or articles:publish can alter the article's breaking flag
+    const canToggleBreaking = hasPermission(currentUser.role, currentUser.permissions, [
+      'breaking:manage',
+      'articles:publish',
+    ])
+
     await prisma.article.update({
       where: { id },
       data: {
-        isBreaking: markBreaking !== undefined ? Boolean(markBreaking) : true,
+        ...(canToggleBreaking && {
+          isBreaking: markBreaking !== undefined ? Boolean(markBreaking) : true,
+        }),
         updatedAt: new Date(),
       },
     })

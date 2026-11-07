@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma, { ArticleStatus, CommentStatus } from '@/lib/prisma'
+import { sanitizePlainText } from '@/lib/security/sanitizer'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,6 +50,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // 0. Rate limiting: Max 5 comments per 10 minutes per IP
+    const rateLimitError = checkRateLimit(request, 'comment_submission', {
+      maxRequests: 5,
+      windowMs: 10 * 60 * 1000,
+      messageEn: 'Too many comment submissions. Please wait a few minutes before submitting another comment.',
+      messageNe: 'छोटो समयमा धेरै प्रतिक्रिया पठाइयो। कृपया केही मिनेटपछि पुन: प्रयास गर्नुहोस्।',
+    })
+    if (rateLimitError) return rateLimitError
+
     const body = await request.json()
     const { articleId, authorName, authorEmail, content, parentId, honeypot } = body
 
@@ -119,13 +130,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 5. Create comment in PENDING status for editorial moderation
+    // 5. Create comment in PENDING status for editorial moderation (Sanitized plain text)
     const comment = await prisma.comment.create({
       data: {
         articleId,
-        authorName: trimmedName,
+        authorName: sanitizePlainText(trimmedName),
         authorEmail: trimmedEmail,
-        content: trimmedContent,
+        content: sanitizePlainText(trimmedContent),
         parentId: parentId || null,
         status: CommentStatus.PENDING,
       },

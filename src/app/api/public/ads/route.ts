@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 import { AdPlacement } from '../../../../../prisma/generated/client'
 
 export async function GET(request: NextRequest) {
@@ -26,15 +27,21 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Increment impressions asynchronously for retrieved ads
+    // Increment impressions asynchronously for retrieved ads (rate-limited per IP to prevent impression fraud/DB flooding)
     if (ads.length > 0) {
-      const ids = ads.map((a) => a.id)
-      prisma.advertisement
-        .updateMany({
-          where: { id: { in: ids } },
-          data: { impressions: { increment: 1 } },
-        })
-        .catch((err) => console.error('Failed to increment ad impressions:', err))
+      const rateLimitError = checkRateLimit(request, 'ad_impressions', {
+        maxRequests: 60,
+        windowMs: 60 * 1000,
+      })
+      if (!rateLimitError) {
+        const ids = ads.map((a) => a.id)
+        prisma.advertisement
+          .updateMany({
+            where: { id: { in: ids } },
+            data: { impressions: { increment: 1 } },
+          })
+          .catch((err) => console.error('Failed to increment ad impressions:', err))
+      }
     }
 
     return NextResponse.json({ ads })

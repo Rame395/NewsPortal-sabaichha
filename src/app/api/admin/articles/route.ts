@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import { ArticleStatus } from '@/lib/prisma'
+import { sanitizeArticleHtml, sanitizePlainText } from '@/lib/security/sanitizer'
+import { safeHttpUrl } from '@/lib/security/url'
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,6 +26,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') as ArticleStatus | null
     const categoryId = searchParams.get('categoryId') ? parseInt(searchParams.get('categoryId')!, 10) : null
     const search = searchParams.get('search')?.trim()
+    const isFeatured = searchParams.get('isFeatured')
+    const isBreaking = searchParams.get('isBreaking')
+    const sortBy = searchParams.get('sortBy') || 'newest'
 
     const where: Record<string, unknown> = {}
 
@@ -41,20 +46,35 @@ export async function GET(request: NextRequest) {
       where.categoryId = categoryId
     }
 
+    if (isFeatured === 'true') {
+      where.isFeatured = true
+    }
+
+    if (isBreaking === 'true') {
+      where.isBreaking = true
+    }
+
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { subtitle: { contains: search, mode: 'insensitive' } },
         { excerpt: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+        { author: { fullName: { contains: search, mode: 'insensitive' } } },
       ]
     }
+
+    let orderBy: Record<string, 'asc' | 'desc'> = { createdAt: 'desc' }
+    if (sortBy === 'oldest') orderBy = { createdAt: 'asc' }
+    if (sortBy === 'views') orderBy = { viewCount: 'desc' }
+    if (sortBy === 'title') orderBy = { title: 'asc' }
 
     const [articles, totalCount] = await Promise.all([
       prisma.article.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         include: {
           author: {
             select: { id: true, fullName: true, email: true, avatarUrl: true },
@@ -108,6 +128,8 @@ export async function POST(request: NextRequest) {
       status = 'DRAFT',
       isBreaking = false,
       isFeatured = false,
+      isTrending = false,
+      isCategoryLead = false,
       scheduledFor,
       tags = [],
     } = body
@@ -128,8 +150,10 @@ export async function POST(request: NextRequest) {
     let cleanSlug = (slug || title)
       .toLowerCase()
       .trim()
+      .replace(/[\u0964\u0965।,.;:!?"'“”‘’«»()\[\]{}–—/\\]/g, ' ')
       .replace(/[^a-z0-9\u0900-\u097F]+/g, '-')
       .replace(/^-+|-+$/g, '')
+      .replace(/-+/g, '-')
 
     if (!cleanSlug) {
       cleanSlug = `article-${Date.now()}`
@@ -145,18 +169,27 @@ export async function POST(request: NextRequest) {
     const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length
     const readTimeMinutes = Math.max(1, Math.ceil(wordCount / 180))
 
+    const cleanContent = sanitizeArticleHtml(String(content))
+    const cleanTitle = sanitizePlainText(String(title))
+    const cleanSubtitle = subtitle ? sanitizePlainText(String(subtitle)) : null
+    const cleanExcerpt = excerpt ? sanitizePlainText(String(excerpt)) : null
+    const cleanFeaturedImage = featuredImage ? safeHttpUrl(featuredImage) : null
+    const cleanImageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
+
     const newArticle = await prisma.article.create({
       data: {
-        title: String(title).trim(),
+        title: cleanTitle,
         slug: cleanSlug,
-        subtitle: subtitle ? String(subtitle).trim() : null,
-        content: String(content),
-        excerpt: excerpt ? String(excerpt).trim() : null,
-        featuredImage: featuredImage || null,
-        imageCaption: imageCaption || null,
+        subtitle: cleanSubtitle,
+        content: cleanContent,
+        excerpt: cleanExcerpt,
+        featuredImage: cleanFeaturedImage,
+        imageCaption: cleanImageCaption,
         status: finalStatus,
         isBreaking: Boolean(isBreaking),
         isFeatured: Boolean(isFeatured),
+        isTrending: Boolean(isTrending),
+        isCategoryLead: Boolean(isCategoryLead),
         readTimeMinutes,
         authorId: currentUser.id,
         categoryId: Number(categoryId),

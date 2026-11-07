@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
+import { hasPermission } from '@/lib/auth/permissions'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user || !hasPermission(user.role, user.permissions, 'newsletter:manage')) {
+      return NextResponse.json({ error: 'Forbidden. You do not have permission to view newsletter subscribers.' }, { status: 403 })
     }
 
     const subscribers = await prisma.newsletterSubscriber.findMany({
@@ -27,8 +28,8 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user || !hasPermission(user.role, user.permissions, 'newsletter:manage')) {
+      return NextResponse.json({ error: 'Forbidden. You do not have permission to manage newsletter subscribers.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -37,9 +38,19 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Subscriber ID is required' }, { status: 400 })
     }
 
-    await prisma.newsletterSubscriber.delete({
+    const deleted = await prisma.newsletterSubscriber.delete({
       where: { id },
     })
+
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'NEWSLETTER_SUBSCRIBER_DELETED',
+        targetType: 'NewsletterSubscriber',
+        targetId: id,
+        details: `Removed newsletter subscriber ${deleted.email}`,
+      },
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, message: 'Subscriber removed.' })
   } catch (error) {

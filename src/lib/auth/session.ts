@@ -3,9 +3,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import prisma from '@/lib/prisma'
 import crypto from 'crypto'
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || 'dev-super-secret-news-portal-key-change-in-production-32-chars'
-)
+import { getJwtSecret } from '@/lib/auth/jwt'
 
 const SESSION_COOKIE_NAME = 'sabaichha_session'
 const SESSION_EXPIRY_DAYS = 7
@@ -49,7 +47,7 @@ export async function createSession(
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_EXPIRY_DAYS}d`)
-    .sign(JWT_SECRET)
+    .sign(getJwtSecret())
 
   // Set secure HTTP-only cookie
   cookieStore.set(SESSION_COOKIE_NAME, jwt, {
@@ -76,7 +74,7 @@ export async function getCurrentUser() {
 
     if (!token) return null
 
-    const { payload } = await jwtVerify(token, JWT_SECRET)
+    const { payload } = await jwtVerify(token, getJwtSecret())
     const { sessionId, userId } = payload as unknown as AuthSessionPayload
 
     if (!sessionId || !userId) return null
@@ -122,7 +120,7 @@ export async function destroySession() {
 
     if (token) {
       try {
-        const { payload } = await jwtVerify(token, JWT_SECRET)
+        const { payload } = await jwtVerify(token, getJwtSecret())
         const { sessionId } = payload as unknown as AuthSessionPayload
         if (sessionId) {
           await prisma.session.delete({ where: { id: sessionId } }).catch(() => {})

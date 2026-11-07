@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { getCurrentUser } from '@/lib/auth/session'
+import { createSession, getCurrentUser } from '@/lib/auth/session'
+import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitResponse = checkRateLimit(request, 'auth_change_password', {
+      maxRequests: 5,
+      windowMs: 15 * 60 * 1000,
+      messageEn: 'Too many password change attempts. Please wait 15 minutes before trying again.',
+      messageNe: 'धेरै पटक पासवर्ड परिवर्तन प्रयास गरियो। कृपया १५ मिनेटपछि पुन: प्रयास गर्नुहोस्।',
+    })
+
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
     const user = await getCurrentUser()
 
     if (!user) {
@@ -14,9 +26,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { currentPassword, newPassword } = body
 
-    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8 || newPassword.length > 200) {
       return NextResponse.json(
-        { error: 'New password must be at least 8 characters long.' },
+        { error: 'New password must be between 8 and 200 characters long.' },
         { status: 400 }
       )
     }
@@ -52,6 +64,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // SECURITY: Revoke all existing sessions across devices and issue a fresh session for this device
+    await prisma.session.deleteMany({ where: { userId: user.id } })
+    const ip = getClientIp(request)
+    const userAgent = request.headers.get('user-agent') || 'unknown'
+    await createSession(user.id, user.email, user.role, ip, userAgent)
+
     // Log the event
     await prisma.auditLog.create({
       data: {
@@ -59,7 +77,8 @@ export async function POST(request: NextRequest) {
         action: 'PASSWORD_CHANGED',
         targetType: 'User',
         targetId: user.id,
-        details: 'User successfully updated their password.',
+        details: 'User successfully updated their password (all prior sessions revoked).',
+        ipAddress: ip,
       },
     }).catch(() => {})
 

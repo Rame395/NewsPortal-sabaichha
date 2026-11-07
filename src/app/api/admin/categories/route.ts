@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { nameEn, nameNe, slug, description, parentId, orderIndex, showInMenu } = body
+    const { nameEn, nameNe, slug, description, parentId, orderIndex, showInMenu, layoutStyle } = body
 
     if (!nameEn || !nameNe) {
       return NextResponse.json({ error: 'Both English and Nepali category names are required.' }, { status: 400 })
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
         parentId: parentId ? Number(parentId) : null,
         orderIndex: orderIndex ? Number(orderIndex) : 0,
         showInMenu: showInMenu !== false,
+        layoutStyle: layoutStyle ? String(layoutStyle) : 'HERO_LIST',
       },
     })
 

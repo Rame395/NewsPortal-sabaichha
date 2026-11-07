@@ -79,6 +79,7 @@ model Category {
   description String?
   orderIndex  Int        @default(0) @map("order_index")
   showInMenu  Boolean    @default(true) @map("show_in_menu")
+  layoutStyle String     @default("HERO_LIST") @map("layout_style")
   parentId    Int?       @map("parent_id")
   parent      Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[] @relation("SubCategories")
@@ -101,6 +102,8 @@ model Article {
   status          ArticleStatus @default(DRAFT)
   isBreaking      Boolean       @default(false) @map("is_breaking")
   isFeatured      Boolean       @default(false) @map("is_featured")
+  isTrending      Boolean       @default(false) @map("is_trending")
+  isCategoryLead  Boolean       @default(false) @map("is_category_lead")
   viewCount       Int           @default(0) @map("view_count")
   readTimeMinutes Int           @default(3) @map("read_time_minutes")
   

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma, { CommentStatus } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
+import { sanitizePlainText } from '@/lib/security/sanitizer'
 
 export async function PATCH(
   request: NextRequest,
@@ -40,7 +41,7 @@ export async function PATCH(
     }
 
     if (typeof content === 'string' && content.trim().length > 0) {
-      updateData.content = content.trim()
+      updateData.content = sanitizePlainText(content.trim())
     }
 
     const updated = await prisma.comment.update({

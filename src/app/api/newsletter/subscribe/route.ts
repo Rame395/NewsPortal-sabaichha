@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Rate limiting: Max 5 subscription requests per 10 minutes per IP
+    const rateLimitError = checkRateLimit(request, 'newsletter_subscribe', {
+      maxRequests: 5,
+      windowMs: 10 * 60 * 1000,
+      messageEn: 'Too many subscription attempts. Please try again after a few minutes.',
+      messageNe: 'धेरै पटक प्रयास गरियो। कृपया केही मिनेटपछि पुन: प्रयास गर्नुहोस्।',
+    })
+    if (rateLimitError) return rateLimitError
+
     const { email } = await request.json()
 
     if (!email || typeof email !== 'string') {

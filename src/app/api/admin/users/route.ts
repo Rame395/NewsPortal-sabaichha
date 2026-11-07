@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { getCurrentUser } from '@/lib/auth/session'
-import { hasPermission } from '@/lib/auth/permissions'
+import { hasPermission, sanitizePermissionList } from '@/lib/auth/permissions'
 import { Role } from '@/lib/prisma'
+import { sanitizePlainText } from '@/lib/security/sanitizer'
+import { sendStaffWelcomeEmail } from '@/lib/email/mailer'
 
 export async function GET() {
   try {
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { fullName, email, password, role, permissions, mustChangePassword, bio } = body
+    const { fullName, email, password, role, permissions, mustChangePassword, bio, sendWelcomeEmail } = body
 
     if (!fullName || !email || !password || !role) {
       return NextResponse.json(
@@ -81,9 +83,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (String(password).length < 8) {
+    if (String(password).length < 8 || String(password).length > 200) {
       return NextResponse.json(
-        { error: 'Initial password must be at least 8 characters long.' },
+        { error: 'Initial password must be between 8 and 200 characters long.' },
         { status: 400 }
       )
     }
@@ -93,10 +95,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid role specified.' }, { status: 400 })
     }
 
+    const actorIsSuperAdmin = currentUser.role === Role.SUPER_ADMIN
+
     // Only SUPER_ADMIN can assign the SUPER_ADMIN role to others
-    if (role === Role.SUPER_ADMIN && currentUser.role !== Role.SUPER_ADMIN) {
+    if (role === Role.SUPER_ADMIN && !actorIsSuperAdmin) {
       return NextResponse.json(
         { error: 'Only a Super Admin can create another Super Admin.' },
+        { status: 403 }
+      )
+    }
+
+    // Validate permissions: only known keys, and non-super-admins can only grant permissions they hold
+    const requestedPerms = sanitizePermissionList(permissions)
+    const grantablePerms = actorIsSuperAdmin
+      ? requestedPerms
+      : requestedPerms.filter((p) => currentUser.permissions.includes(p))
+
+    if (grantablePerms.length !== requestedPerms.length) {
+      return NextResponse.json(
+        { error: 'You cannot grant permissions that you do not hold yourself.' },
         { status: 403 }
       )
     }
@@ -106,13 +123,13 @@ export async function POST(request: NextRequest) {
 
     const newUser = await prisma.user.create({
       data: {
-        fullName: String(fullName).trim(),
+        fullName: sanitizePlainText(String(fullName)),
         email: cleanEmail,
         passwordHash,
         role: role as Role,
-        permissions: Array.isArray(permissions) ? permissions : [],
+        permissions: grantablePerms,
         mustChangePassword: mustChangePassword !== false,
-        bio: bio ? String(bio).trim() : null,
+        bio: bio ? sanitizePlainText(String(bio)) : null,
         isActive: true,
       },
       select: {
@@ -127,6 +144,28 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Send welcome onboarding email with login credentials if requested (default true)
+    let emailStatus = { sent: false, error: null as string | null }
+    if (sendWelcomeEmail !== false) {
+      try {
+        const mailResult = await sendStaffWelcomeEmail({
+          to: cleanEmail,
+          fullName: String(fullName),
+          email: cleanEmail,
+          password: String(password),
+          role: String(role),
+        })
+        if (mailResult.success) {
+          emailStatus.sent = true
+        } else {
+          emailStatus.error = mailResult.error || 'Failed to dispatch email'
+        }
+      } catch (err: unknown) {
+        console.error('Welcome email dispatch error:', err)
+        emailStatus.error = err instanceof Error ? err.message : 'Unknown mailer error'
+      }
+    }
+
     // Log the user creation in audit log
     await prisma.auditLog.create({
       data: {
@@ -134,14 +173,17 @@ export async function POST(request: NextRequest) {
         action: 'USER_CREATED',
         targetType: 'User',
         targetId: newUser.id,
-        details: `Created staff member ${newUser.email} with role ${newUser.role} and permissions: [${newUser.permissions.join(', ')}]`,
+        details: `Created staff member ${newUser.email} with role ${newUser.role}. Credentials email: ${emailStatus.sent ? 'Sent successfully' : emailStatus.error ? `Failed (${emailStatus.error})` : 'Skipped'}`,
       },
     }).catch(() => {})
 
     return NextResponse.json({
       success: true,
-      message: 'Staff member account created successfully.',
+      message: emailStatus.sent
+        ? `Staff member created successfully and login credentials were sent to ${cleanEmail}.`
+        : 'Staff member account created successfully.',
       user: newUser,
+      emailStatus,
     })
   } catch (error) {
     console.error('Create user error:', error)

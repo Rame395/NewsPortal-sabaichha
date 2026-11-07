@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma, { ArticleStatus } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Prevent polling floods: 60 requests per minute per IP
+    const rateLimitResponse = checkRateLimit(request, 'live_polling', {
+      maxRequests: 60,
+      windowMs: 60 * 1000,
+      messageEn: 'Too many live update requests. Please wait a moment.',
+      messageNe: 'धेरै पटक ताजा अपडेट अनुरोध गरियो। कृपया केही समय पर्खनुहोस्।',
+    })
+
+    if (rateLimitResponse) {
+      return rateLimitResponse
+    }
+
     const { id } = await params
 
     // Verify article exists

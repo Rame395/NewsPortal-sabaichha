@@ -15,6 +15,9 @@ export const ALL_PERMISSIONS = [
   'media:upload',
   'users:manage',
   'audit:view',
+  'settings:manage',
+  'ads:manage',
+  'newsletter:manage',
 ]
 
 async function main() {
@@ -80,16 +83,17 @@ async function main() {
   }
 
   console.log('Seeding root Super Admin account...')
+  const initialPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@123456'
   const salt = await bcrypt.genSalt(12)
-  const passwordHash = await bcrypt.hash('Admin@123456', salt)
+  const passwordHash = await bcrypt.hash(initialPassword, salt)
 
+  // SECURITY: Never overwrite an existing Super Admin's password on re-seed unless SEED_ADMIN_PASSWORD is explicitly passed
   const admin = await prisma.user.upsert({
     where: { email: 'admin@sabaichha.com' },
     update: {
       role: Role.SUPER_ADMIN,
       permissions: ALL_PERMISSIONS,
-      passwordHash,
-      mustChangePassword: false,
+      ...(process.env.SEED_ADMIN_PASSWORD ? { passwordHash } : {}),
     },
     create: {
       fullName: 'Super Administrator',
@@ -97,7 +101,7 @@ async function main() {
       passwordHash,
       role: Role.SUPER_ADMIN,
       permissions: ALL_PERMISSIONS,
-      mustChangePassword: false,
+      mustChangePassword: !process.env.SEED_ADMIN_PASSWORD,
       bio: 'Principal administrator with full platform authorization at SabaiChha.com.',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
       isActive: true,

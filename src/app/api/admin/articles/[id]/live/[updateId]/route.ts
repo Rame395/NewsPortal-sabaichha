@@ -30,12 +30,27 @@ export async function DELETE(
     const existing = await prisma.liveUpdate.findUnique({
       where: { id: updateId },
       include: {
-        article: { select: { id: true, title: true } },
+        article: { select: { id: true, title: true, authorId: true } },
       },
     })
 
     if (!existing || existing.articleId !== id) {
       return NextResponse.json({ error: 'Live update entry not found.' }, { status: 404 })
+    }
+
+    const canManageAny = hasPermission(currentUser.role, currentUser.permissions, [
+      'articles:edit_all',
+      'breaking:manage',
+    ])
+    if (
+      !canManageAny &&
+      existing.authorId !== currentUser.id &&
+      existing.article.authorId !== currentUser.id
+    ) {
+      return NextResponse.json(
+        { error: 'Forbidden. You can only delete your own live updates.' },
+        { status: 403 }
+      )
     }
 
     await prisma.liveUpdate.delete({

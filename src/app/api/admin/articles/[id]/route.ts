@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import { ArticleStatus } from '@/lib/prisma'
+import { sanitizeArticleHtml, sanitizePlainText } from '@/lib/security/sanitizer'
+import { safeHttpUrl } from '@/lib/security/url'
 
 export async function GET(
   request: NextRequest,
@@ -84,23 +86,27 @@ export async function PATCH(
       status,
       isBreaking,
       isFeatured,
+      isTrending,
+      isCategoryLead,
       scheduledFor,
       tags,
     } = body
 
     const updateData: Record<string, unknown> = {}
 
-    if (title) updateData.title = String(title).trim()
-    if (subtitle !== undefined) updateData.subtitle = subtitle ? String(subtitle).trim() : null
-    if (excerpt !== undefined) updateData.excerpt = excerpt ? String(excerpt).trim() : null
-    if (featuredImage !== undefined) updateData.featuredImage = featuredImage || null
-    if (imageCaption !== undefined) updateData.imageCaption = imageCaption || null
+    if (title) updateData.title = sanitizePlainText(String(title))
+    if (subtitle !== undefined) updateData.subtitle = subtitle ? sanitizePlainText(String(subtitle)) : null
+    if (excerpt !== undefined) updateData.excerpt = excerpt ? sanitizePlainText(String(excerpt)) : null
+    if (featuredImage !== undefined) updateData.featuredImage = featuredImage ? safeHttpUrl(featuredImage) : null
+    if (imageCaption !== undefined) updateData.imageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
     if (categoryId) updateData.categoryId = Number(categoryId)
     if (typeof isBreaking === 'boolean') updateData.isBreaking = isBreaking
     if (typeof isFeatured === 'boolean') updateData.isFeatured = isFeatured
+    if (typeof isTrending === 'boolean') updateData.isTrending = isTrending
+    if (typeof isCategoryLead === 'boolean') updateData.isCategoryLead = isCategoryLead
 
     if (content) {
-      updateData.content = String(content)
+      updateData.content = sanitizeArticleHtml(String(content))
       const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length
       updateData.readTimeMinutes = Math.max(1, Math.ceil(wordCount / 180))
     }
@@ -109,8 +115,10 @@ export async function PATCH(
       const cleanSlug = String(slug)
         .toLowerCase()
         .trim()
+        .replace(/[\u0964\u0965।,.;:!?"'“”‘’«»()\[\]{}–—/\\]/g, ' ')
         .replace(/[^a-z0-9\u0900-\u097F]+/g, '-')
         .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-')
 
       const existing = await prisma.article.findFirst({
         where: { slug: cleanSlug, NOT: { id } },

@@ -11,6 +11,8 @@ export type PermissionKey =
   | 'users:manage'
   | 'audit:view'
   | 'settings:manage'
+  | 'ads:manage'
+  | 'newsletter:manage'
 
 export interface PermissionDefinition {
   key: PermissionKey
@@ -118,7 +120,42 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     descriptionEn: 'Configure footer details, social media handles, and live market tickers.',
     descriptionNe: 'फुटर विवरण, सामाजिक सञ्जाल र बजार दर तथा मौसम सेटिङ्स व्यवस्थापन गर्ने।',
   },
+  {
+    key: 'ads:manage',
+    group: 'Administration',
+    labelEn: 'Manage Advertisements',
+    labelNe: 'विज्ञापन व्यवस्थापन',
+    descriptionEn: 'Create, edit, and remove ad banners and ad script code shown on every public page.',
+    descriptionNe: 'सबै सार्वजनिक पृष्ठमा देखिने विज्ञापन ब्यानर तथा विज्ञापन कोड थप्ने, सम्पादन गर्ने र हटाउने।',
+  },
+  {
+    key: 'newsletter:manage',
+    group: 'Administration',
+    labelEn: 'Manage Newsletter Subscribers',
+    labelNe: 'इमेल बुलेटिन सदस्य व्यवस्थापन',
+    descriptionEn: 'View and remove newsletter subscriber email addresses (personal data).',
+    descriptionNe: 'इमेल बुलेटिनका सदस्यहरूको इमेल ठेगाना (व्यक्तिगत विवरण) हेर्ने र हटाउने।',
+  },
 ]
+
+/** Set of every valid permission key, used to reject unknown/forged permission strings. */
+export const VALID_PERMISSION_KEYS: ReadonlySet<string> = new Set(
+  PERMISSION_DEFINITIONS.map((p) => p.key)
+)
+
+/**
+ * Filters an untrusted permissions payload down to known permission keys only.
+ */
+export function sanitizePermissionList(input: unknown): PermissionKey[] {
+  if (!Array.isArray(input)) return []
+  const unique = new Set<PermissionKey>()
+  for (const item of input) {
+    if (typeof item === 'string' && VALID_PERMISSION_KEYS.has(item)) {
+      unique.add(item as PermissionKey)
+    }
+  }
+  return Array.from(unique)
+}
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, PermissionKey[]> = {
   SUPER_ADMIN: PERMISSION_DEFINITIONS.map((p) => p.key),
@@ -134,6 +171,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, PermissionKey[]> = {
     'media:upload',
     'audit:view',
     'settings:manage',
+    'ads:manage',
+    'newsletter:manage',
   ],
   EDITOR: [
     'articles:create',

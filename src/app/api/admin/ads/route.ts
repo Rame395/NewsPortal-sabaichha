@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
+import { hasPermission } from '@/lib/auth/permissions'
+import { sanitizePlainText } from '@/lib/security/sanitizer'
+import { safeHttpUrl } from '@/lib/security/url'
 import { AdPlacement, AdStatus, AdType } from '../../../../../prisma/generated/client'
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user || !hasPermission(user.role, user.permissions, 'ads:manage')) {
+      return NextResponse.json({ error: 'Forbidden. You do not have permission to manage advertisements.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -58,8 +61,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user || !hasPermission(user.role, user.permissions, 'ads:manage')) {
+      return NextResponse.json({ error: 'Forbidden. You do not have permission to create advertisements.' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -69,20 +72,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title and Placement are required.' }, { status: 400 })
     }
 
+    if (!Object.values(AdPlacement).includes(placement as AdPlacement)) {
+      return NextResponse.json({ error: 'Invalid ad placement.' }, { status: 400 })
+    }
+
+    const adType: AdType = type && Object.values(AdType).includes(type as AdType) ? (type as AdType) : 'IMAGE_BANNER'
+    const adStatus: AdStatus = status && Object.values(AdStatus).includes(status as AdStatus) ? (status as AdStatus) : 'ACTIVE'
+
+    // SECURITY: Custom HTML / AdSense scripts run on every public page — restrict to SUPER_ADMIN only
+    if ((adType === 'CUSTOM_HTML' || adType === 'GOOGLE_ADSENSE' || scriptCode) && user.role !== 'SUPER_ADMIN') {
+      return NextResponse.json(
+        { error: 'Only a Super Admin can create custom HTML or script-based advertisements.' },
+        { status: 403 }
+      )
+    }
+
+    const cleanImageUrl = imageUrl ? safeHttpUrl(imageUrl) : null
+    if (imageUrl && !cleanImageUrl) {
+      return NextResponse.json({ error: 'Invalid image URL. Only http(s) or relative /uploads paths are allowed.' }, { status: 400 })
+    }
+
+    const cleanTargetUrl = targetUrl ? safeHttpUrl(targetUrl) : null
+    if (targetUrl && !cleanTargetUrl) {
+      return NextResponse.json({ error: 'Invalid target URL. Only http(s) or relative paths are allowed.' }, { status: 400 })
+    }
+
     const ad = await prisma.advertisement.create({
       data: {
-        title,
+        title: sanitizePlainText(String(title)),
         placement: placement as AdPlacement,
-        type: (type as AdType) || 'IMAGE_BANNER',
-        status: (status as AdStatus) || 'ACTIVE',
-        imageUrl: imageUrl || null,
-        targetUrl: targetUrl || null,
-        scriptCode: scriptCode || null,
-        sponsorName: sponsorName || null,
+        type: adType,
+        status: adStatus,
+        imageUrl: cleanImageUrl,
+        targetUrl: cleanTargetUrl,
+        scriptCode: user.role === 'SUPER_ADMIN' && scriptCode ? String(scriptCode) : null,
+        sponsorName: sponsorName ? sanitizePlainText(String(sponsorName)) : null,
         startDate: startDate ? new Date(startDate) : new Date(),
         endDate: endDate ? new Date(endDate) : null,
       },
     })
+
+    await prisma.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'AD_CREATED',
+        targetType: 'Advertisement',
+        targetId: ad.id,
+        details: `Created advertisement "${ad.title}" (${ad.placement}, ${ad.type})`,
+      },
+    }).catch(() => {})
 
     return NextResponse.json({ ad }, { status: 201 })
   } catch (error) {

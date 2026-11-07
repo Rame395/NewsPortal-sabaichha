@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import { getSiteSettings, AllSettings } from '@/lib/settings'
+import { neutralizeDangerousUrls } from '@/lib/security/url'
 
 export async function GET() {
   try {
@@ -34,7 +35,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    const body: Partial<AllSettings> = await request.json()
+    const rawBody: Partial<AllSettings> = await request.json()
+    // Strip any dangerous URL schemes (javascript:, data:, vbscript:) from settings fields
+    const body = neutralizeDangerousUrls(rawBody)
 
     // Upsert key-values
     const upserts = []
@@ -65,6 +68,16 @@ export async function POST(request: NextRequest) {
           where: { key: 'live_tickers' },
           update: { value: JSON.stringify(body.liveTickers) },
           create: { key: 'live_tickers', value: JSON.stringify(body.liveTickers) },
+        })
+      )
+    }
+
+    if (body.trendingTopics) {
+      upserts.push(
+        prisma.siteSetting.upsert({
+          where: { key: 'trending_topics' },
+          update: { value: JSON.stringify(body.trendingTopics) },
+          create: { key: 'trending_topics', value: JSON.stringify(body.trendingTopics) },
         })
       )
     }
