@@ -22,6 +22,8 @@ import {
   Bold,
   Italic,
   ExternalLink,
+  TrendingUp,
+  Pin,
 } from 'lucide-react'
 import { MediaPickerModal } from '@/components/admin/media-picker-modal'
 import { RichTextEditor } from '@/components/admin/rich-text-editor'
@@ -51,6 +53,8 @@ interface InitialArticleData {
   status: 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED'
   isBreaking: boolean
   isFeatured: boolean
+  isTrending?: boolean
+  isCategoryLead?: boolean
   scheduledFor?: string | null
   tags?: { tag: { id: number; name: string } }[]
 }
@@ -74,6 +78,8 @@ export function ArticleForm({
   const [status, setStatus] = React.useState(initialData?.status || 'DRAFT')
   const [isBreaking, setIsBreaking] = React.useState(initialData?.isBreaking || false)
   const [isFeatured, setIsFeatured] = React.useState(initialData?.isFeatured || false)
+  const [isTrending, setIsTrending] = React.useState(initialData?.isTrending || false)
+  const [isCategoryLead, setIsCategoryLead] = React.useState(initialData?.isCategoryLead || false)
   const [scheduledFor, setScheduledFor] = React.useState(
     initialData?.scheduledFor ? new Date(initialData.scheduledFor).toISOString().slice(0, 16) : ''
   )
@@ -124,8 +130,10 @@ export function ArticleForm({
       const generated = val
         .toLowerCase()
         .trim()
+        .replace(/[\u0964\u0965।,.;:!?"'“”‘’«»()\[\]{}–—/\\]/g, ' ')
         .replace(/[^a-z0-9\u0900-\u097F]+/g, '-')
         .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-')
       setSlug(generated)
     }
   }
@@ -191,6 +199,8 @@ export function ArticleForm({
         status,
         isBreaking,
         isFeatured,
+        isTrending,
+        isCategoryLead,
         scheduledFor: status === 'SCHEDULED' && scheduledFor ? new Date(scheduledFor).toISOString() : null,
         tags: selectedTagIds.map((id) => ({ id })),
       }
@@ -480,6 +490,32 @@ export function ArticleForm({
                   <span>{language === 'ne' ? 'प्रमुख समाचार (Featured Story)' : 'Featured Story'}</span>
                 </span>
               </label>
+
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isTrending}
+                  onChange={(e) => setIsTrending(e.target.checked)}
+                  className="rounded text-orange-600 focus:ring-orange-500"
+                />
+                <span className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 font-bold">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>{language === 'ne' ? 'ट्रेन्डिङ समाचार (Trending Story)' : 'Trending Story'}</span>
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isCategoryLead}
+                  onChange={(e) => setIsCategoryLead(e.target.checked)}
+                  className="rounded text-rose-600 focus:ring-rose-500"
+                />
+                <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400 font-bold">
+                  <Pin className="w-4 h-4" />
+                  <span>{language === 'ne' ? 'विधाको मुख्य समाचार (Category Spotlight Lead)' : 'Category Spotlight Lead'}</span>
+                </span>
+              </label>
             </div>
           </div>
 
@@ -525,7 +561,7 @@ export function ArticleForm({
                 </button>
               </div>
               <input
-                type="url"
+                type="text"
                 value={featuredImage}
                 onChange={(e) => setFeaturedImage(e.target.value)}
                 placeholder="https://... or /uploads/..."

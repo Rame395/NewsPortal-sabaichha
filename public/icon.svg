@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444" />
+      <stop offset="50%" stop-color="#dc2626" />
+      <stop offset="100%" stop-color="#991b1b" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#450a0a" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Modern Squircle Background -->
+  <rect x="16" y="16" width="480" height="480" rx="112" ry="112" fill="url(#bgGrad)" />
+  <rect x="20" y="20" width="472" height="236" rx="108" ry="108" fill="url(#glowGrad)" />
+  <rect x="16" y="16" width="480" height="480" rx="112" ry="112" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.25" />
+
+  <!-- Bold Typography 'स' for SabaiChha (सबै छ) -->
+  <g filter="url(#shadow)" fill="#ffffff">
+    <!-- Shirorekha (Top Header Bar) -->
+    <rect x="104" y="116" width="304" height="40" rx="8" />
+
+    <!-- Danda (Right Vertical Bar) -->
+    <rect x="364" y="116" width="44" height="276" rx="8" />
+
+    <!-- Middle Connecting Bar -->
+    <rect x="228" y="254" width="144" height="36" rx="6" />
+
+    <!-- Left Arm & Loop of 'स' -->
+    <path d="M 240 178 C 240 154 204 152 184 152 C 150 152 128 174 128 206 C 128 244 172 268 216 284 L 144 394 C 136 406 148 418 162 418 L 206 418 C 218 418 228 408 236 396 L 284 316 C 290 306 284 294 272 292 C 250 288 240 270 240 250 Z" />
+
+    <!-- Live Gold Dot Badge on Top Right -->
+    <circle cx="424" cy="96" r="24" fill="#facc15" stroke="#991b1b" stroke-width="5" />
+  </g>
+</svg>

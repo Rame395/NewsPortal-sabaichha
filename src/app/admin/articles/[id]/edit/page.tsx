@@ -48,6 +48,8 @@ export default async function EditArticlePage({
     status: article.status,
     isBreaking: article.isBreaking,
     isFeatured: article.isFeatured,
+    isTrending: article.isTrending,
+    isCategoryLead: article.isCategoryLead,
     scheduledFor: article.scheduledFor ? article.scheduledFor.toISOString() : null,
     tags: article.tags,
   }

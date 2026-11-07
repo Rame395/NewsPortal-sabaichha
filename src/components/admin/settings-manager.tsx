@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useLanguage } from '@/context/language-context'
-import { AllSettings, DEFAULT_SITE_SETTINGS } from '@/lib/settings'
+import { AllSettings, DEFAULT_SITE_SETTINGS, TrendingTopicItem } from '@/lib/settings'
 import {
   Settings,
   Building,
@@ -21,6 +21,12 @@ import {
   Coins,
   DollarSign,
   Shield,
+  Flame,
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Sparkles,
 } from 'lucide-react'
 
 // Custom SVGs for Times of India-style social icons
@@ -75,11 +81,125 @@ export function TelegramIcon({ className = 'w-4 h-4' }: { className?: string }) 
 export function SettingsManager({ initialSettings }: { initialSettings: AllSettings }) {
   const { language } = useLanguage()
 
-  const [settings, setSettings] = React.useState<AllSettings>(initialSettings)
-  const [activeTab, setActiveTab] = React.useState<'site' | 'social' | 'tickers' | 'footer'>('social')
+  const [settings, setSettings] = React.useState<AllSettings>(() => ({
+    ...initialSettings,
+    trendingTopics: initialSettings.trendingTopics || DEFAULT_SITE_SETTINGS.trendingTopics,
+  }))
+  const [activeTab, setActiveTab] = React.useState<'site' | 'social' | 'tickers' | 'trending' | 'footer'>('trending')
   const [saving, setSaving] = React.useState(false)
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
+
+  // New trending topic form state
+  const [newTopicNe, setNewTopicNe] = React.useState('')
+  const [newTopicEn, setNewTopicEn] = React.useState('')
+  const [newTopicUrl, setNewTopicUrl] = React.useState('')
+  const [newTopicIsHot, setNewTopicIsHot] = React.useState(false)
+
+  // Handlers for trending topics
+  const handleAddTopic = () => {
+    if (!newTopicNe.trim()) return
+    const formattedNe = newTopicNe.trim().startsWith('#') ? newTopicNe.trim() : `#${newTopicNe.trim()}`
+    const formattedEn = newTopicEn.trim()
+      ? newTopicEn.trim().startsWith('#')
+        ? newTopicEn.trim()
+        : `#${newTopicEn.trim()}`
+      : formattedNe
+
+    const newItem: TrendingTopicItem = {
+      id: Date.now().toString(),
+      labelNe: formattedNe,
+      labelEn: formattedEn,
+      url: newTopicUrl.trim() || undefined,
+      isHot: newTopicIsHot,
+      isActive: true,
+    }
+
+    setSettings((prev) => ({
+      ...prev,
+      trendingTopics: {
+        ...prev.trendingTopics,
+        items: [...prev.trendingTopics.items, newItem],
+      },
+    }))
+
+    setNewTopicNe('')
+    setNewTopicEn('')
+    setNewTopicUrl('')
+    setNewTopicIsHot(false)
+  }
+
+  const handleDeleteTopic = (id: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      trendingTopics: {
+        ...prev.trendingTopics,
+        items: prev.trendingTopics.items.filter((item) => item.id !== id),
+      },
+    }))
+  }
+
+  const handleToggleTopicActive = (id: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      trendingTopics: {
+        ...prev.trendingTopics,
+        items: prev.trendingTopics.items.map((item) =>
+          item.id === id ? { ...item, isActive: !item.isActive } : item
+        ),
+      },
+    }))
+  }
+
+  const handleToggleTopicHot = (id: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      trendingTopics: {
+        ...prev.trendingTopics,
+        items: prev.trendingTopics.items.map((item) =>
+          item.id === id ? { ...item, isHot: !item.isHot } : item
+        ),
+      },
+    }))
+  }
+
+  const handleMoveTopic = (index: number, direction: 'up' | 'down') => {
+    const items = [...settings.trendingTopics.items]
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= items.length) return
+
+    const temp = items[index]
+    items[index] = items[targetIndex]
+    items[targetIndex] = temp
+
+    setSettings((prev) => ({
+      ...prev,
+      trendingTopics: {
+        ...prev.trendingTopics,
+        items,
+      },
+    }))
+  }
+
+  const handleQuickAddPreset = (labelNe: string, labelEn: string, isHot = false) => {
+    if (settings.trendingTopics.items.some((item) => item.labelNe === labelNe)) {
+      return
+    }
+    const newItem: TrendingTopicItem = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+      labelNe,
+      labelEn,
+      isHot,
+      isActive: true,
+    }
+    setSettings((prev) => ({
+      ...prev,
+      trendingTopics: {
+        ...prev.trendingTopics,
+        items: [...prev.trendingTopics.items, newItem],
+      },
+    }))
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -179,6 +299,19 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
         >
           <TrendingUp className="w-3.5 h-3.5" />
           <span>{language === 'ne' ? 'मौसम तथा बजार दर (Weather & Rates)' : 'Live Weather & Market Rates'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('trending')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
+            activeTab === 'trending'
+              ? 'bg-red-600 text-white shadow-sm'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
+          }`}
+        >
+          <Flame className="w-3.5 h-3.5 text-amber-500" />
+          <span>{language === 'ne' ? 'चर्चामा रहेका विषय (Trending Topics)' : 'Trending Topics Ribbon'}</span>
         </button>
 
         <button
@@ -864,6 +997,373 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 5: TRENDING TOPICS INFINITE MARQUEE */}
+        {activeTab === 'trending' && (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xs space-y-8">
+            {/* Header & Master Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+                  <span>{language === 'ne' ? 'चर्चामा रहेका विषयहरू (Trending Topics Ribbon)' : 'Trending Topics Infinite Ribbon'}</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {language === 'ne'
+                    ? 'गृहपृष्ठको शीर्ष नेभिगेसनमुनि निरन्तर चल्ने इन्फिनिट रिबनमा देखाइने विषयहरू र ह्यासट्यागहरू व्यवस्थापन गर्नुहोस्।'
+                    : 'Manage continuous horizontal scrolling topics & hashtag pills displayed below the header navigation.'}
+                </p>
+              </div>
+
+              {/* Master Switch */}
+              <label className="flex items-center gap-3 cursor-pointer self-start sm:self-auto bg-slate-50 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <input
+                  type="checkbox"
+                  checked={settings.trendingTopics?.enabled ?? true}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      trendingTopics: {
+                        ...settings.trendingTopics,
+                        enabled: e.target.checked,
+                      },
+                    })
+                  }
+                  className="w-4 h-4 text-red-600 rounded focus:ring-red-500 accent-red-600 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {language === 'ne' ? 'रिबन सक्रिय गर्नुहोस्' : 'Enable Ribbon'}
+                </span>
+              </label>
+            </div>
+
+            {/* Ribbon Titles (Nepali & English) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ne' ? 'रिबन पिन गरिएको शीर्षक (नेपाली)' : 'Pinned Badge Title (Nepali)'}
+                </label>
+                <input
+                  type="text"
+                  value={settings.trendingTopics?.titleNe || ''}
+                  placeholder="चर्चामा"
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      trendingTopics: {
+                        ...settings.trendingTopics,
+                        titleNe: e.target.value,
+                      },
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ne' ? 'रिबन पिन गरिएको शीर्षक (English)' : 'Pinned Badge Title (English)'}
+                </label>
+                <input
+                  type="text"
+                  value={settings.trendingTopics?.titleEn || ''}
+                  placeholder="Trending"
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      trendingTopics: {
+                        ...settings.trendingTopics,
+                        titleEn: e.target.value,
+                      },
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold"
+                />
+              </div>
+            </div>
+
+            {/* Quick Add Presets */}
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-2.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{language === 'ne' ? 'द्रुत विषयहरू थप्नुहोस् (Quick Add Presets):' : 'Click to Quick-Add Popular Topics:'}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { ne: '#लुम्बिनी_महोत्सव', en: '#LumbiniExpo', hot: true },
+                  { ne: '#नेपाली_क्रिकेट', en: '#NepalCricket', hot: true },
+                  { ne: '#नेप्से_परिसूचक', en: '#NEPSE', hot: false },
+                  { ne: '#आर्थिक_सुधार', en: '#EconomicReform', hot: false },
+                  { ne: '#जलविद्युत्_निर्यात', en: '#Hydropower', hot: true },
+                  { ne: '#मन्त्रिपरिषद्_निर्णय', en: '#CabinetDecision', hot: false },
+                  { ne: '#पर्यटनवर्ष', en: '#VisitNepal', hot: false },
+                ].map((preset) => {
+                  const alreadyExists = (settings.trendingTopics?.items || []).some((i) => i.labelNe === preset.ne)
+                  return (
+                    <button
+                      key={preset.ne}
+                      type="button"
+                      disabled={alreadyExists}
+                      onClick={() => handleQuickAddPreset(preset.ne, preset.en, preset.hot)}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition ${
+                        alreadyExists
+                          ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed opacity-60'
+                          : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-amber-500 hover:text-white border border-slate-300 dark:border-slate-700 shadow-2xs cursor-pointer'
+                      }`}
+                    >
+                      <span>+</span>
+                      <span>{language === 'ne' ? preset.ne : preset.en}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Add New Custom Topic Box */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Plus className="w-3.5 h-3.5 text-red-600" />
+                <span>{language === 'ne' ? 'नयाँ विषय / ह्यासट्याग थप्नुहोस्' : 'Add New Trending Topic'}</span>
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                <div className="sm:col-span-4">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {language === 'ne' ? 'शीर्षक (नेपाली)' : 'Label (Nepali)'} *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="#प्रतिनिधिसभा"
+                    value={newTopicNe}
+                    onChange={(e) => setNewTopicNe(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium"
+                  />
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {language === 'ne' ? 'शीर्षक (English)' : 'Label (English)'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="#HouseOfReps"
+                    value={newTopicEn}
+                    onChange={(e) => setNewTopicEn(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium"
+                  />
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    {language === 'ne' ? 'लिङ्क (वैकल्पिक)' : 'Custom URL (Optional)'}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="/search?q=..."
+                    value={newTopicUrl}
+                    onChange={(e) => setNewTopicUrl(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-mono"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 flex items-center justify-between gap-2">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-amber-600">
+                    <input
+                      type="checkbox"
+                      checked={newTopicIsHot}
+                      onChange={(e) => setNewTopicIsHot(e.target.checked)}
+                      className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400 accent-amber-500 cursor-pointer"
+                    />
+                    <span>🔥 {language === 'ne' ? 'हट' : 'Hot'}</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleAddTopic}
+                    disabled={!newTopicNe.trim()}
+                    className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition flex items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{language === 'ne' ? 'थप्नुहोस्' : 'Add'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Topics List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  {language === 'ne'
+                    ? `हाल सक्रिय विषयहरू (${(settings.trendingTopics?.items || []).length})`
+                    : `Active Topics List (${(settings.trendingTopics?.items || []).length})`}
+                </h3>
+                <span className="text-[11px] text-slate-400">
+                  {language === 'ne'
+                    ? 'क्रम मिलाउन बाण चिन्ह (↑/↓) प्रयोग गर्नुहोस्'
+                    : 'Use arrows to reorder pills'}
+                </span>
+              </div>
+
+              {(settings.trendingTopics?.items || []).length === 0 ? (
+                <div className="p-8 text-center bg-slate-50 dark:bg-slate-950 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 text-xs">
+                  {language === 'ne'
+                    ? 'कुनै चर्चामा रहेका विषयहरू छैनन्। माथिका द्रुत बटन वा फारमबाट थप्नुहोस्।'
+                    : 'No trending topics added yet. Click a quick-add preset above.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2.5">
+                  {(settings.trendingTopics?.items || []).map((topic, index) => (
+                    <div
+                      key={topic.id}
+                      className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition"
+                    >
+                      {/* Left: Reorder Arrows & Info */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Up/Down reorder */}
+                        <div className="flex flex-col gap-0.5 shrink-0">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => handleMoveTopic(index, 'up')}
+                            className="p-1 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                            title="Move Up"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === (settings.trendingTopics?.items || []).length - 1}
+                            onClick={() => handleMoveTopic(index, 'down')}
+                            className="p-1 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                            title="Move Down"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {/* Pill Display */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border transition ${
+                              topic.isActive
+                                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-300 dark:border-slate-700 shadow-2xs'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-dashed border-slate-300 dark:border-slate-700 line-through opacity-70'
+                            }`}
+                          >
+                            {topic.isHot && <Flame className="w-3 h-3 text-amber-500 fill-amber-500 animate-pulse" />}
+                            <span>{topic.labelNe}</span>
+                            {topic.labelEn && topic.labelEn !== topic.labelNe && (
+                              <span className="text-[10px] text-slate-400 font-normal">({topic.labelEn})</span>
+                            )}
+                          </span>
+
+                          <span className="text-[11px] text-slate-400 font-mono hidden md:inline truncate max-w-[200px]">
+                            {topic.url || `→ Search /search?q=${topic.labelNe.replace(/^#/, '')}`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Hot Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTopicHot(topic.id)}
+                          className={`p-1.5 rounded-lg border text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                            topic.isHot
+                              ? 'bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700'
+                          }`}
+                          title="Toggle 🔥 Hot badge"
+                        >
+                          <Flame className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline text-[10px]">{topic.isHot ? 'HOT' : 'Normal'}</span>
+                        </button>
+
+                        {/* Active Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTopicActive(topic.id)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
+                            topic.isActive
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-500 border border-slate-300 dark:border-slate-700'
+                          }`}
+                        >
+                          {topic.isActive ? (language === 'ne' ? 'सक्रिय' : 'Active') : (language === 'ne' ? 'निष्क्रिय' : 'Off')}
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTopic(topic.id)}
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                          title="Delete topic"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Live Interactive Preview Box */}
+            <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>{language === 'ne' ? 'प्रत्यक्ष पूर्वावलोकन (Live Preview on Homepage):' : 'Live Front-End Preview:'}</span>
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {language === 'ne' ? '(माउस लैजाँदा रोकिन्छ)' : '(Pauses on cursor hover)'}
+                </span>
+              </div>
+
+              {/* Mini Ribbon Preview */}
+              <div className="marquee-container relative w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs py-2 px-3 overflow-hidden flex items-center shadow-2xs">
+                <div className="shrink-0 flex items-center gap-1.5 pr-2.5 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800">
+                  <Flame className="w-3 h-3 text-red-600 fill-red-600 animate-pulse" />
+                  <span className="font-black text-slate-900 dark:text-white text-[11px]">
+                    {settings.trendingTopics?.titleNe || 'चर्चामा'}:
+                  </span>
+                </div>
+
+                <div className="flex-1 overflow-hidden relative flex items-center pl-2">
+                  <div className="animate-marquee-infinite flex items-center gap-2 shrink-0 py-0.5 pr-2">
+                    {(settings.trendingTopics?.items || [])
+                      .filter((i) => i.isActive)
+                      .map((topic, i) => (
+                        <span
+                          key={`prev1-${topic.id}-${i}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs whitespace-nowrap"
+                        >
+                          {topic.isHot && <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />}
+                          <span>{topic.labelNe}</span>
+                        </span>
+                      ))}
+                  </div>
+                  <div className="animate-marquee-infinite flex items-center gap-2 shrink-0 py-0.5 pr-2" aria-hidden="true">
+                    {(settings.trendingTopics?.items || [])
+                      .filter((i) => i.isActive)
+                      .map((topic, i) => (
+                        <span
+                          key={`prev2-${topic.id}-${i}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs whitespace-nowrap"
+                        >
+                          {topic.isHot && <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />}
+                          <span>{topic.labelNe}</span>
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </form>

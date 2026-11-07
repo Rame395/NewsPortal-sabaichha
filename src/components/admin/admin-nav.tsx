@@ -49,20 +49,40 @@ export function AdminNav({
   const router = useRouter()
   const { language } = useLanguage()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+  const [user, setUser] = React.useState<CurrentUser | null>(currentUser)
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setUser(currentUser)
+    }
+  }, [currentUser])
+
+  // Safety net: if currentUser was null in layout (e.g. freshly signed in via client router), fetch session
+  React.useEffect(() => {
+    if (!user && pathname !== '/admin/login' && pathname !== '/admin/change-password') {
+      fetch('/api/auth/me')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.authenticated && data.user) {
+            setUser(data.user)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [user, pathname])
+
+  const activeUser = user || currentUser
 
   // Don't render the administrative sidebar on login or password change screens
-  if (!currentUser || pathname === '/admin/login' || pathname === '/admin/change-password') {
+  if (!activeUser || pathname === '/admin/login' || pathname === '/admin/change-password') {
     return <>{children}</>
   }
 
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
-      router.push('/admin/login')
-      router.refresh()
-    } catch {
-      router.push('/admin/login')
-    }
+    } catch {}
+    window.location.href = '/admin/login'
   }
 
   const navItems = [
@@ -78,7 +98,7 @@ export function AdminNav({
       nameNe: 'समाचारहरू',
       href: '/admin/articles',
       icon: FileText,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, [
+      allowed: hasPermission(activeUser.role, activeUser.permissions, [
         'articles:create',
         'articles:edit_own',
         'articles:edit_all',
@@ -89,7 +109,7 @@ export function AdminNav({
       nameNe: 'मिडिया ग्यालरी',
       href: '/admin/media',
       icon: ImageIcon,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, [
+      allowed: hasPermission(activeUser.role, activeUser.permissions, [
         'media:upload',
         'articles:create',
         'articles:edit_own',
@@ -101,55 +121,49 @@ export function AdminNav({
       nameNe: 'विधाहरू',
       href: '/admin/categories',
       icon: FolderTree,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, 'categories:manage'),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'categories:manage'),
     },
     {
       nameEn: 'Comments',
       nameNe: 'प्रतिक्रियाहरू',
       href: '/admin/comments',
       icon: MessageSquare,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, 'comments:moderate'),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'comments:moderate'),
     },
     {
       nameEn: 'Advertisements',
       nameNe: 'विज्ञापन व्यवस्थापन',
       href: '/admin/ads',
       icon: Megaphone,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, [
-        'articles:create',
-        'articles:edit_all',
-      ]),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'ads:manage'),
     },
     {
       nameEn: 'Newsletter',
       nameNe: 'इमेल बुलेटिन',
       href: '/admin/newsletter',
       icon: Mail,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, [
-        'articles:create',
-        'articles:edit_all',
-      ]),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'newsletter:manage'),
     },
     {
       nameEn: 'Staff & Roles',
       nameNe: 'कर्मचारी तथा भूमिका',
       href: '/admin/users',
       icon: Users,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, 'users:manage'),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'users:manage'),
     },
     {
       nameEn: 'Audit Logs',
       nameNe: 'सुरक्षा लगहरू',
       href: '/admin/audit',
       icon: ShieldAlert,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, 'audit:view'),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'audit:view'),
     },
     {
       nameEn: 'Site Settings',
       nameNe: 'साइट सेटिङ्स',
       href: '/admin/settings',
       icon: SettingsIcon,
-      allowed: hasPermission(currentUser.role, currentUser.permissions, 'settings:manage'),
+      allowed: hasPermission(activeUser.role, activeUser.permissions, 'settings:manage'),
     },
   ]
 
@@ -215,14 +229,14 @@ export function AdminNav({
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2">
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {currentUser.fullName}
+                {activeUser.fullName}
               </p>
               <span
                 className={`inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                  roleColors[currentUser.role] || roleColors.CUSTOM
+                  roleColors[activeUser.role] || roleColors.CUSTOM
                 }`}
               >
-                {currentUser.role}
+                {activeUser.role}
               </span>
             </div>
 

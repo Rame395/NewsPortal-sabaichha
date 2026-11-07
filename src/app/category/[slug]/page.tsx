@@ -4,43 +4,89 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
+import { CategoryHeroSection } from '@/components/home/category-hero-section'
 import { ArticleStatus } from '@/lib/prisma'
 import { Clock, Calendar, ArrowLeft, FolderTree } from 'lucide-react'
+import { toNepaliNumerals } from '@/lib/market/market-service'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'
 
 interface PageProps {
   params: Promise<{ slug: string }>
 }
 
+function safeDecodeSlug(raw: string): string {
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    select: { nameEn: true, nameNe: true, description: true },
+  const decodedSlug = safeDecodeSlug(slug)
+
+  const category = await prisma.category.findFirst({
+    where: {
+      OR: [{ slug: decodedSlug }, { slug }],
+    },
+    select: { slug: true, nameEn: true, nameNe: true, description: true },
   })
 
   if (!category) {
     return { title: 'Category Not Found | SabaiChha.com' }
   }
 
+  const title = `${category.nameNe} (${category.nameEn}) समाचार | SabaiChha.com`
+  const description =
+    category.description ||
+    `सबै छ डट कममा ${category.nameNe} सम्बन्धी ताजा समाचार, विशेष रिपोर्ट र विश्लेषणहरू।`
+  const canonicalUrl = `${SITE_URL}/category/${category.slug}`
+
   return {
-    title: `${category.nameNe} (${category.nameEn}) | SabaiChha.com`,
-    description: category.description || `Latest ${category.nameEn} news on SabaiChha.com`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'SabaiChha.com | सबै छ डट कम',
+      type: 'website',
+      images: [`${SITE_URL}/logo.jpg`],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${SITE_URL}/logo.jpg`],
+    },
   }
 }
 
 export default async function CategoryArchivePage({ params }: PageProps) {
   const { slug } = await params
+  const decodedSlug = safeDecodeSlug(slug)
 
   const [category, allCategories] = await Promise.all([
-    prisma.category.findUnique({
-      where: { slug },
+    prisma.category.findFirst({
+      where: {
+        OR: [{ slug: decodedSlug }, { slug }],
+      },
       include: {
         children: {
           select: { id: true, nameEn: true, nameNe: true, slug: true },
         },
         articles: {
           where: { status: ArticleStatus.PUBLISHED },
-          orderBy: { publishedAt: 'desc' },
+          orderBy: [
+            { isCategoryLead: 'desc' },
+            { publishedAt: 'desc' },
+          ],
           include: {
             author: { select: { fullName: true } },
           },
@@ -58,8 +104,31 @@ export default async function CategoryArchivePage({ params }: PageProps) {
     notFound()
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'गृहपृष्ठ',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: category.nameNe,
+        item: `${SITE_URL}/category/${category.slug}`,
+      },
+    ],
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <Header categories={allCategories} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-8">
@@ -101,7 +170,7 @@ export default async function CategoryArchivePage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Article Grid */}
+        {/* Article Grid / Hero Lead Layout */}
         {category.articles.length === 0 ? (
           <div className="p-16 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-slate-400 space-y-3">
             <p className="text-base font-bold text-slate-700 dark:text-slate-300">
@@ -113,59 +182,82 @@ export default async function CategoryArchivePage({ params }: PageProps) {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {category.articles.map((art) => (
-              <div
-                key={art.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col group"
-              >
-                {art.featuredImage ? (
-                  <Link href={`/news/${art.slug}`} className="relative aspect-16/10 w-full overflow-hidden">
-                    <Image
-                      src={art.featuredImage}
-                      alt={art.title}
-                      fill
-                      className="object-cover group-hover:scale-103 transition duration-300"
-                    />
-                  </Link>
-                ) : (
-                  <div className="aspect-16/10 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                    <span className="text-xs font-mono">No Cover Photo</span>
-                  </div>
-                )}
+          <div className="space-y-10">
+            {/* 1. Hero Lead (1 Large + 4 Secondary Stories) */}
+            <CategoryHeroSection
+              category={{
+                nameEn: category.nameEn,
+                nameNe: category.nameNe,
+                slug: category.slug,
+                layoutStyle: category.layoutStyle,
+              }}
+              articles={category.articles.slice(0, 5)}
+            />
 
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <Link
-                      href={`/news/${art.slug}`}
-                      className="text-base font-bold text-slate-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
+            {/* 2. Remaining Category Archive Articles */}
+            {category.articles.length > 5 && (
+              <div className="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white tracking-tight">
+                    {category.nameNe} : थप समाचारहरू
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {category.articles.slice(5).map((art) => (
+                    <div
+                      key={art.id}
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col group"
                     >
-                      {art.title}
-                    </Link>
-                    {art.subtitle && (
-                      <p className="text-xs text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">
-                        {art.subtitle}
-                      </p>
-                    )}
-                  </div>
+                      {art.featuredImage ? (
+                        <Link href={`/news/${art.slug}`} className="relative aspect-16/10 w-full overflow-hidden">
+                          <Image
+                            src={art.featuredImage}
+                            alt={art.title}
+                            fill
+                            className="object-cover group-hover:scale-103 transition duration-300"
+                          />
+                        </Link>
+                      ) : (
+                        <div className="aspect-16/10 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                          <span className="text-xs font-mono">No Cover Photo</span>
+                        </div>
+                      )}
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <span>{art.author.fullName}</span>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-red-500" />
-                      <span>{art.readTimeMinutes} min</span>
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                        <div>
+                          <Link
+                            href={`/news/${art.slug}`}
+                            className="text-base font-bold text-slate-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
+                          >
+                            {art.title}
+                          </Link>
+                          {art.subtitle && (
+                            <p className="text-xs text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">
+                              {art.subtitle}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800">
+                          <span>{art.author.fullName}</span>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-red-500" />
+                            <span>{toNepaliNumerals(art.readTimeMinutes)} मिनेट</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         )}
       </main>
 
-      <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 text-center text-xs text-slate-500">
-        <p>© 2026 SabaiChha.com. All rights reserved.</p>
-      </footer>
+      <Footer categories={allCategories} />
     </div>
   )
 }

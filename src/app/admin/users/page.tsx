@@ -20,6 +20,7 @@ import {
   Users as UsersIcon,
   Search,
   Lock,
+  Mail,
 } from 'lucide-react'
 
 interface StaffMember {
@@ -59,6 +60,7 @@ export default function UsersManagementPage() {
     ROLE_DEFAULT_PERMISSIONS['JOURNALIST']
   )
   const [mustChangePassword, setMustChangePassword] = React.useState(true)
+  const [sendCredentialsEmail, setSendCredentialsEmail] = React.useState(true)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   // Fetch users on mount
@@ -108,6 +110,7 @@ export default function UsersManagementPage() {
     setSelectedRole('JOURNALIST')
     setSelectedPermissions(ROLE_DEFAULT_PERMISSIONS['JOURNALIST'])
     setMustChangePassword(true)
+    setSendCredentialsEmail(true)
     setError(null)
     setIsModalOpen(true)
   }
@@ -121,6 +124,7 @@ export default function UsersManagementPage() {
     setSelectedRole(u.role)
     setSelectedPermissions(u.permissions || [])
     setMustChangePassword(u.mustChangePassword)
+    setSendCredentialsEmail(true)
     setError(null)
     setIsModalOpen(true)
   }
@@ -138,6 +142,7 @@ export default function UsersManagementPage() {
         const payload: Record<string, unknown> = {
           role: selectedRole,
           permissions: selectedPermissions,
+          sendNotificationEmail: sendCredentialsEmail,
         }
         if (password) {
           payload.newPassword = password
@@ -152,7 +157,11 @@ export default function UsersManagementPage() {
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to update user.')
 
-        setSuccessMsg(language === 'ne' ? 'कर्मचारी विवरण सफलतापूर्वक अद्यावधिक भयो।' : 'Staff permissions successfully updated.')
+        setSuccessMsg(
+          language === 'ne'
+            ? 'कर्मचारी विवरण सफलतापूर्वक अद्यावधिक भयो।'
+            : 'Staff permissions successfully updated.'
+        )
       } else {
         // Create new user
         const res = await fetch('/api/admin/users', {
@@ -165,13 +174,22 @@ export default function UsersManagementPage() {
             role: selectedRole,
             permissions: selectedPermissions,
             mustChangePassword,
+            sendWelcomeEmail: sendCredentialsEmail,
           }),
         })
 
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to create user.')
 
-        setSuccessMsg(language === 'ne' ? 'नयाँ कर्मचारी खाता सफलतापूर्वक सिर्जना भयो।' : 'New staff member successfully created.')
+        const emailNote = data.emailStatus?.sent
+          ? (language === 'ne' ? ' (लगइन विवरण इमेल पठाइयो)' : ' (Credentials emailed)')
+          : ''
+
+        setSuccessMsg(
+          language === 'ne'
+            ? `नयाँ कर्मचारी खाता सफलतापूर्वक सिर्जना भयो${emailNote}।`
+            : `New staff member successfully created${emailNote}.`
+        )
       }
 
       setIsModalOpen(false)
@@ -528,6 +546,33 @@ export default function UsersManagementPage() {
                     )
                   })}
                 </div>
+              </div>
+
+              {/* Automated Credentials Email Option */}
+              <div className="p-3.5 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border border-red-200 dark:border-red-900/60 space-y-1">
+                <label className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sendCredentialsEmail}
+                    onChange={(e) => setSendCredentialsEmail(e.target.checked)}
+                    className="rounded text-red-600 focus:ring-red-500 w-4 h-4"
+                  />
+                  <Mail className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>
+                    {editingUser
+                      ? (language === 'ne'
+                          ? 'इमेल मार्फत नयाँ भूमिका/पासवर्डको जानकारी पठाउनुहोस्'
+                          : 'Send update notification email to user')
+                      : (language === 'ne'
+                          ? 'प्रयोगकर्ताको इमेलमा लगइन विवरण (इमेल र पासवर्ड) तुरुन्तै पठाउनुहोस्'
+                          : 'Send login credentials (Email & Password) directly to user inbox')}
+                  </span>
+                </label>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-6">
+                  {language === 'ne'
+                    ? 'कर्मचारीले आधिकारिक सम्पादकीय पोर्टल लिङ्क, तोकिएको भूमिका र लगइन पासवर्ड प्राप्त गर्नेछन्।'
+                    : 'Dispatches an official SabaiChha onboarding email with portal URL, role badge, and temporary credentials.'}
+                </p>
               </div>
 
               {!editingUser && (

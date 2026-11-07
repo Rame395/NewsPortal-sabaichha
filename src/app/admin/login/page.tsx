@@ -37,9 +37,9 @@ export default function AdminLoginPage() {
       }
 
       if (data.mustChangePassword) {
-        router.push('/admin/change-password')
+        window.location.href = '/admin/change-password'
       } else {
-        router.push('/admin')
+        window.location.href = '/admin'
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

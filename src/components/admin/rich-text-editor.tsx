@@ -795,7 +795,7 @@ export function RichTextEditor({
               onInput={handleInput}
               onBlur={handleInput}
               data-placeholder={placeholder}
-              className="flex-1 outline-none font-serif text-slate-900 dark:text-slate-100 text-base leading-relaxed space-y-4 empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 empty:before:pointer-events-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-red-600 prose-blockquote:border-l-4 prose-blockquote:border-red-600 prose-blockquote:bg-red-50/50 dark:prose-blockquote:bg-red-950/20 prose-blockquote:p-4 prose-blockquote:italic"
+              className="flex-1 outline-none font-serif text-slate-900 dark:text-slate-100 text-base leading-relaxed space-y-4 [&_p]:my-3.5 [&_p]:leading-[1.8] [&_div]:my-3 [&_div]:leading-[1.8] [&_div:empty]:h-4 [&_p:empty]:h-4 empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400 empty:before:pointer-events-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-red-600 prose-blockquote:border-l-4 prose-blockquote:border-red-600 prose-blockquote:bg-red-50/50 dark:prose-blockquote:bg-red-950/20 prose-blockquote:p-4 prose-blockquote:italic"
             />
           </div>
         ) : (

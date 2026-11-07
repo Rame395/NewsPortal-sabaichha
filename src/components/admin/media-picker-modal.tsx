@@ -105,7 +105,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm"
               className="hidden"
               onChange={(e) => handleUpload(e.target.files)}
             />
@@ -162,12 +162,27 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
                     }`}
                   >
-                    <Image
-                      src={item.fileUrl}
-                      alt={item.altText || item.fileName}
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
-                    />
+                    {item.fileUrl.endsWith('.mp4') || item.fileUrl.endsWith('.webm') ? (
+                      <div className="relative w-full h-full">
+                        <video
+                          src={item.fileUrl}
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/75 text-white">
+                          VIDEO
+                        </span>
+                      </div>
+                    ) : (
+                      <Image
+                        src={item.fileUrl}
+                        alt={item.altText || item.fileName}
+                        fill
+                        unoptimized={item.fileUrl.endsWith('.gif')}
+                        className="object-cover group-hover:scale-105 transition duration-300"
+                      />
+                    )}
 
                     {isSelected && (
                       <div className="absolute inset-0 bg-red-600/30 flex items-center justify-center backdrop-blur-2xs">

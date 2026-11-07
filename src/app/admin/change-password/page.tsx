@@ -45,7 +45,7 @@ export default function ChangePasswordPage() {
         throw new Error(data.error || 'Failed to update password.')
       }
 
-      router.push('/admin')
+      window.location.href = '/admin'
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message)

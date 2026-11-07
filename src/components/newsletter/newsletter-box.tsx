@@ -4,7 +4,11 @@ import * as React from 'react'
 import { Mail, CheckCircle2, AlertCircle, Send, Sparkles } from 'lucide-react'
 import { useLanguage } from '@/context/language-context'
 
-export function NewsletterBox({ variant = 'default' }: { variant?: 'default' | 'card' }) {
+export function NewsletterBox({
+  variant = 'default',
+}: {
+  variant?: 'default' | 'card' | 'sidebar'
+}) {
   const { language } = useLanguage()
   const [email, setEmail] = React.useState('')
   const [loading, setLoading] = React.useState(false)
@@ -44,6 +48,81 @@ export function NewsletterBox({ variant = 'default' }: { variant?: 'default' | '
     }
   }
 
+  // Sidebar / Compact vertical card variant
+  if (variant === 'sidebar' || variant === 'card') {
+    return (
+      <div className="w-full bg-linear-to-br from-red-600 via-rose-600 to-red-700 text-white rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
+        {/* Subtle decorative glow */}
+        <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
+
+        <div className="relative z-10 space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-bold backdrop-blur-xs uppercase tracking-wider">
+            <Sparkles className="w-3 h-3 text-amber-300" />
+            <span>{language === 'ne' ? 'निःशुल्क डिजिटल बुलेटिन' : 'Free Newsletter'}</span>
+          </div>
+
+          <div>
+            <h3 className="text-base font-black tracking-tight leading-snug">
+              {language === 'ne' ? 'दैनिक बिहानी बुलेटिन' : 'Daily Morning Briefing'}
+            </h3>
+            <p className="text-xs text-red-100 mt-1 leading-relaxed">
+              {language === 'ne'
+                ? 'देश-विदेशका प्रमुख १० ताजा समाचार तथा विश्लेषण हरेक बिहान तपाईंको इनबक्समा!'
+                : 'Top 10 daily developments delivered directly to your inbox every morning.'}
+            </p>
+          </div>
+
+          {/* Vertical Stack Form */}
+          <form onSubmit={handleSubmit} className="space-y-2 w-full pt-1">
+            <div className="relative w-full">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={language === 'ne' ? 'तपाईंको इमेल ठेगाना...' : 'Enter your email...'}
+                className="w-full px-3.5 py-2.5 pl-9 rounded-xl bg-white text-slate-900 placeholder-slate-400 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-white shadow-2xs"
+              />
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>
+                {loading
+                  ? language === 'ne'
+                    ? 'दर्ता गर्दै...'
+                    : 'Subscribing...'
+                  : language === 'ne'
+                  ? 'दर्ता गर्नुहोस्'
+                  : 'Subscribe'}
+              </span>
+            </button>
+          </form>
+
+          {success && (
+            <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-xs flex items-center gap-1.5 text-xs font-bold text-white text-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0" />
+              <span>{success}</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-2.5 rounded-xl bg-black/40 backdrop-blur-xs flex items-center gap-1.5 text-xs font-bold text-red-200 text-center justify-center">
+              <AlertCircle className="w-4 h-4 text-white shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Default wide variant (used in homepage)
   return (
     <div className="w-full bg-linear-to-r from-red-600 to-rose-700 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
       {/* Decorative background glow */}

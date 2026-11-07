@@ -8,14 +8,14 @@ export default async function Home() {
 
   return (
     <PublicHomepage
+      trendingTopics={data.trendingTopics}
       categories={data.categories}
+      categorySections={data.categorySections}
       breakingArticles={data.breakingArticles}
+      featuredArticles={data.featuredArticles}
       featuredLead={data.featuredLead}
       topHighlights={data.topHighlights}
       trendingArticles={data.trendingArticles}
-      politicsArticles={data.politicsArticles}
-      economyArticles={data.economyArticles}
-      sportsArticles={data.sportsArticles}
     />
   )
 }

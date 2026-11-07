@@ -20,6 +20,8 @@ import {
   Save,
   Image as ImageIcon,
   Code2,
+  Upload,
+  Film,
 } from 'lucide-react'
 import { MediaPickerModal } from './media-picker-modal'
 
@@ -55,6 +57,18 @@ const PLACEMENTS = [
   { key: 'ARTICLE_INLINE', label: 'Article Inline', size: '728 × 90' },
   { key: 'STICKY_FOOTER', label: 'Sticky Footer Bar', size: 'Responsive' },
 ]
+
+const isVideoMedia = (url?: string | null) => {
+  if (!url) return false
+  const clean = url.toLowerCase().split('?')[0]
+  return clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.includes('/video/')
+}
+
+const isGifMedia = (url?: string | null) => {
+  if (!url) return false
+  const clean = url.toLowerCase().split('?')[0]
+  return clean.endsWith('.gif')
+}
 
 export function AdManager() {
   const [ads, setAds] = React.useState<AdItem[]>([])
@@ -322,6 +336,22 @@ export function AdManager() {
         </div>
       </div>
 
+      {/* Ad Slots Dimension Quick Guide */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs space-y-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <Megaphone className="w-4 h-4 text-red-600" />
+          <span>ब्यानर स्लट साइज गाइड (Recommended Banner Pixel Sizes)</span>
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+          {PLACEMENTS.map((p) => (
+            <div key={p.key} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
+              <span className="font-bold text-slate-800 dark:text-slate-200 block truncate text-[11px]">{p.label}</span>
+              <span className="font-mono text-xs font-bold text-red-600 dark:text-red-400 block">{p.size} px</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Ads Table / List */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden">
         {loading ? (
@@ -355,8 +385,25 @@ export function AdManager() {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           {ad.imageUrl ? (
-                            <div className="relative w-16 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-100">
-                              <Image src={ad.imageUrl} alt={ad.title} fill className="object-cover" />
+                            <div className="relative w-16 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                              {isVideoMedia(ad.imageUrl) ? (
+                                <video
+                                  src={ad.imageUrl}
+                                  autoPlay
+                                  loop
+                                  muted
+                                  playsInline
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <Image
+                                  src={ad.imageUrl}
+                                  alt={ad.title}
+                                  fill
+                                  unoptimized={isGifMedia(ad.imageUrl)}
+                                  className="object-contain"
+                                />
+                              )}
                             </div>
                           ) : (
                             <div className="w-16 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 text-slate-400">
@@ -525,6 +572,9 @@ export function AdManager() {
                       </option>
                     ))}
                   </select>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    सिफारिस गरिएको साइज: <strong className="text-red-600 font-mono">{PLACEMENTS.find(p => p.key === placement)?.size}</strong> पिक्सेल
+                  </p>
                 </div>
 
                 <div>
@@ -536,7 +586,7 @@ export function AdManager() {
                     onChange={(e) => setType(e.target.value as any)}
                     className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                   >
-                    <option value="IMAGE_BANNER">ब्यानर तस्बिर + लिङ्क (Image Banner)</option>
+                    <option value="IMAGE_BANNER">ब्यानर तस्बिर वा भिडियो + लिङ्क (Image, GIF or Video Banner)</option>
                     <option value="GOOGLE_ADSENSE">Google AdSense / Custom Script</option>
                     <option value="CUSTOM_HTML">Custom HTML Widget</option>
                   </select>
@@ -546,31 +596,92 @@ export function AdManager() {
               {/* Image banner fields */}
               {type === 'IMAGE_BANNER' && (
                 <>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      ब्यानर तस्बिर URL (Banner Image)
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      ब्यानर मिडिया URL (Banner Media: Image, GIF, or Video) *
                     </label>
+
+                    {/* Format & Size Acceptance Guide Badge */}
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <Upload className="w-3.5 h-3.5 text-red-600" />
+                        <span>स्वीकार्य मिडिया ढाँचा तथा साइज सीमा (Allowed Formats & Size Limits):</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px]">
+                        <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+                          <p className="font-bold text-slate-800 dark:text-slate-200">🖼️ Image (तस्बिर)</p>
+                          <p className="text-slate-500 font-mono text-[10px]">JPG, PNG, WebP</p>
+                          <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">Max 2MB (Auto-compressed)</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+                          <p className="font-bold text-slate-800 dark:text-slate-200">🎞️ Animated GIF</p>
+                          <p className="text-slate-500 font-mono text-[10px]">GIF Animation</p>
+                          <span className="text-[10px] text-purple-600 font-bold block mt-0.5">Max 3MB limit</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+                          <p className="font-bold text-slate-800 dark:text-slate-200">🎬 Short Video (भिडियो)</p>
+                          <p className="text-slate-500 font-mono text-[10px]">MP4, WebM (Muted loop)</p>
+                          <span className="text-[10px] text-blue-600 font-bold block mt-0.5">Max 5MB limit</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex gap-2">
                       <input
-                        type="url"
+                        type="text"
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="https://... or choose from Media Library"
-                        className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                        placeholder="https://... or /uploads/... or select from Media"
+                        className="w-full px-3.5 py-2 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
                       <button
                         type="button"
                         onClick={() => setIsMediaPickerOpen(true)}
-                        className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shrink-0 flex items-center gap-1.5"
+                        className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer"
                       >
-                        <ImageIcon className="w-3.5 h-3.5" />
-                        <span>मिडिया</span>
+                        <ImageIcon className="w-3.5 h-3.5 text-red-600" />
+                        <span>मिडिया छान्नुहोस्</span>
                       </button>
                     </div>
 
                     {imageUrl && (
-                      <div className="mt-2 relative w-full h-24 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100">
-                        <Image src={imageUrl} alt="Preview" fill className="object-cover" />
+                      <div className="mt-2.5 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold">
+                          <span className="flex items-center gap-1.5">
+                            <span>लाइभ पूर्वावलोकन (Live Preview)</span>
+                            {isVideoMedia(imageUrl) && (
+                              <span className="px-1.5 py-0.2 rounded bg-blue-600 text-white text-[9px] uppercase font-mono font-bold">
+                                Looping Video
+                              </span>
+                            )}
+                            {isGifMedia(imageUrl) && (
+                              <span className="px-1.5 py-0.2 rounded bg-purple-600 text-white text-[9px] uppercase font-mono font-bold">
+                                Animated GIF
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-emerald-600 font-medium">अक्षर नछोडिने गरी पूर्ण दृश्य (No Cropping)</span>
+                        </div>
+                        <div className="relative w-full h-28 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center">
+                          {isVideoMedia(imageUrl) ? (
+                            <video
+                              src={imageUrl}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-full object-contain p-0.5"
+                            />
+                          ) : (
+                            <Image
+                              src={imageUrl}
+                              alt="Preview"
+                              fill
+                              unoptimized={isGifMedia(imageUrl)}
+                              className="object-contain p-0.5"
+                            />
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -580,10 +691,10 @@ export function AdManager() {
                       गन्तव्य वेबसाइट लिङ्क (Target URL / Click Destination)
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       value={targetUrl}
                       onChange={(e) => setTargetUrl(e.target.value)}
-                      placeholder="https://client-website.com/promotion"
+                      placeholder="https://client-website.com/promotion or /page"
                       className="w-full px-3.5 py-2 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                     />
                   </div>

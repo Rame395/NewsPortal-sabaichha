@@ -25,6 +25,7 @@ interface CategoryItem {
   description: string | null
   orderIndex: number
   showInMenu: boolean
+  layoutStyle?: string
   parentId: number | null
   parent?: { id: number; nameEn: string; nameNe: string } | null
   children?: { id: number; nameEn: string; nameNe: string; slug: string; orderIndex: number }[]
@@ -59,6 +60,7 @@ export default function CategoriesManagementPage() {
   const [catParentId, setCatParentId] = React.useState<string>('')
   const [catOrderIndex, setCatOrderIndex] = React.useState(1)
   const [catShowInMenu, setCatShowInMenu] = React.useState(true)
+  const [catLayoutStyle, setCatLayoutStyle] = React.useState('HERO_LIST')
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   // Tag Modal State
@@ -109,6 +111,7 @@ export default function CategoriesManagementPage() {
     setCatParentId('')
     setCatOrderIndex(categories.length + 1)
     setCatShowInMenu(true)
+    setCatLayoutStyle('HERO_LIST')
     setError(null)
     setIsCatModalOpen(true)
   }
@@ -122,6 +125,7 @@ export default function CategoriesManagementPage() {
     setCatParentId(cat.parentId ? String(cat.parentId) : '')
     setCatOrderIndex(cat.orderIndex)
     setCatShowInMenu(cat.showInMenu)
+    setCatLayoutStyle(cat.layoutStyle || 'HERO_LIST')
     setError(null)
     setIsCatModalOpen(true)
   }
@@ -141,6 +145,7 @@ export default function CategoriesManagementPage() {
         parentId: catParentId ? Number(catParentId) : null,
         orderIndex: Number(catOrderIndex),
         showInMenu: catShowInMenu,
+        layoutStyle: catLayoutStyle,
       }
 
       const url = editingCategory ? `/api/admin/categories/${editingCategory.id}` : '/api/admin/categories'
@@ -567,6 +572,48 @@ export default function CategoriesManagementPage() {
                   placeholder="Short description of this section..."
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">
+                  {language === 'ne' ? 'लेआउट शैली (Layout Style)' : 'Layout Style'}
+                </label>
+                <select
+                  value={catLayoutStyle}
+                  onChange={(e) => setCatLayoutStyle(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="HERO_LIST">
+                    {language === 'ne'
+                      ? '१ मुख्य समाचार + ४ समाचारको सूची (Hero Lead + Secondary List)'
+                      : 'Hero Lead + Secondary List (1 Big Left + 4 List Right)'}
+                  </option>
+                  <option value="MAGAZINE_SPLIT">
+                    {language === 'ne'
+                      ? 'म्यागजिन स्प्लिट (Magazine Twin Feature: २ मुख्य ५०/५० + ३ कार्ड स्ट्रिप)'
+                      : 'Magazine Split (2 Twin Hero Feature 50/50 + 3 Card Bottom Strip)'}
+                  </option>
+                  <option value="VIDEO_GALLERY">
+                    {language === 'ne'
+                      ? 'भिडियो तथा मल्टिमिडिया थियेटर (Dark Theater + Play Overlay)'
+                      : 'Video Gallery / Multimedia (Dark Theater + Play Badges)'}
+                  </option>
+                  <option value="PHOTO_CAROUSEL">
+                    {language === 'ne'
+                      ? 'फोटो क्यारोसेल / ग्यालरी (Horizontal Swipeable Photo Cards)'
+                      : 'Photo Carousel (Horizontal Scroll Cards with Controls)'}
+                  </option>
+                  <option value="OPINION">
+                    {language === 'ne'
+                      ? 'विचार / स्तम्भ शैली (Author Columnist Cards with Portrait & Quotes)'
+                      : 'Opinion & Editorial (Author Portrait & Quote Cards)'}
+                  </option>
+                  <option value="GRID_3">
+                    {language === 'ne'
+                      ? '३-कॉलम समान कार्ड ग्रिड (3-Column Action Photo Grid)'
+                      : '3-Column Action Photo Grid (Sports / Lifestyle style)'}
+                  </option>
+                </select>
               </div>
 
               <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer pt-1">

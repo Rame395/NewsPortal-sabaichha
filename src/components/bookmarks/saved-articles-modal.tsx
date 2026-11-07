@@ -54,7 +54,7 @@ export function SavedArticlesModal() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="relative inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer shadow-2xs"
+        className="shrink-0 relative inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer shadow-2xs"
         title="Saved Articles / पछि पढ्नका लागि सुरक्षित"
       >
         <Bookmark className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />

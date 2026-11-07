@@ -2,6 +2,12 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+html,
+body {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
 html.dark,
 html.dark body {
   background-color: #020617;
@@ -72,4 +78,91 @@ body {
 font {
   background-color: transparent !important;
   box-shadow: none !important;
+}
+
+/* ========================================================= */
+/* Live API Financial & Weather Icon Animations             */
+/* ========================================================= */
+@keyframes coinShimmer {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.6));
+  }
+  50% {
+    transform: scale(1.15) rotate(10deg);
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.95));
+  }
+}
+
+@keyframes trendDipDown {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.6));
+  }
+  50% {
+    transform: translateY(2.5px);
+    filter: drop-shadow(0 0 7px rgba(239, 68, 68, 0.95));
+  }
+}
+
+@keyframes trendRiseUp {
+  0%, 100% {
+    transform: translateY(0);
+    filter: drop-shadow(0 0 3px rgba(16, 185, 129, 0.6));
+  }
+  50% {
+    transform: translateY(-2.5px);
+    filter: drop-shadow(0 0 7px rgba(16, 185, 129, 0.95));
+  }
+}
+
+@keyframes dollarPulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.5));
+  }
+  50% {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 7px rgba(16, 185, 129, 0.95));
+  }
+}
+
+.animate-coin-shimmer {
+  animation: coinShimmer 2.2s ease-in-out infinite;
+}
+
+.animate-trend-down {
+  animation: trendDipDown 1.8s ease-in-out infinite;
+}
+
+.animate-trend-up {
+  animation: trendRiseUp 1.8s ease-in-out infinite;
+}
+
+.animate-dollar-pulse {
+  animation: dollarPulseGlow 2s ease-in-out infinite;
+}
+
+/* ========================================================= */
+/* Infinite Horizontal Marquee Ribbon Animations             */
+/* ========================================================= */
+@keyframes infiniteMarquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  flex-shrink: 0;
+  animation: infiniteMarquee 32s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite:hover,
+.marquee-container:hover .animate-marquee-infinite {
+  animation-play-state: paused;
 }
