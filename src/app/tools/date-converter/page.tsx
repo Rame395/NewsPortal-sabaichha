@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { DateConverterClient } from '@/components/tools/date-converter-client'
-import { prisma } from '@/lib/prisma'
-import { ArticleStatus } from '@prisma/client'
+import { prisma, ArticleStatus } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
