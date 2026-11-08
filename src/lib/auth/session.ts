@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 import { SignJWT, jwtVerify } from 'jose'
 import prisma from '@/lib/prisma'
 import crypto from 'crypto'
@@ -67,7 +68,7 @@ export async function createSession(
   return dbSession
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser() {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
@@ -111,7 +112,7 @@ export async function getCurrentUser() {
   } catch {
     return null
   }
-}
+})
 
 export async function destroySession() {
   try {
