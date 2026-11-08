@@ -123,13 +123,13 @@ export function Footer({ categories = [] }: FooterProps) {
         {/* Top Branding & Social Ribbon */}
         <div className="flex flex-col md:flex-row items-center justify-between pb-10 border-b border-slate-800 gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <Link href="/" className="relative h-14 w-60 bg-white rounded-xl p-1.5 flex items-center shrink-0">
+            <Link href="/" className="relative h-16 w-64 bg-white rounded-xl p-2 flex items-center justify-center shrink-0 shadow-2xs">
               <Image
                 src="/logo.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
-                width={240}
-                height={56}
-                className="object-contain max-h-12 w-auto"
+                width={260}
+                height={64}
+                className="object-contain max-h-13 w-auto"
               />
             </Link>
             <div className="sm:border-l sm:border-slate-700 sm:pl-4">

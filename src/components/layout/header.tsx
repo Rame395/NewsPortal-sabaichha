@@ -67,21 +67,21 @@ export function Header({
         {/* Left: Logo & Official Tagline + Reg. No. */}
         <div className="flex items-center justify-between w-full lg:w-auto gap-4 shrink-0">
           <Link href="/" className="flex items-center gap-3 sm:gap-4 group shrink-0">
-            <div className="relative h-14 w-52 sm:h-16 sm:w-64 bg-white rounded-lg p-1.5 shadow-2xs border border-blue-100/70 shrink-0 flex items-center">
+            <div className="relative h-14 w-52 sm:h-18 sm:w-72 bg-white rounded-lg p-1.5 shadow-2xs border border-blue-100/70 shrink-0 flex items-center justify-center">
               <Image
                 src="/logo.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
-                width={288}
-                height={64}
-                className="object-contain max-h-14 sm:max-h-16 w-auto"
+                width={300}
+                height={75}
+                className="object-contain max-h-13 sm:max-h-16 w-auto"
                 priority
               />
             </div>
             <div className="hidden xl:block border-l-2 border-[#C10A1E] pl-3.5 space-y-0.5">
               <p className="text-xs font-bold text-[#02267C] dark:text-blue-300 tracking-tight">
                 {language === 'ne'
-                  ? 'सूचना, संवाद र मनोरञ्जनको संगम, सबै छ डट कम'
-                  : 'Confluence of Information, Dialogue & Entertainment'}
+                  ? 'नेपालको आधिकारिक डिजिटल अनलाइन पत्रिका'
+                  : 'Nepal’s Official Digital News Portal'}
               </p>
               <div className="flex items-center gap-2 text-[10.5px]">
                 <span className="font-semibold text-[#C10A1E] dark:text-red-400 font-mono">

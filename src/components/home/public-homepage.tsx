@@ -21,7 +21,6 @@ import {
   Flame,
   Star,
   ChevronRight,
-  ChevronLeft,
   TrendingUp,
   Eye,
   ListPlus,
@@ -60,6 +59,10 @@ interface CategorySectionData {
   articles: ArticleSnippet[]
 }
 
+// Feature toggles: Keep features preserved in codebase for future projects while controlling visibility
+const SHOW_TRENDING_RIBBON = false // Trending Hashtags Ribbon (चर्चामा: #...)
+const SHOW_BREAKING_TICKER = false // Top Red Live Breaking News Ticker (ताजा खबर)
+
 export function PublicHomepage({
   trendingTopics,
   categories,
@@ -86,27 +89,14 @@ export function PublicHomepage({
   trendingArticles: ArticleSnippet[]
 }) {
   const { language, t } = useLanguage()
-  const [featuredIndex, setFeaturedIndex] = React.useState(0)
-  const [isFeaturedPaused, setIsFeaturedPaused] = React.useState(false)
 
-  // Consolidate featured stories list (multi-featured support)
+  // Consolidate featured stories list (multi-featured support - all displayed stacked)
   const allFeatured = React.useMemo(() => {
     if (featuredArticles && featuredArticles.length > 0) {
       return featuredArticles
     }
     return featuredLead ? [featuredLead] : []
   }, [featuredArticles, featuredLead])
-
-  // Auto-rotate every 6.5 seconds if multiple featured stories exist and reader is not hovering
-  React.useEffect(() => {
-    if (allFeatured.length <= 1 || isFeaturedPaused) return
-    const timer = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % allFeatured.length)
-    }, 6500)
-    return () => clearInterval(timer)
-  }, [allFeatured.length, isFeaturedPaused])
-
-  const currentFeatured = allFeatured[featuredIndex] || featuredLead
 
   // Format time ago helper
   const formatTimeAgo = (dateStr: string | null | Date) => {
@@ -140,11 +130,11 @@ export function PublicHomepage({
       {/* 1. Header with Red & White Theme */}
       <Header categories={categories} />
 
-      {/* 2. Infinite Horizontal Trending Topics Ribbon */}
-      <TrendingRibbon trendingTopics={trendingTopics} />
+      {/* 2. Infinite Horizontal Trending Topics Ribbon (Preserved in codebase, hidden for minimal UI) */}
+      {SHOW_TRENDING_RIBBON && <TrendingRibbon trendingTopics={trendingTopics} />}
 
-      {/* 3. Live Breaking Ticker */}
-      <BreakingTicker breakingArticles={breakingArticles} />
+      {/* 3. Live Breaking Ticker (Preserved in codebase, hidden for minimal UI) */}
+      {SHOW_BREAKING_TICKER && <BreakingTicker breakingArticles={breakingArticles} />}
 
       {/* Main Content Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-10 sm:space-y-12">
@@ -152,176 +142,142 @@ export function PublicHomepage({
         {/* HERO SECTION: Lead Story (प्रमुख समाचार) + Latest Highlights */}
         {/* ========================================================= */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Main Lead Story (Left 8 Cols) */}
-          <div className="lg:col-span-8 space-y-3">
-            {/* Clear Section Title with Multi-Featured Rotating Controls */}
-            <div className="flex items-center justify-between pb-2 border-b-2 border-red-600 gap-2 flex-nowrap">
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0">
+          {/* Main Lead Stories (Left 8 Cols) - Stacked vertically below one another */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* Clear Section Title */}
+            <div className="flex items-center justify-between pb-2 border-b-2 border-red-600 gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <span className="p-1 rounded-md bg-amber-500 text-white shadow-2xs shrink-0">
                   <Star className="w-3.5 h-3.5 fill-white" />
                 </span>
                 <h2
-                  className="text-sm sm:text-base md:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider shrink-0"
+                  className="text-sm sm:text-base md:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider"
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {language === 'ne' ? 'प्रमुख समाचार' : 'Featured Story'}
+                  {language === 'ne' ? 'प्रमुख समाचार' : 'Featured Stories'}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
-                {allFeatured.length > 1 && (
-                  <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-100 dark:bg-slate-800/90 px-2 sm:px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 shrink-0 select-none">
-                    <span
-                      className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 font-mono tracking-tight tabular-nums shrink-0"
-                      style={{ whiteSpace: 'nowrap' }}
-                    >
-                      {language === 'ne'
-                        ? `${toNepaliNumerals(featuredIndex + 1)}\u00A0/\u00A0${toNepaliNumerals(allFeatured.length)}`
-                        : `${featuredIndex + 1}\u00A0/\u00A0${allFeatured.length}`}
-                    </span>
-                    <div className="flex items-center gap-0.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setFeaturedIndex((prev) => (prev - 1 + allFeatured.length) % allFeatured.length)}
-                        className="w-5 h-5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer shrink-0"
-                        aria-label="Previous featured story"
-                      >
-                        <ChevronLeft className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFeaturedIndex((prev) => (prev + 1) % allFeatured.length)}
-                        className="w-5 h-5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer shrink-0"
-                        aria-label="Next featured story"
-                      >
-                        <ChevronRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {allFeatured.length > 1 && (
+                <span className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 font-mono">
+                  {language === 'ne'
+                    ? `${toNepaliNumerals(allFeatured.length)} प्रमुख समाचार`
+                    : `${allFeatured.length} Stories`}
+                </span>
+              )}
             </div>
 
-            {currentFeatured ? (
-              <div
-                onMouseEnter={() => setIsFeaturedPaused(true)}
-                onMouseLeave={() => setIsFeaturedPaused(false)}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition duration-300"
-              >
-                {/* 1. TOP ZONE: Badges, Big Eye-Catching Headline & Subtitle ABOVE Image */}
-                <div key={`header-${currentFeatured.id}`} className="p-4 sm:p-6 md:p-8 pb-3 sm:pb-4 space-y-2.5 sm:space-y-3.5 animate-in fade-in duration-300">
-                  {/* Category & Story Badges */}
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-[#C10A1E] text-white flex items-center gap-1 shadow-xs uppercase tracking-wider">
-                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
-                      <span>{language === 'ne' ? 'प्रमुख समाचार' : 'Featured'}</span>
-                    </span>
-
-                    <span className="px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold bg-[#02267C] text-white uppercase tracking-wide">
-                      {language === 'ne' ? currentFeatured.category.nameNe : currentFeatured.category.nameEn}
-                    </span>
-
-                    <span className="inline-flex px-2 py-0.5 rounded-md text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 items-center gap-1">
-                      <Clock className="w-3 h-3 text-red-500" />
-                      <span>{language === 'ne' ? toNepaliNumerals(currentFeatured.readTimeMinutes) : currentFeatured.readTimeMinutes} {t('readTime')}</span>
-                    </span>
-                  </div>
-
-                  {/* Primary Eye-Catching Headline */}
-                  <Link href={`/news/${currentFeatured.slug}`} className="group block">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.6rem] font-black text-slate-950 dark:text-white group-hover:text-[#C10A1E] dark:group-hover:text-red-400 transition leading-tight tracking-tight">
-                      {getLocalizedTitle(currentFeatured, language)}
-                    </h2>
-                  </Link>
-
-                  {/* Subtitle / Teaser */}
-                  {currentFeatured.subtitle && (
-                    <p className="text-sm sm:text-base md:text-lg font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
-                      {getLocalizedSubtitle(currentFeatured, language)}
-                    </p>
-                  )}
-                </div>
-
-                {/* 2. COVER IMAGE: Large Dramatic Story Photo */}
-                {currentFeatured.featuredImage && (
-                  <Link
-                    href={`/news/${currentFeatured.slug}`}
-                    key={`img-${currentFeatured.id}`}
-                    className="block relative w-full aspect-16/9 sm:aspect-16/8 max-h-[360px] sm:max-h-[420px] overflow-hidden group bg-slate-950"
+            {/* Stacked Featured Stories List */}
+            {allFeatured.length > 0 ? (
+              <div className="space-y-6 sm:space-y-8">
+                {allFeatured.map((story, idx) => (
+                  <article
+                    key={story.id}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition duration-300"
                   >
-                    <Image
-                      src={currentFeatured.featuredImage}
-                      alt={currentFeatured.title}
-                      fill
-                      priority
-                      className="object-cover group-hover:scale-102 transition duration-500 animate-in fade-in duration-300"
-                    />
-                  </Link>
-                )}
+                    {/* 1. TOP ZONE: Badges, Big Eye-Catching Headline & Subtitle ABOVE Image */}
+                    <div className="p-4 sm:p-6 md:p-8 pb-3 sm:pb-4 space-y-2.5 sm:space-y-3.5">
+                      {/* Category & Story Badges */}
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-[#C10A1E] text-white flex items-center gap-1 shadow-xs uppercase tracking-wider">
+                          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
+                          <span>{language === 'ne' ? 'प्रमुख समाचार' : 'Featured'}</span>
+                        </span>
 
-                {/* 3. BOTTOM ZONE: Key Takeaways & Author Byline */}
-                <div key={`body-${currentFeatured.id}`} className="p-4 sm:p-6 md:p-8 pt-4 sm:pt-5 space-y-3.5 sm:space-y-4 animate-in fade-in duration-300">
-                  {/* Key Takeaways Box (TL;DR Summary from Blueprint) */}
-                  {currentFeatured.excerpt && (
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border-l-4 border-[#C10A1E] text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-sans">
-                      <div className="flex items-center gap-1.5 font-bold text-[#C10A1E] dark:text-red-400 mb-1.5 uppercase text-[11px] tracking-wider">
-                        <ListPlus className="w-3.5 h-3.5" />
-                        <span>{language === 'ne' ? 'मुख्य बुँदाहरू' : 'Key Takeaways'}</span>
+                        {story.category && (
+                          <Link
+                            href={`/category/${story.category.slug}`}
+                            className="px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold bg-[#02267C] text-white uppercase tracking-wide hover:opacity-90 transition"
+                          >
+                            {language === 'ne' ? story.category.nameNe : story.category.nameEn}
+                          </Link>
+                        )}
+
+                        <span className="inline-flex px-2 py-0.5 rounded-md text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-red-500" />
+                          <span>
+                            {language === 'ne' ? toNepaliNumerals(story.readTimeMinutes) : story.readTimeMinutes} {t('readTime')}
+                          </span>
+                        </span>
                       </div>
-                      {getLocalizedExcerpt(currentFeatured, language)}
-                    </div>
-                  )}
 
-                  {/* Author Byline & Publish Time */}
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
-                        {currentFeatured.author?.fullName || 'SabaiChha Desk'}
-                      </span>
-                      <span>•</span>
-                      <span suppressHydrationWarning>{formatTimeAgo(currentFeatured.publishedAt)}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:gap-2.5">
-                      <BookmarkButton
-                        size="sm"
-                        article={{
-                          id: currentFeatured.id,
-                          title: currentFeatured.title,
-                          slug: currentFeatured.slug,
-                          featuredImage: currentFeatured.featuredImage,
-                          categoryName: language === 'ne' ? currentFeatured.category.nameNe : currentFeatured.category.nameEn,
-                        }}
-                      />
-                      <Link
-                        href={`/news/${currentFeatured.slug}`}
-                        className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 hover:underline"
-                      >
-                        <span>{language === 'ne' ? 'पूरा पढ्नुहोस्' : 'Read Full Story'}</span>
-                        <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      {/* Primary Eye-Catching Headline */}
+                      <Link href={`/news/${story.slug}`} className="group block">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-black text-slate-950 dark:text-white group-hover:text-[#C10A1E] dark:group-hover:text-red-400 transition leading-tight tracking-tight">
+                          {getLocalizedTitle(story, language)}
+                        </h2>
                       </Link>
-                    </div>
-                  </div>
 
-                  {/* Slide Indicators for multiple featured stories */}
-                  {allFeatured.length > 1 && (
-                    <div className="flex items-center justify-center gap-1.5 pt-2">
-                      {allFeatured.map((_: ArticleSnippet, idx: number) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => setFeaturedIndex(idx)}
-                          aria-label={`Go to featured story ${idx + 1}`}
-                          className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                            idx === featuredIndex
-                              ? 'w-6 bg-red-600 dark:bg-red-500'
-                              : 'w-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'
-                          }`}
-                        />
-                      ))}
+                      {/* Subtitle / Teaser */}
+                      {story.subtitle && (
+                        <p className="text-sm sm:text-base md:text-lg font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {getLocalizedSubtitle(story, language)}
+                        </p>
+                      )}
                     </div>
-                  )}
-                </div>
+
+                    {/* 2. COVER IMAGE: Large Dramatic Story Photo */}
+                    {story.featuredImage && (
+                      <Link
+                        href={`/news/${story.slug}`}
+                        className="block relative w-full aspect-16/9 sm:aspect-16/8 max-h-[380px] sm:max-h-[440px] overflow-hidden group bg-slate-950"
+                      >
+                        <Image
+                          src={story.featuredImage}
+                          alt={story.title}
+                          fill
+                          priority={idx === 0}
+                          className="object-cover group-hover:scale-102 transition duration-500"
+                        />
+                      </Link>
+                    )}
+
+                    {/* 3. BOTTOM ZONE: Key Takeaways & Author Byline */}
+                    <div className="p-4 sm:p-6 md:p-8 pt-4 sm:pt-5 space-y-3.5 sm:space-y-4">
+                      {/* Key Takeaways Box */}
+                      {story.excerpt && (
+                        <div className="p-3.5 sm:p-4 rounded-2xl bg-red-50/60 dark:bg-red-950/20 border-l-4 border-[#C10A1E] text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-sans">
+                          <div className="flex items-center gap-1.5 font-bold text-[#C10A1E] dark:text-red-400 mb-1.5 uppercase text-[11px] tracking-wider">
+                            <ListPlus className="w-3.5 h-3.5" />
+                            <span>{language === 'ne' ? 'मुख्य बुँदाहरू' : 'Key Takeaways'}</span>
+                          </div>
+                          {getLocalizedExcerpt(story, language)}
+                        </div>
+                      )}
+
+                      {/* Author Byline & Publish Time */}
+                      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">
+                            {story.author?.fullName || 'SabaiChha Desk'}
+                          </span>
+                          <span>•</span>
+                          <span suppressHydrationWarning>{formatTimeAgo(story.publishedAt)}</span>
+                        </div>
+
+                        <div className="flex items-center gap-2 sm:gap-2.5">
+                          <BookmarkButton
+                            size="sm"
+                            article={{
+                              id: story.id,
+                              title: story.title,
+                              slug: story.slug,
+                              featuredImage: story.featuredImage,
+                              categoryName: language === 'ne' ? story.category.nameNe : story.category.nameEn,
+                            }}
+                          />
+                          <Link
+                            href={`/news/${story.slug}`}
+                            className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 hover:underline"
+                          >
+                            <span>{language === 'ne' ? 'पूरा पढ्नुहोस्' : 'Read Full Story'}</span>
+                            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))}
               </div>
             ) : (
               <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 text-slate-400">

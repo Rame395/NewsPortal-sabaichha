@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-xl">
           {/* Brand Logo */}
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="relative h-14 w-60 mb-3">
+            <div className="relative h-16 w-64 mb-3 bg-white rounded-xl p-1.5 shadow-2xs">
               <Image
                 src="/logo.jpg"
                 alt="SabaiChha.com"

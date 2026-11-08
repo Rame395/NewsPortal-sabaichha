@@ -151,13 +151,13 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
             {/* Drawer Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex items-center justify-between">
               <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
-                <div className="relative h-10 w-44 bg-white rounded-md p-1 flex items-center">
+                <div className="relative h-12 w-48 bg-white rounded-lg p-1.5 shadow-2xs flex items-center justify-center">
                   <Image
                     src="/logo.jpg"
                     alt="SabaiChha.com"
-                    width={180}
-                    height={40}
-                    className="object-contain max-h-9 w-auto"
+                    width={200}
+                    height={50}
+                    className="object-contain max-h-10 w-auto"
                   />
                 </div>
               </Link>
