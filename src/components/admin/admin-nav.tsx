@@ -185,7 +185,7 @@ export function AdminNav({
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <Link href="/admin" className="flex items-center gap-2">
               <div className="relative h-12 w-48 bg-white rounded-lg p-1 shadow-2xs">
-                <Image src="/logo.jpg" alt="SabaiChha.com" fill className="object-contain" priority />
+                <Image src="/logo-v2.jpg" alt="SabaiChha.com" fill className="object-contain" priority />
               </div>
             </Link>
           </div>

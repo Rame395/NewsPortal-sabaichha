@@ -69,7 +69,7 @@ export function Header({
           <Link href="/" className="flex items-center gap-3 sm:gap-4 group shrink-0">
             <div className="relative h-14 w-52 sm:h-18 sm:w-72 bg-white rounded-lg p-1.5 shadow-2xs border border-blue-100/70 shrink-0 flex items-center justify-center">
               <Image
-                src="/logo.jpg"
+                src="/logo-v2.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
                 width={300}
                 height={75}

@@ -125,7 +125,7 @@ export function Footer({ categories = [] }: FooterProps) {
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
             <Link href="/" className="relative h-16 w-64 bg-white rounded-xl p-2 flex items-center justify-center shrink-0 shadow-2xs">
               <Image
-                src="/logo.jpg"
+                src="/logo-v2.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
                 width={260}
                 height={64}

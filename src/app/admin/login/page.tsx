@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
           <div className="flex flex-col items-center text-center mb-8">
             <div className="relative h-16 w-64 mb-3 bg-white rounded-xl p-1.5 shadow-2xs">
               <Image
-                src="/logo.jpg"
+                src="/logo-v2.jpg"
                 alt="SabaiChha.com"
                 fill
                 className="object-contain"

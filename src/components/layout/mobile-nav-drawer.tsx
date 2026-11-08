@@ -153,7 +153,7 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
               <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
                 <div className="relative h-12 w-48 bg-white rounded-lg p-1.5 shadow-2xs flex items-center justify-center">
                   <Image
-                    src="/logo.jpg"
+                    src="/logo-v2.jpg"
                     alt="SabaiChha.com"
                     width={200}
                     height={50}

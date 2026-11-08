@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     description: 'सूचना, संवाद र मनोरञ्जनको संगम - ताजा नेपाली समाचार, विश्लेषण, र उपयोगी औजारहरू।',
     images: [
       {
-        url: `${SITE_URL}/logo.jpg`,
+        url: `${SITE_URL}/logo-v2.jpg`,
         width: 1200,
         height: 630,
         alt: 'SabaiChha.com News Portal',
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'सबै छ डट कम | SabaiChha.com',
     description: 'नेपालको आधिकारिक डिजिटल अनलाइन पत्रिका - ताजा समाचार तथा विचार',
-    images: [`${SITE_URL}/logo.jpg`],
+    images: [`${SITE_URL}/logo-v2.jpg`],
   },
   robots: {
     index: true,
@@ -98,7 +98,7 @@ const organizationSchema = {
   '@type': 'NewsMediaOrganization',
   name: 'सबै छ डट कम (SabaiChha.com)',
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.jpg`,
+  logo: `${SITE_URL}/logo-v2.jpg`,
   description: 'नेपालको आधिकारिक डिजिटल अनलाइन पत्रिका - ताजा समाचार, विचार, समाज र खेलकुद।',
 }
 
