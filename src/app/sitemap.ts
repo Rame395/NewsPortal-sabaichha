@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next'
 import prisma from '@/lib/prisma'
 import { ArticleStatus } from '@/lib/prisma'
 
+export const revalidate = 600 // Revalidate every 10 minutes
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
