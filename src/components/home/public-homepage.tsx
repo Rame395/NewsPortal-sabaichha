@@ -370,8 +370,11 @@ export function PublicHomepage({
 
         {/* ========================================================= */}
         {/* ALL CATEGORIES IN EXACT ADMIN-CONFIGURED ORDER (orderIndex) */}
+        {/* Automatically hides any category with 0 published articles */}
         {/* ========================================================= */}
-        {categorySections.map((cat, index) => (
+        {categorySections
+          .filter((cat) => cat.articles && cat.articles.length > 0)
+          .map((cat, index, activeCategories) => (
           <React.Fragment key={cat.id}>
             <CategoryHeroSection
               category={{
@@ -384,7 +387,7 @@ export function PublicHomepage({
             />
 
             {/* Insert Most Read / Trending + Sidebar Ad after the 3rd category (or after the last if fewer than 3) */}
-            {index === Math.min(2, categorySections.length - 1) && trendingArticles.length > 0 && (
+            {index === Math.min(2, activeCategories.length - 1) && trendingArticles.length > 0 && (
               <section className="space-y-4">
                 <div className="flex items-center justify-between pb-2 border-b-2 border-red-600">
                   <h3 className="text-base sm:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">

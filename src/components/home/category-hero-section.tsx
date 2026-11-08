@@ -55,6 +55,11 @@ export function CategoryHeroSection({
   const { language, t } = useLanguage()
   const carouselRef = React.useRef<HTMLDivElement>(null)
 
+  // Automatically hide category section if no published articles exist
+  if (!articles || articles.length === 0) {
+    return null
+  }
+
   const formatTimeAgo = (dateStr: string | null | Date) => {
     if (!dateStr) return ''
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
