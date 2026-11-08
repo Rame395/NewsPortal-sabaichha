@@ -1,0 +1,135 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Prevent overlapping deployments from running simultaneously
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  # =========================================================================
+  # JOB 1: Full-Stack Next.js Integrity, Typecheck & Build Verification
+  # =========================================================================
+  verify:
+    name: Typecheck & Production Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm run db:generate
+
+      - name: Typecheck (TypeScript & Imports Check)
+        run: pnpm run typecheck
+
+      - name: Test Production Build Compilation
+        run: pnpm run build
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+          JWT_SECRET: "ci-build-test-secret-minimum-32-chars-long"
+          NEXTAUTH_SECRET: "ci-build-test-secret-minimum-32-chars-long"
+
+  # =========================================================================
+  # JOB 2: Zero-Downtime Production Deployment to Hostinger VPS
+  # =========================================================================
+  deploy:
+    name: Deploy to Hostinger VPS
+    needs: [verify]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy & Zero-Downtime Reload via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+
+            # 0. Load NVM environment (Node.js, pnpm, pm2) for non-interactive SSH
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export PATH="$PATH:$HOME/.nvm/versions/node/v20.19.6/bin:/usr/local/bin"
+
+            echo "🚀 Starting Automated Deployment on $(hostname)..."
+            echo "Node: $(node -v) | NPM: $(npm -v)"
+
+            cd /var/www/sabaichha
+
+            # 1. Pull latest verified commits cleanly
+            echo "📥 Fetching and syncing latest code from origin/main..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 2. Install packages & synchronize Prisma schema
+            echo "📦 Installing packages & updating database schema..."
+            if command -v pnpm &> /dev/null; then
+              pnpm install
+              pnpm run db:generate
+              pnpm run db:push
+            else
+              npm install --prefer-offline --no-audit
+              npx prisma generate
+              npx prisma db push
+            fi
+
+            # 3. Build Next.js Production Bundle
+            echo "🎨 Compiling Next.js production bundle..."
+            if command -v pnpm &> /dev/null; then
+              pnpm run build
+            else
+              npm run build
+            fi
+
+            # 4. Graceful Zero-Downtime Reload with PM2
+            echo "🔄 Reloading PM2 process..."
+            pm2 reload sabaichha || pm2 restart sabaichha
+
+            # 5. Automated Post-Deployment Smoke Test
+            echo "🩺 Running live healthcheck verification on port 3050..."
+            sleep 3
+            if curl -f -s -I http://127.0.0.1:3050/ | grep -q -E "200|308|307"; then
+              echo "✅ Health check PASSED! SabaiChha News Portal is online and healthy."
+            else
+              echo "❌ Health check FAILED! Application did not start properly."
+              pm2 logs sabaichha --lines 25 --nostream
+              exit 1
+            fi
+
+            echo "🎉 Deployment successfully completed!"
