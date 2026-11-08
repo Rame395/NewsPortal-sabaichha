@@ -9,8 +9,6 @@ import {
   TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
-  LinkedinIcon,
-  TelegramIcon,
 } from '@/components/ui/social-icons'
 import {
   MapPin,
@@ -96,8 +94,6 @@ export function Footer({ categories = [] }: FooterProps) {
     twitter: 'https://x.com/sabaichha',
     youtube: 'https://youtube.com/@sabaichha',
     instagram: 'https://instagram.com/sabaichha',
-    linkedin: 'https://linkedin.com/company/sabaichha',
-    telegram: 'https://t.me/sabaichha',
   }
 
   const footerText = settings?.footer || {
@@ -188,35 +184,11 @@ export function Footer({ categories = [] }: FooterProps) {
               <a
                 href={social.instagram}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-pink-500/30 bg-pink-500/10 text-pink-400 hover:bg-pink-600 hover:text-white flex items-center justify-center transition shadow-2xs"
                 title="Instagram"
               >
                 <InstagramIcon className="w-4 h-4" />
-              </a>
-            )}
-
-            {social.linkedin && (
-              <a
-                href={social.linkedin}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 hover:bg-sky-600 hover:text-white flex items-center justify-center transition shadow-2xs"
-                title="LinkedIn"
-              >
-                <LinkedinIcon className="w-4 h-4" />
-              </a>
-            )}
-
-            {social.telegram && (
-              <a
-                href={social.telegram}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white flex items-center justify-center transition shadow-2xs"
-                title="Telegram"
-              >
-                <TelegramIcon className="w-4 h-4" />
               </a>
             )}
           </div>

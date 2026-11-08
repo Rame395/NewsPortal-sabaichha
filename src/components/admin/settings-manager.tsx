@@ -62,22 +62,6 @@ export function InstagramIcon({ className = 'w-4 h-4' }: { className?: string })
   )
 }
 
-export function LinkedinIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-    </svg>
-  )
-}
-
-export function TelegramIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.46c.535-.194 1.006.128.832.941z" />
-    </svg>
-  )
-}
-
 export function SettingsManager({ initialSettings }: { initialSettings: AllSettings }) {
   const { language } = useLanguage()
 
@@ -401,24 +385,6 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                 >
                   <InstagramIcon className="w-3.5 h-3.5" />
                 </a>
-                <a
-                  href={settings.socialLinks.linkedin || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-7 h-7 rounded-full border border-[#0A66C2]/40 text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white flex items-center justify-center transition shadow-2xs"
-                  title="LinkedIn"
-                >
-                  <LinkedinIcon className="w-3.5 h-3.5" />
-                </a>
-                <a
-                  href={settings.socialLinks.telegram || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-7 h-7 rounded-full border border-[#229ED9]/40 text-[#229ED9] hover:bg-[#229ED9] hover:text-white flex items-center justify-center transition shadow-2xs"
-                  title="Telegram"
-                >
-                  <TelegramIcon className="w-3.5 h-3.5" />
-                </a>
               </div>
             </div>
 
@@ -495,44 +461,6 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                     })
                   }
                   placeholder="https://instagram.com/sabaichha"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                  <LinkedinIcon className="w-4 h-4 text-[#0A66C2]" />
-                  <span>LinkedIn Page URL</span>
-                </label>
-                <input
-                  type="url"
-                  value={settings.socialLinks.linkedin}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      socialLinks: { ...settings.socialLinks, linkedin: e.target.value },
-                    })
-                  }
-                  placeholder="https://linkedin.com/company/sabaichha"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                  <TelegramIcon className="w-4 h-4 text-[#229ED9]" />
-                  <span>Telegram Channel URL</span>
-                </label>
-                <input
-                  type="url"
-                  value={settings.socialLinks.telegram}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      socialLinks: { ...settings.socialLinks, telegram: e.target.value },
-                    })
-                  }
-                  placeholder="https://t.me/sabaichha"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-white"
                 />
               </div>

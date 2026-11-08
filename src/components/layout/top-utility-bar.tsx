@@ -11,8 +11,6 @@ import {
   TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
-  LinkedinIcon,
-  TelegramIcon,
 } from '@/components/ui/social-icons'
 import {
   Calendar,
@@ -120,8 +118,6 @@ export function TopUtilityBar() {
     twitter: 'https://x.com/sabaichha',
     youtube: 'https://youtube.com/@sabaichha',
     instagram: 'https://instagram.com/sabaichha',
-    linkedin: 'https://linkedin.com/company/sabaichha',
-    telegram: 'https://t.me/sabaichha',
   }
 
   const weather = data?.weather || {
@@ -357,13 +353,13 @@ export function TopUtilityBar() {
         {/* 3. RIGHT ZONE: Circular Social Icons, ePaper, Login, Theme Toggle (shrink-0) */}
         {/* ======================================================== */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Times of India-style Circular Social Icons (Top 3 on xl, all 6 on 2xl) */}
-          <div className="hidden xl:flex items-center gap-1 pr-1.5 border-r border-slate-300 dark:border-slate-800">
+          {/* Times of India-style Circular Social Icons (Facebook, X, YouTube, Instagram) */}
+          <div className="hidden lg:flex items-center gap-1 pr-1.5 border-r border-slate-300 dark:border-slate-800">
             {socialLinks.facebook && (
               <a
                 href={socialLinks.facebook}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-5.5 h-5.5 rounded-full border border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
                 title="Follow on Facebook"
               >
@@ -375,7 +371,7 @@ export function TopUtilityBar() {
               <a
                 href={socialLinks.twitter}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-5.5 h-5.5 rounded-full border border-slate-400 dark:border-slate-600 text-slate-800 dark:text-slate-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
                 title="Follow on X / Twitter"
               >
@@ -387,7 +383,7 @@ export function TopUtilityBar() {
               <a
                 href={socialLinks.youtube}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="w-5.5 h-5.5 rounded-full border border-red-500/40 text-red-600 dark:text-red-500 hover:bg-red-600 hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
                 title="Subscribe on YouTube"
               >
@@ -395,44 +391,17 @@ export function TopUtilityBar() {
               </a>
             )}
 
-            {/* Extra icons on 2xl screens */}
-            <div className="hidden 2xl:flex items-center gap-1">
-              {socialLinks.instagram && (
-                <a
-                  href={socialLinks.instagram}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-5.5 h-5.5 rounded-full border border-pink-500/40 text-pink-600 dark:text-pink-400 hover:bg-pink-600 hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
-                  title="Follow on Instagram"
-                >
-                  <InstagramIcon className="w-2.5 h-2.5" />
-                </a>
-              )}
-
-              {socialLinks.linkedin && (
-                <a
-                  href={socialLinks.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-5.5 h-5.5 rounded-full border border-sky-500/40 text-sky-600 dark:text-sky-400 hover:bg-sky-600 hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
-                  title="Follow on LinkedIn"
-                >
-                  <LinkedinIcon className="w-2.5 h-2.5" />
-                </a>
-              )}
-
-              {socialLinks.telegram && (
-                <a
-                  href={socialLinks.telegram}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-5.5 h-5.5 rounded-full border border-cyan-500/40 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500 hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
-                  title="Join Telegram Channel"
-                >
-                  <TelegramIcon className="w-2.5 h-2.5" />
-                </a>
-              )}
-            </div>
+            {socialLinks.instagram && (
+              <a
+                href={socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-5.5 h-5.5 rounded-full border border-pink-500/40 text-pink-600 dark:text-pink-400 hover:bg-pink-600 hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
+                title="Follow on Instagram"
+              >
+                <InstagramIcon className="w-2.5 h-2.5" />
+              </a>
+            )}
           </div>
 
           {/* Read ePaper Pill (TOI style) - Desktop/Tablet */}

@@ -67,13 +67,13 @@ export function Header({
         {/* Left: Logo & Official Tagline + Reg. No. */}
         <div className="flex items-center justify-between w-full lg:w-auto gap-4 shrink-0">
           <Link href="/" className="flex items-center gap-3 sm:gap-4 group shrink-0">
-            <div className="relative h-14 w-52 sm:h-18 sm:w-72 bg-white rounded-lg p-1.5 shadow-2xs border border-blue-100/70 shrink-0 flex items-center justify-center">
+            <div className="relative h-12 w-48 sm:h-14 sm:w-60 bg-white rounded-lg p-1 shadow-2xs border border-blue-100/70 shrink-0 flex items-center justify-center">
               <Image
                 src="/logo-v2.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
-                width={300}
-                height={75}
-                className="object-contain max-h-13 sm:max-h-16 w-auto"
+                width={260}
+                height={65}
+                className="object-contain max-h-11 sm:max-h-13 w-auto"
                 priority
               />
             </div>

@@ -28,6 +28,12 @@ import {
   MapPin,
 } from 'lucide-react'
 import { PROVINCES } from '@/lib/constants/provinces'
+import {
+  FacebookIcon,
+  TwitterXIcon,
+  YoutubeIcon,
+  InstagramIcon,
+} from '@/components/ui/social-icons'
 
 interface CategoryItem {
   id: number
@@ -40,11 +46,36 @@ interface MobileNavDrawerProps {
   categories: CategoryItem[]
 }
 
+const DEFAULT_SOCIAL = {
+  facebook: 'https://facebook.com/sabaichha',
+  twitter: 'https://x.com/sabaichha',
+  youtube: 'https://youtube.com/@sabaichha',
+  instagram: 'https://instagram.com/sabaichha',
+}
+
 export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
   const pathname = usePathname()
   const { language, t } = useLanguage()
   const isNe = language === 'ne'
   const [isOpen, setIsOpen] = React.useState(false)
+  const [socialLinks, setSocialLinks] = React.useState(DEFAULT_SOCIAL)
+
+  // Fetch configured social links from server
+  React.useEffect(() => {
+    fetch('/api/public/market-weather', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.social) {
+          setSocialLinks({
+            facebook: data.social.facebook || DEFAULT_SOCIAL.facebook,
+            twitter: data.social.twitter || DEFAULT_SOCIAL.twitter,
+            youtube: data.social.youtube || DEFAULT_SOCIAL.youtube,
+            instagram: data.social.instagram || DEFAULT_SOCIAL.instagram,
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Close drawer automatically whenever route changes
   React.useEffect(() => {
@@ -365,6 +396,80 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                   <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
                   <span>{isNe ? 'गोपनीयता नीति (Privacy Policy)' : 'Privacy Policy'}</span>
                 </Link>
+              </div>
+
+              {/* Social Media Channels (हामीसँग जोडिनुहोस् / Follow Us) */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                <div className="px-1 flex items-center justify-between">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {isNe ? 'हामीसँग जोडिनुहोस्' : 'Connect with Us'}
+                  </span>
+                  <span className="text-[10px] text-red-600 dark:text-red-400 font-bold">
+                    SabaiChha
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {socialLinks.facebook && (
+                    <a
+                      href={socialLinks.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-blue-500/20 bg-blue-50/60 dark:bg-blue-950/30 text-[#1877F2] hover:bg-blue-600 hover:text-white transition group shadow-2xs"
+                      title="Facebook"
+                    >
+                      <FacebookIcon className="w-5 h-5 group-hover:scale-110 transition" />
+                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white">
+                        Facebook
+                      </span>
+                    </a>
+                  )}
+
+                  {socialLinks.twitter && (
+                    <a
+                      href={socialLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition group shadow-2xs"
+                      title="X (Twitter)"
+                    >
+                      <TwitterXIcon className="w-4.5 h-4.5 group-hover:scale-110 transition" />
+                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white dark:group-hover:text-black">
+                        X
+                      </span>
+                    </a>
+                  )}
+
+                  {socialLinks.youtube && (
+                    <a
+                      href={socialLinks.youtube}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-red-500/20 bg-red-50/60 dark:bg-red-950/30 text-[#FF0000] hover:bg-red-600 hover:text-white transition group shadow-2xs"
+                      title="YouTube"
+                    >
+                      <YoutubeIcon className="w-5 h-5 group-hover:scale-110 transition" />
+                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white">
+                        YouTube
+                      </span>
+                    </a>
+                  )}
+
+                  {socialLinks.instagram && (
+                    <a
+                      href={socialLinks.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-pink-500/20 bg-pink-50/60 dark:bg-pink-950/30 text-[#E4405F] hover:bg-pink-600 hover:text-white transition group shadow-2xs"
+                      title="Instagram"
+                    >
+                      <InstagramIcon className="w-5 h-5 group-hover:scale-110 transition" />
+                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white">
+                        Insta
+                      </span>
+                    </a>
+                  )}
+                </div>
               </div>
 
             </div>
