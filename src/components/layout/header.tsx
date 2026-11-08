@@ -56,15 +56,21 @@ export function Header({
               priority
             />
           </div>
-          <div className="hidden lg:block border-l-2 border-red-600 pl-4">
+          <div className="hidden lg:block border-l-2 border-red-600 pl-4 space-y-0.5">
             <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight">
               {language === 'ne'
-                ? 'नेपालको आधिकारिक डिजिटल अनलाइन पत्रिका'
-                : 'Nepal’s Leading Digital News Portal'}
+                ? 'सूचना, संवाद र मनोरञ्जनको संगम, सबै छ डट कम'
+                : 'Confluence of Information, Dialogue & Entertainment'}
             </p>
-            <p className="text-[11px] text-red-600 dark:text-red-400 font-mono font-semibold">
-              https://sabaichha.com
-            </p>
+            <div className="flex items-center gap-2 text-[10.5px]">
+              <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
+                https://sabaichha.com
+              </span>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">
+                {language === 'ne' ? 'सूचना विभाग दर्ता नं. ५३२७' : 'Regd. No. 5327'}
+              </span>
+            </div>
           </div>
         </Link>
 

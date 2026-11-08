@@ -94,7 +94,7 @@ export const DEFAULT_SITE_SETTINGS: AllSettings = {
     phone: '+977 1-4240000 / 9851000000',
     email: 'info@sabaichha.com',
     pressCouncilNo: 'प्रेस काउन्सिल दर्ता नं.: १२३/०८०-८१',
-    deptOfInfoNo: 'सूचना विभाग दर्ता नं.: ४५६/०८०-८१',
+    deptOfInfoNo: 'सूचना विभाग दर्ता नं.: ५३२७',
     editorName: 'सन्तोष श्रेष्ठ (प्रधान सम्पादक)',
     publisherName: 'सबै छ मिडिया नेटवर्क प्रा. लि.',
   },
