@@ -27,10 +27,10 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - name: Install Dependencies
@@ -86,23 +86,13 @@ jobs:
 
             # 2. Install packages & synchronize Prisma schema
             echo "📦 Installing packages & updating database schema..."
-            if command -v pnpm &> /dev/null; then
-              pnpm install
-              pnpm run db:generate
-              pnpm run db:push
-            else
-              npm install --prefer-offline --no-audit
-              npx prisma generate
-              npx prisma db push
-            fi
+            npm install --prefer-offline --no-audit
+            npx prisma generate
+            npx prisma db push
 
             # 3. Build Next.js Production Bundle
             echo "🎨 Compiling Next.js production bundle..."
-            if command -v pnpm &> /dev/null; then
-              pnpm run build
-            else
-              npm run build
-            fi
+            npm run build
 
             # 4. Graceful Zero-Downtime Reload with PM2
             echo "🔄 Reloading PM2 process..."
