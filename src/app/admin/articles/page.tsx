@@ -66,6 +66,7 @@ interface ArticleItem {
     nameNe: string
     slug: string
   }
+  province?: string | null
   _count: {
     comments: number
   }
@@ -81,6 +82,7 @@ export default function ArticlesListPage() {
   // Filters state
   const [statusFilter, setStatusFilter] = React.useState<string>('')
   const [categoryFilter, setCategoryFilter] = React.useState<string>('')
+  const [provinceFilter, setProvinceFilter] = React.useState<string>('')
   const [searchTerm, setSearchTerm] = React.useState('')
   const [debouncedSearch, setDebouncedSearch] = React.useState('')
   const [onlyFeatured, setOnlyFeatured] = React.useState(false)
@@ -127,6 +129,7 @@ export default function ArticlesListPage() {
       params.set('limit', '10')
       if (statusFilter) params.set('status', statusFilter)
       if (categoryFilter) params.set('categoryId', categoryFilter)
+      if (provinceFilter) params.set('province', provinceFilter)
       if (debouncedSearch) params.set('search', debouncedSearch)
       if (onlyFeatured) params.set('isFeatured', 'true')
       if (onlyBreaking) params.set('isBreaking', 'true')
@@ -151,12 +154,13 @@ export default function ArticlesListPage() {
 
   React.useEffect(() => {
     fetchArticles()
-  }, [page, statusFilter, categoryFilter, debouncedSearch, onlyFeatured, onlyBreaking, sortBy])
+  }, [page, statusFilter, categoryFilter, provinceFilter, debouncedSearch, onlyFeatured, onlyBreaking, sortBy])
 
   // Reset all filters helper
   const handleResetFilters = () => {
     setStatusFilter('')
     setCategoryFilter('')
+    setProvinceFilter('')
     setSearchTerm('')
     setDebouncedSearch('')
     setOnlyFeatured(false)
@@ -370,6 +374,33 @@ export default function ArticlesListPage() {
               </select>
             </div>
 
+            {/* Province Filter Dropdown */}
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 shadow-2xs">
+              <label htmlFor="provinceFilterSelect" className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                {language === 'ne' ? 'प्रदेश:' : 'Province:'}
+              </label>
+              <select
+                id="provinceFilterSelect"
+                value={provinceFilter}
+                onChange={(e) => {
+                  setProvinceFilter(e.target.value)
+                  setPage(1)
+                }}
+                className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="" className="dark:bg-slate-900 text-slate-900 dark:text-white">
+                  {language === 'ne' ? 'सबै प्रदेश (All Provinces)' : 'All Provinces'}
+                </option>
+                <option value="koshi" className="dark:bg-slate-900 text-slate-900 dark:text-white">कोशी (Koshi)</option>
+                <option value="madhesh" className="dark:bg-slate-900 text-slate-900 dark:text-white">मधेश (Madhesh)</option>
+                <option value="bagmati" className="dark:bg-slate-900 text-slate-900 dark:text-white">बागमती (Bagmati)</option>
+                <option value="gandaki" className="dark:bg-slate-900 text-slate-900 dark:text-white">गण्डकी (Gandaki)</option>
+                <option value="lumbini" className="dark:bg-slate-900 text-slate-900 dark:text-white">लुम्बिनी (Lumbini)</option>
+                <option value="karnali" className="dark:bg-slate-900 text-slate-900 dark:text-white">कर्णाली (Karnali)</option>
+                <option value="sudurpashchim" className="dark:bg-slate-900 text-slate-900 dark:text-white">सुदूरपश्चिम (Sudurpashchim)</option>
+              </select>
+            </div>
+
             {/* Quick Flag: Featured Story */}
             <button
               type="button"
@@ -480,6 +511,21 @@ export default function ArticlesListPage() {
                 <button
                   type="button"
                   onClick={() => setStatusFilter('')}
+                  className="hover:text-red-600"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {provinceFilter && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-[#02267C] dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-bold">
+                <span>
+                  {language === 'ne' ? 'प्रदेश:' : 'Province:'} {provinceFilter}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setProvinceFilter('')}
                   className="hover:text-red-600"
                 >
                   <X className="w-3 h-3" />
@@ -662,11 +708,18 @@ export default function ArticlesListPage() {
                         </div>
                       </td>
 
-                      {/* Category */}
+                      {/* Category & Province */}
                       <td className="px-5 py-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
-                          {language === 'ne' ? art.category.nameNe : art.category.nameEn}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
+                            {language === 'ne' ? art.category.nameNe : art.category.nameEn}
+                          </span>
+                          {art.province && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-[#02267C] dark:text-blue-300 border border-blue-200 dark:border-blue-800 capitalize">
+                              📍 {art.province}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Status */}

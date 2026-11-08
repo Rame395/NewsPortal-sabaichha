@@ -83,6 +83,7 @@ export async function PATCH(
       featuredImage,
       imageCaption,
       categoryId,
+      province,
       status,
       isBreaking,
       isFeatured,
@@ -100,6 +101,9 @@ export async function PATCH(
     if (featuredImage !== undefined) updateData.featuredImage = featuredImage ? safeHttpUrl(featuredImage) : null
     if (imageCaption !== undefined) updateData.imageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
     if (categoryId) updateData.categoryId = Number(categoryId)
+    if (province !== undefined) {
+      updateData.province = province ? String(province).toLowerCase().trim() : null
+    }
     if (typeof isBreaking === 'boolean') updateData.isBreaking = isBreaking
     if (typeof isFeatured === 'boolean') updateData.isFeatured = isFeatured
     if (typeof isTrending === 'boolean') updateData.isTrending = isTrending

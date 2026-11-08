@@ -25,7 +25,9 @@ import {
   PhoneCall,
   Info,
   ExternalLink,
+  MapPin,
 } from 'lucide-react'
+import { PROVINCES } from '@/lib/constants/provinces'
 
 interface CategoryItem {
   id: number
@@ -206,6 +208,39 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>
+              </div>
+
+              {/* Province News Section (प्रदेश समाचार - ७ प्रदेश) */}
+              <div className="pt-4 space-y-2">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    {isNe ? 'प्रदेश समाचार' : 'Province News'}
+                  </span>
+                  <span className="text-[10px] font-mono text-[#02267C] dark:text-blue-400 font-bold bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full">
+                    {isNe ? '७ प्रदेश' : '7 Provinces'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5">
+                  {PROVINCES.map((prov) => {
+                    const isActive = pathname === `/province/${prov.slug}`
+                    return (
+                      <Link
+                        key={prov.slug}
+                        href={`/province/${prov.slug}`}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition ${
+                          isActive
+                            ? 'bg-[#02267C] text-white shadow-xs'
+                            : 'bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="truncate">{isNe ? prov.nameNe : prov.nameEn}</span>
+                        <ChevronRight className="w-3.5 h-3.5 opacity-40 shrink-0" />
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* News Categories Section */}

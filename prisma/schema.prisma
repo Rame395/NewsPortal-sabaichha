@@ -108,6 +108,7 @@ model Article {
   isCategoryLead  Boolean       @default(false) @map("is_category_lead")
   viewCount       Int           @default(0) @map("view_count")
   readTimeMinutes Int           @default(3) @map("read_time_minutes")
+  province        String?       @map("province")
   
   authorId        String        @map("author_id")
   author          User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -126,6 +127,7 @@ model Article {
 
   @@index([status, publishedAt(sort: Desc)])
   @@index([categoryId, publishedAt(sort: Desc)])
+  @@index([province, publishedAt(sort: Desc)])
   @@index([isBreaking, publishedAt(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@index([authorId, createdAt(sort: Desc)])

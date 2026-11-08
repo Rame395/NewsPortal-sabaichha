@@ -50,6 +50,7 @@ interface InitialArticleData {
   featuredImage?: string | null
   imageCaption?: string | null
   categoryId: number
+  province?: string | null
   status: 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED'
   isBreaking: boolean
   isFeatured: boolean
@@ -75,6 +76,7 @@ export function ArticleForm({
   const [featuredImage, setFeaturedImage] = React.useState(initialData?.featuredImage || '')
   const [imageCaption, setImageCaption] = React.useState(initialData?.imageCaption || '')
   const [categoryId, setCategoryId] = React.useState<number | ''>(initialData?.categoryId || '')
+  const [province, setProvince] = React.useState(initialData?.province || '')
   const [status, setStatus] = React.useState(initialData?.status || 'DRAFT')
   const [isBreaking, setIsBreaking] = React.useState(initialData?.isBreaking || false)
   const [isFeatured, setIsFeatured] = React.useState(initialData?.isFeatured || false)
@@ -196,6 +198,7 @@ export function ArticleForm({
         featuredImage,
         imageCaption,
         categoryId: Number(categoryId),
+        province: province ? province.toLowerCase().trim() : null,
         status,
         isBreaking,
         isFeatured,
@@ -460,6 +463,27 @@ export function ArticleForm({
                     {c.nameNe} ({c.nameEn})
                   </option>
                 ))}
+              </select>
+            </div>
+
+            {/* Province Dropdown (प्रदेश समाचार) */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                {language === 'ne' ? 'प्रदेश समाचार (Province - ऐच्छिक)' : 'Province (Optional)'}
+              </label>
+              <select
+                value={province}
+                onChange={(e) => setProvince(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+              >
+                <option value="">{language === 'ne' ? '-- कुनै पनि होइन (राष्ट्रिय/केन्द्रीय) --' : '-- None (National/General) --'}</option>
+                <option value="koshi">कोशी प्रदेश (Koshi Province)</option>
+                <option value="madhesh">मधेश प्रदेश (Madhesh Province)</option>
+                <option value="bagmati">बागमती प्रदेश (Bagmati Province)</option>
+                <option value="gandaki">गण्डकी प्रदेश (Gandaki Province)</option>
+                <option value="lumbini">लुम्बिनी प्रदेश (Lumbini Province)</option>
+                <option value="karnali">कर्णाली प्रदेश (Karnali Province)</option>
+                <option value="sudurpashchim">सुदूरपश्चिम प्रदेश (Sudurpashchim Province)</option>
               </select>
             </div>
 

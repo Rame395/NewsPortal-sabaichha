@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')?.trim()
     const isFeatured = searchParams.get('isFeatured')
     const isBreaking = searchParams.get('isBreaking')
+    const province = searchParams.get('province')?.trim()
     const sortBy = searchParams.get('sortBy') || 'newest'
 
     const where: Record<string, unknown> = {}
@@ -44,6 +45,10 @@ export async function GET(request: NextRequest) {
 
     if (categoryId && !isNaN(categoryId)) {
       where.categoryId = categoryId
+    }
+
+    if (province) {
+      where.province = province.toLowerCase()
     }
 
     if (isFeatured === 'true') {
@@ -125,6 +130,7 @@ export async function POST(request: NextRequest) {
       featuredImage,
       imageCaption,
       categoryId,
+      province,
       status = 'DRAFT',
       isBreaking = false,
       isFeatured = false,
@@ -193,6 +199,7 @@ export async function POST(request: NextRequest) {
         readTimeMinutes,
         authorId: currentUser.id,
         categoryId: Number(categoryId),
+        province: province ? String(province).toLowerCase().trim() : null,
         publishedAt: finalStatus === 'PUBLISHED' ? new Date() : null,
         scheduledFor: scheduledFor ? new Date(scheduledFor) : null,
         tags: {

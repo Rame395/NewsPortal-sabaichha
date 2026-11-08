@@ -10,7 +10,8 @@ import { SavedArticlesModal } from '@/components/bookmarks/saved-articles-modal'
 import { GlobalSearchBar } from '@/components/search/global-search-bar'
 import { AdBanner } from '@/components/ads/ad-banner'
 import { MobileNavDrawer } from '@/components/layout/mobile-nav-drawer'
-import { Home } from 'lucide-react'
+import { Home, ChevronDown } from 'lucide-react'
+import { PROVINCES } from '@/lib/constants/provinces'
 
 interface CategoryNav {
   id: number
@@ -26,6 +27,25 @@ export function Header({
 }) {
   const pathname = usePathname()
   const { language, t } = useLanguage()
+
+  const [isProvinceOpen, setIsProvinceOpen] = React.useState(false)
+  const provinceDropdownRef = React.useRef<HTMLDivElement>(null)
+
+  // Auto-close dropdown when route changes
+  React.useEffect(() => {
+    setIsProvinceOpen(false)
+  }, [pathname])
+
+  // Click outside listener
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (provinceDropdownRef.current && !provinceDropdownRef.current.contains(e.target as Node)) {
+        setIsProvinceOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Fallback categories if not passed
   const navCategories = categories.length > 0 ? categories : [
@@ -101,8 +121,8 @@ export function Header({
       />
 
       {/* 4. Official Royal Navy & Crimson Navigation Bar */}
-      <nav className="bg-[#02267C] dark:bg-[#031B56] border-t-2 border-[#C10A1E] shadow-md overflow-x-auto scrollbar-none touch-pan-x">
-        <div className="max-w-7xl mx-auto px-3 sm:px-8 flex items-center gap-1 min-w-max sm:min-w-0">
+      <nav className="bg-[#02267C] dark:bg-[#031B56] border-t-2 border-[#C10A1E] shadow-md overflow-x-auto md:overflow-visible scrollbar-none touch-pan-x">
+        <div className="max-w-7xl mx-auto px-3 sm:px-8 flex items-center gap-1 min-w-max sm:min-w-0 relative">
           
           {/* Mobile All Categories / Full Directory Hamburger Drawer */}
           <MobileNavDrawer categories={navCategories} />
@@ -124,7 +144,91 @@ export function Header({
             <Home className="w-4 h-4" />
           </Link>
 
-          {navCategories.map((cat) => {
+          {/* First Category (e.g. राजनीति / Politics) */}
+          {navCategories.length > 0 && (() => {
+            const firstCat = navCategories[0]
+            const isFirstActive =
+              pathname === `/category/${firstCat.slug}` ||
+              pathname.startsWith(`/category/${firstCat.slug}/`)
+            return (
+              <Link
+                key={firstCat.id}
+                href={`/category/${firstCat.slug}`}
+                className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
+                  isFirstActive
+                    ? 'bg-[#C10A1E] text-white shadow-xs'
+                    : 'text-white/95 hover:bg-[#011C5E] hover:text-white'
+                }`}
+              >
+                {language === 'ne' ? firstCat.nameNe : firstCat.nameEn}
+              </Link>
+            )
+          })()}
+
+          {/* Province News Dropdown (प्रदेश समाचार - ७ प्रदेश) */}
+          <div
+            ref={provinceDropdownRef}
+            className="relative group shrink-0"
+            onMouseEnter={() => setIsProvinceOpen(true)}
+            onMouseLeave={() => setIsProvinceOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setIsProvinceOpen((prev) => !prev)}
+              className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
+                pathname.startsWith('/province')
+                  ? 'bg-[#C10A1E] text-white shadow-xs'
+                  : 'text-white/95 hover:bg-[#011C5E] hover:text-white'
+              }`}
+              aria-expanded={isProvinceOpen}
+              aria-haspopup="true"
+            >
+              <span>{language === 'ne' ? 'प्रदेश' : 'Province'}</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  isProvinceOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {/* Dropdown Menu Popup */}
+            <div
+              className={`absolute left-0 top-full pt-1 z-50 min-w-[210px] transition-all duration-150 ${
+                isProvinceOpen
+                  ? 'opacity-100 visible translate-y-0 pointer-events-auto'
+                  : 'opacity-0 invisible -translate-y-1 pointer-events-none'
+              }`}
+            >
+              <div className="bg-[#02267C] dark:bg-[#031B56] border-2 border-[#C10A1E] rounded-b-xl shadow-2xl py-1 overflow-hidden">
+                <div className="px-3.5 py-1.5 border-b border-white/10 text-[10.5px] font-extrabold uppercase tracking-wider text-white/70">
+                  {language === 'ne' ? '७ वटै प्रदेश समाचार' : 'All 7 Provinces'}
+                </div>
+                {PROVINCES.map((prov) => {
+                  const isProvActive = pathname === `/province/${prov.slug}`
+                  return (
+                    <Link
+                      key={prov.slug}
+                      href={`/province/${prov.slug}`}
+                      onClick={() => setIsProvinceOpen(false)}
+                      className={`px-3.5 py-2 text-xs font-bold transition flex items-center justify-between ${
+                        isProvActive
+                          ? 'bg-[#C10A1E] text-white'
+                          : 'text-white/90 hover:bg-[#011C5E] hover:text-white'
+                      }`}
+                    >
+                      <span>{language === 'ne' ? prov.nameNe : prov.nameEn}</span>
+                      <span className="text-[10px] text-white/50 font-normal">
+                        {language === 'ne' ? prov.nameEn : prov.nameNe}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Remaining Categories */}
+          {navCategories.slice(1).map((cat) => {
             const isCatActive =
               pathname === `/category/${cat.slug}` ||
               pathname.startsWith(`/category/${cat.slug}/`)

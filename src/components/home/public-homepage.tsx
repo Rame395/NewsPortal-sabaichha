@@ -14,7 +14,6 @@ import { AdBanner } from '@/components/ads/ad-banner'
 import { NewsletterBox } from '@/components/newsletter/newsletter-box'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import { CategoryHeroSection } from '@/components/home/category-hero-section'
-import { ProvinceNewsSection } from '@/components/home/province-news-section'
 import { MultimediaShowcase } from '@/components/home/multimedia-showcase'
 import { toNepaliNumerals } from '@/lib/market/market-service'
 import {
@@ -200,13 +199,6 @@ export function PublicHomepage({
                     </div>
                   </div>
                 )}
-
-                <span
-                  className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full shrink-0"
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  {language === 'ne' ? 'सम्पादकीय छनोट' : "Editor's Pick"}
-                </span>
               </div>
             </div>
 
@@ -389,9 +381,6 @@ export function PublicHomepage({
 
         {/* Phase 6: Homepage Billboard Ad Slot (970x250) */}
         <AdBanner placement="HOMEPAGE_BILLBOARD" />
-
-        {/* 7-Province News Filter (प्रदेश समाचार: कोशी देखि सुदूरपश्चिम सम्म - thurpaonline style) */}
-        <ProvinceNewsSection articles={allArticlesPool} />
 
         {/* ========================================================= */}
         {/* ALL CATEGORIES IN EXACT ADMIN-CONFIGURED ORDER (orderIndex) */}

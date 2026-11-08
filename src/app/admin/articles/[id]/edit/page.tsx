@@ -45,6 +45,7 @@ export default async function EditArticlePage({
     featuredImage: article.featuredImage,
     imageCaption: article.imageCaption,
     categoryId: article.categoryId,
+    province: article.province,
     status: article.status,
     isBreaking: article.isBreaking,
     isFeatured: article.isFeatured,
