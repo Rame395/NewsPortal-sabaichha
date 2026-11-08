@@ -14,6 +14,8 @@ import { AdBanner } from '@/components/ads/ad-banner'
 import { NewsletterBox } from '@/components/newsletter/newsletter-box'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import { CategoryHeroSection } from '@/components/home/category-hero-section'
+import { ProvinceNewsSection } from '@/components/home/province-news-section'
+import { MultimediaShowcase } from '@/components/home/multimedia-showcase'
 import { toNepaliNumerals } from '@/lib/market/market-service'
 import {
   Clock,
@@ -117,6 +119,22 @@ export function PublicHomepage({
     const days = Math.floor(hours / 24)
     return `${days} ${language === 'ne' ? 'दिन अगाडि' : 'd ago'}`
   }
+
+  // Pool of all published articles for province filtering and multimedia showcase
+  const allArticlesPool = React.useMemo(() => {
+    const pool = [
+      ...(featuredArticles || []),
+      ...(topHighlights || []),
+      ...(trendingArticles || []),
+      ...categorySections.flatMap((c) => c.articles || []),
+    ]
+    const seen = new Set<string>()
+    return pool.filter((art) => {
+      if (!art || !art.id || seen.has(art.id)) return false
+      seen.add(art.id)
+      return true
+    })
+  }, [featuredArticles, topHighlights, trendingArticles, categorySections])
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
@@ -368,6 +386,9 @@ export function PublicHomepage({
         {/* Phase 6: Homepage Billboard Ad Slot (970x250) */}
         <AdBanner placement="HOMEPAGE_BILLBOARD" />
 
+        {/* 7-Province News Filter (प्रदेश समाचार: कोशी देखि सुदूरपश्चिम सम्म - thurpaonline style) */}
+        <ProvinceNewsSection articles={allArticlesPool} />
+
         {/* ========================================================= */}
         {/* ALL CATEGORIES IN EXACT ADMIN-CONFIGURED ORDER (orderIndex) */}
         {/* Automatically hides any category with 0 published articles */}
@@ -437,6 +458,9 @@ export function PublicHomepage({
             {index === Math.min(3, categorySections.length - 1) && <NewsletterBox />}
           </React.Fragment>
         ))}
+
+        {/* Multimedia Showcase: Photo Feature & Video Reports (मल्टिमिडिया) */}
+        <MultimediaShowcase articles={allArticlesPool} />
       </main>
 
       {/* Phase 6: Sticky Bottom Floating Ad Banner */}

@@ -42,49 +42,60 @@ export function Header({
       {/* 1. Times of India Style Top Utility Bar (Live Weather, Market Rates & Circular Social Icons) */}
       <TopUtilityBar />
 
-      {/* 2. Main Branding Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 sm:py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Logo & Tagline */}
-        <Link href="/" className="flex items-center gap-4 group shrink-0">
-          <div className="relative h-14 w-60 sm:h-16 sm:w-72 bg-white rounded-lg p-1 shrink-0 flex items-center">
-            <Image
-              src="/logo.jpg"
-              alt="SabaiChha.com - सबै छ डट कम"
-              width={288}
-              height={64}
-              className="object-contain max-h-14 sm:max-h-16 w-auto"
-              priority
-            />
-          </div>
-          <div className="hidden lg:block border-l-2 border-red-600 pl-4 space-y-0.5">
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight">
-              {language === 'ne'
-                ? 'सूचना, संवाद र मनोरञ्जनको संगम, सबै छ डट कम'
-                : 'Confluence of Information, Dialogue & Entertainment'}
-            </p>
-            <div className="flex items-center gap-2 text-[10.5px]">
-              <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
-                https://sabaichha.com
-              </span>
-              <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="text-slate-500 dark:text-slate-400 font-medium">
-                {language === 'ne' ? 'सूचना विभाग दर्ता नं. ५३२७' : 'Regd. No. 5327'}
-              </span>
+      {/* 2. Main Branding & Leaderboard Bar (Side-by-Side on Desktop matching thurpaonline style) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3 sm:py-3.5 flex flex-col lg:flex-row items-center justify-between gap-4">
+        {/* Left: Logo & Official Tagline + Reg. No. */}
+        <div className="flex items-center justify-between w-full lg:w-auto gap-4 shrink-0">
+          <Link href="/" className="flex items-center gap-3 sm:gap-4 group shrink-0">
+            <div className="relative h-14 w-52 sm:h-16 sm:w-64 bg-white rounded-lg p-1 shrink-0 flex items-center">
+              <Image
+                src="/logo.jpg"
+                alt="SabaiChha.com - सबै छ डट कम"
+                width={288}
+                height={64}
+                className="object-contain max-h-14 sm:max-h-16 w-auto"
+                priority
+              />
             </div>
+            <div className="hidden xl:block border-l-2 border-red-600 pl-3.5 space-y-0.5">
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight">
+                {language === 'ne'
+                  ? 'सूचना, संवाद र मनोरञ्जनको संगम, सबै छ डट कम'
+                  : 'Confluence of Information, Dialogue & Entertainment'}
+              </p>
+              <div className="flex items-center gap-2 text-[10.5px]">
+                <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
+                  https://sabaichha.com
+                </span>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">
+                  {language === 'ne' ? 'सूचना विभाग दर्ता नं. ५३२७' : 'Regd. No. 5327'}
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Mobile Search & Saved Articles */}
+          <div className="flex lg:hidden items-center gap-2">
+            <GlobalSearchBar />
+            <SavedArticlesModal />
           </div>
-        </Link>
+        </div>
 
-        {/* Global Search & Saved Articles Drawer */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-          <GlobalSearchBar />
-
-          {/* Reader Saved Articles Button */}
-          <SavedArticlesModal />
+        {/* Right: Header Leaderboard Ad Banner (728x90) + Desktop Search & Saved */}
+        <div className="hidden lg:flex items-center gap-3 justify-end flex-1 max-w-[780px]">
+          <div className="flex-1 max-w-[728px]">
+            <AdBanner placement="HEADER_LEADERBOARD" />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <GlobalSearchBar />
+            <SavedArticlesModal />
+          </div>
         </div>
       </div>
 
-      {/* 3. Header Leaderboard Ad Banner Slot (728x90) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 pb-3 hidden md:block">
+      {/* Mobile-only Header Leaderboard Ad */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 pb-3 lg:hidden">
         <AdBanner placement="HEADER_LEADERBOARD" />
       </div>
 
