@@ -20,6 +20,21 @@ jobs:
   verify:
     name: Typecheck & Production Build
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: sabaichha_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -39,13 +54,18 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm run db:generate
 
+      - name: Push Schema to Test Database
+        run: pnpm run db:push
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/sabaichha_test?schema=public"
+
       - name: Typecheck (TypeScript & Imports Check)
         run: pnpm run typecheck
 
       - name: Test Production Build Compilation
         run: pnpm run build
         env:
-          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/sabaichha_test?schema=public"
           JWT_SECRET: "ci-build-test-secret-minimum-32-chars-long"
           NEXTAUTH_SECRET: "ci-build-test-secret-minimum-32-chars-long"
 
