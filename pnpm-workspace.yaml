@@ -4,3 +4,6 @@ allowBuilds:
   'prisma': true
   'esbuild': true
   'sharp': true
+  'unrs-resolver': true
+
+strictDepBuilds: false
