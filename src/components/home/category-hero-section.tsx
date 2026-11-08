@@ -128,88 +128,82 @@ export function CategoryHeroSection({
         </div>
       ) : category.layoutStyle === 'OPINION' ? (
         /* ========================================================
-           LAYOUT 1: OPINION / COLUMNIST LAYOUT
-           Author portraits, quote watermarks, and editorial styling
+           LAYOUT 1: OPINION / EDITORIAL ANALYSIS LAYOUT
+           Clean editorial cards without awkward dummy avatars
            ======================================================== */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {articles.slice(0, 3).map((art) => (
             <div
               key={art.id}
-              className="bg-amber-50/40 dark:bg-amber-950/15 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl p-5 sm:p-6 hover:shadow-md hover:border-amber-400/80 dark:hover:border-amber-700/80 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden hover:shadow-md hover:border-red-500/40 transition-all duration-300 flex flex-col justify-between group relative"
             >
-              {/* Subtle background quote watermark */}
-              <Quote className="w-24 h-24 text-amber-500/10 dark:text-amber-400/5 absolute -right-3 -bottom-3 pointer-events-none stroke-1" />
-
-              <div className="space-y-3 relative z-10">
-                {/* Author Avatar Row */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {art.author?.avatarUrl ? (
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-amber-500/50 dark:border-amber-400/50 shadow-xs shrink-0">
-                        <Image
-                          src={art.author.avatarUrl}
-                          alt={art.author.fullName}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 border-2 border-amber-500/40">
-                        <User className="w-6 h-6" />
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="font-black text-sm text-slate-900 dark:text-slate-100 group-hover:text-red-600 dark:group-hover:text-red-400 transition">
-                        {art.author?.fullName ||
-                          (language === 'ne' ? 'स्तम्भकार' : 'Columnist')}
-                      </h4>
-                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">
-                        {language === 'ne'
-                          ? 'विचार / दृष्टिकोण'
-                          : 'Opinion & Analysis'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <Quote className="w-5 h-5 text-amber-500/50 fill-amber-500/20 shrink-0" />
-                </div>
-
-                {/* Op-Ed Headline */}
+              {/* Optional Article Feature Image */}
+              {art.featuredImage ? (
                 <Link
                   href={`/news/${art.slug}`}
-                  className="text-base font-serif font-black text-slate-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition leading-snug line-clamp-3 block pt-1"
+                  className="relative aspect-16/10 w-full overflow-hidden bg-slate-100 dark:bg-slate-800 block"
                 >
-                  &ldquo;{getLocalizedTitle(art, language)}&rdquo;
+                  <Image
+                    src={art.featuredImage}
+                    alt={art.title}
+                    fill
+                    className="object-cover group-hover:scale-104 transition duration-300"
+                  />
+                  <div className="absolute top-2.5 left-2.5">
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-[#C10A1E] text-white flex items-center gap-1 shadow-xs">
+                      <Quote className="w-2.5 h-2.5 fill-white" />
+                      <span>{language === 'ne' ? 'विचार' : 'Opinion'}</span>
+                    </span>
+                  </div>
                 </Link>
-
-                {art.subtitle && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                    {getLocalizedSubtitle(art, language)}
-                  </p>
-                )}
-              </div>
-
-              {/* Byline Footer */}
-              <div className="pt-4 mt-3 border-t border-amber-200/50 dark:border-amber-900/30 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span suppressHydrationWarning>{formatTimeAgo(art.publishedAt)}</span>
-                  <span>•</span>
-                  <span>
-                    {language === 'ne' ? toNepaliNumerals(art.readTimeMinutes) : art.readTimeMinutes} {t('readTime')}
+              ) : (
+                <div className="p-4 sm:p-5 pb-0 flex items-center justify-between">
+                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 flex items-center gap-1">
+                    <Quote className="w-2.5 h-2.5 fill-red-600 dark:fill-red-400" />
+                    <span>{language === 'ne' ? 'विचार / दृष्टिकोण' : 'Opinion & Analysis'}</span>
                   </span>
+                  <Quote className="w-5 h-5 text-red-500/30" />
+                </div>
+              )}
+
+              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div className="space-y-2">
+                  <Link
+                    href={`/news/${art.slug}`}
+                    className="text-base font-serif font-black text-slate-950 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition leading-snug line-clamp-3 block"
+                  >
+                    &ldquo;{getLocalizedTitle(art, language)}&rdquo;
+                  </Link>
+
+                  {art.subtitle && (
+                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {getLocalizedSubtitle(art, language)}
+                    </p>
+                  )}
                 </div>
 
-                <BookmarkButton
-                  article={{
-                    id: art.id,
-                    title: art.title,
-                    slug: art.slug,
-                    featuredImage: art.featuredImage,
-                    categoryName: categoryTitle,
-                  }}
-                  size="sm"
-                />
+                {/* Byline Footer */}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                    <span suppressHydrationWarning>{formatTimeAgo(art.publishedAt)}</span>
+                    <span>•</span>
+                    <span>
+                      {language === 'ne' ? toNepaliNumerals(art.readTimeMinutes) : art.readTimeMinutes} {t('readTime')}
+                    </span>
+                  </div>
+
+                  <BookmarkButton
+                    article={{
+                      id: art.id,
+                      title: art.title,
+                      slug: art.slug,
+                      featuredImage: art.featuredImage,
+                      categoryName: categoryTitle,
+                    }}
+                    size="sm"
+                  />
+                </div>
               </div>
             </div>
           ))}

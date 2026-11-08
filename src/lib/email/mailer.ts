@@ -315,3 +315,90 @@ export async function sendRoleOrPasswordUpdateEmail({
     }
   }
 }
+
+export interface SendContactInquiryParams {
+  name: string
+  email: string
+  phone?: string
+  category: string
+  subject: string
+  message: string
+}
+
+/**
+ * Send contact inquiry notification to editorial desk
+ */
+export async function sendContactInquiryNotification(
+  params: SendContactInquiryParams
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    const transporter = getTransporter()
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>नयाँ सम्पर्क सन्देश - SabaiChha Desk</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #1e293b;">
+  <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+    <div style="background-color: #02267C; border-top: 4px solid #C10A1E; padding: 20px 24px; color: #ffffff;">
+      <h2 style="margin: 0; font-size: 18px; font-weight: 800;">SabaiChha Newsroom - नयाँ सम्पर्क सोधपुछ</h2>
+      <p style="margin: 4px 0 0 0; font-size: 12px; color: #93c5fd;">वेबसाइट सम्पर्क फारमबाट प्राप्त सन्देश</p>
+    </div>
+    <div style="padding: 24px;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: bold; width: 120px;">पठाउनेको नाम:</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: bold;">${params.name}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: bold;">इमेल:</td>
+          <td style="padding: 8px 0; color: #0284c7;"><a href="mailto:${params.email}" style="color: #0284c7;">${params.email}</a></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: bold;">फोन नम्बर:</td>
+          <td style="padding: 8px 0; color: #0f172a;">${params.phone || 'उल्लेख नगरिएको'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: bold;">सोधपुछ विधा:</td>
+          <td style="padding: 8px 0; color: #C10A1E; font-weight: bold;">${params.category}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; font-weight: bold;">विषय:</td>
+          <td style="padding: 8px 0; color: #0f172a; font-weight: bold;">${params.subject}</td>
+        </tr>
+      </table>
+
+      <div style="background-color: #f1f5f9; padding: 16px; border-radius: 12px; border-left: 4px solid #02267C; font-size: 13px; line-height: 1.6; color: #1e293b; white-space: pre-wrap;">
+${params.message}
+      </div>
+
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center;">
+        सबै छ डट कम (SabaiChha.com) • सूचना संवाद र मनोरञ्जनको संगम
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+    const info = await transporter.sendMail({
+      from: SMTP_FROM,
+      to: SMTP_USER,
+      replyTo: params.email,
+      subject: `[SabaiChha Contact] ${params.category}: ${params.subject}`,
+      html: htmlContent,
+      text: `नयाँ सम्पर्क सोधपुछ:\nनाम: ${params.name}\nइमेल: ${params.email}\nफोन: ${params.phone || '-'}\nविधा: ${params.category}\nविषय: ${params.subject}\n\nसन्देश:\n${params.message}`,
+    })
+
+    return { success: true, messageId: info.messageId }
+  } catch (error) {
+    console.error('[SMTP] Error sending contact notification:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown mailer error',
+    }
+  }
+}

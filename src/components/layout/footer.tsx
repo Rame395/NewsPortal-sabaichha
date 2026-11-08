@@ -132,9 +132,6 @@ export function Footer({ categories = [] }: FooterProps) {
               <p className="text-xs font-bold text-white tracking-wide">
                 {language === 'ne' ? siteInfo.sloganNe : siteInfo.sloganEn}
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                {language === 'ne' ? siteInfo.publisherName : 'SabaiChha Media Network Pvt. Ltd.'}
-              </p>
             </div>
           </div>
 
@@ -194,8 +191,8 @@ export function Footer({ categories = [] }: FooterProps) {
           </div>
         </div>
 
-        {/* 5-Column Grid: About, Categories, Utility Tools, Legal & Contact */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 py-10 border-b border-slate-800 text-xs">
+        {/* 4-Column Grid: About, Categories, Utility Tools & Contact */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 py-10 border-b border-slate-800 text-xs">
           {/* Col 1: About SabaiChha */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -205,13 +202,18 @@ export function Footer({ categories = [] }: FooterProps) {
             <p className="text-slate-400 leading-relaxed font-serif text-xs">
               {language === 'ne' ? footerText.aboutNe : footerText.aboutEn}
             </p>
-            <div className="pt-2 text-[11px] text-slate-400 space-y-1">
-              <p>
-                <span className="font-bold text-slate-300">
-                  {language === 'ne' ? 'सम्पादकीय नेतृत्व:' : 'Editor-in-Chief:'}
-                </span>{' '}
-                {siteInfo.editorName}
-              </p>
+            <div className="pt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+              <Link href="/about" className="hover:text-red-400 transition underline underline-offset-2">
+                {language === 'ne' ? 'विस्तृत जानकारी' : 'About Details'}
+              </Link>
+              <span>•</span>
+              <Link href="/contact" className="hover:text-red-400 transition underline underline-offset-2">
+                {language === 'ne' ? 'सम्पर्क' : 'Contact'}
+              </Link>
+              <span>•</span>
+              <Link href="/privacy" className="hover:text-red-400 transition underline underline-offset-2">
+                {language === 'ne' ? 'गोपनीयता' : 'Privacy'}
+              </Link>
             </div>
           </div>
 
@@ -274,43 +276,6 @@ export function Footer({ categories = [] }: FooterProps) {
                 </Link>
               </li>
             </ul>
-          </div>
-
-          {/* Col 3: Publisher & Editorial Board (matching thurpaonline & nepali standards) */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-600"></span>
-              <span>{language === 'ne' ? 'सम्पादकीय समूह' : 'Editorial Board'}</span>
-            </h4>
-            <div className="space-y-2 text-slate-300 text-xs">
-              <div>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
-                  {language === 'ne' ? 'सञ्चालक / अध्यक्ष:' : 'Publisher / Chairman:'}
-                </span>
-                <span className="font-bold text-white">{siteInfo.publisherName}</span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
-                  {language === 'ne' ? 'प्रधान सम्पादक:' : 'Editor-in-Chief:'}
-                </span>
-                <span className="font-bold text-white">{siteInfo.editorName}</span>
-              </div>
-              <div className="pt-1.5 space-y-1.5 font-mono text-[11px] text-slate-300">
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                  <span className="text-blue-300 font-semibold">{siteInfo.deptOfInfoNo}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-red-400 shrink-0" />
-                  <span>{siteInfo.pressCouncilNo}</span>
-                </div>
-              </div>
-              <p className="text-[10px] text-slate-500 pt-1 font-sans">
-                {language === 'ne'
-                  ? 'प्रेस काउन्सिल नेपालको पत्रकार आचारसंहिताअनुसार सञ्चालित।'
-                  : 'Operating in accordance with Press Council Nepal ethical standards.'}
-              </p>
-            </div>
           </div>
 
           {/* Col 4: Contact & Office */}

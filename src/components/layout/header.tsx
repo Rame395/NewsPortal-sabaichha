@@ -89,7 +89,7 @@ export function Header({
                 </span>
                 <span className="text-slate-300 dark:text-slate-700">•</span>
                 <span className="text-slate-600 dark:text-slate-400 font-medium">
-                  {language === 'ne' ? 'सूचना विभाग दर्ता नं. ५३२७' : 'Regd. No. 5327'}
+                  {language === 'ne' ? 'सूचना संवाद र मनोरञ्जनको संगम' : 'Information & Entertainment'}
                 </span>
               </div>
             </div>
