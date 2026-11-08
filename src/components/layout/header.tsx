@@ -38,7 +38,7 @@ export function Header({
   ]
 
   return (
-    <header className="w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors">
+    <header className="w-full bg-[#F0F4FA] dark:bg-[#070E20] border-b border-slate-200 dark:border-slate-800 transition-colors">
       {/* 1. Times of India Style Top Utility Bar (Live Weather, Market Rates & Circular Social Icons) */}
       <TopUtilityBar />
 
@@ -47,7 +47,7 @@ export function Header({
         {/* Left: Logo & Official Tagline + Reg. No. */}
         <div className="flex items-center justify-between w-full lg:w-auto gap-4 shrink-0">
           <Link href="/" className="flex items-center gap-3 sm:gap-4 group shrink-0">
-            <div className="relative h-14 w-52 sm:h-16 sm:w-64 bg-white rounded-lg p-1 shrink-0 flex items-center">
+            <div className="relative h-14 w-52 sm:h-16 sm:w-64 bg-white rounded-lg p-1.5 shadow-2xs border border-blue-100/70 shrink-0 flex items-center">
               <Image
                 src="/logo.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
@@ -57,67 +57,68 @@ export function Header({
                 priority
               />
             </div>
-            <div className="hidden xl:block border-l-2 border-red-600 pl-3.5 space-y-0.5">
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-tight">
+            <div className="hidden xl:block border-l-2 border-[#C10A1E] pl-3.5 space-y-0.5">
+              <p className="text-xs font-bold text-[#02267C] dark:text-blue-300 tracking-tight">
                 {language === 'ne'
                   ? 'सूचना, संवाद र मनोरञ्जनको संगम, सबै छ डट कम'
                   : 'Confluence of Information, Dialogue & Entertainment'}
               </p>
               <div className="flex items-center gap-2 text-[10.5px]">
-                <span className="font-semibold text-red-600 dark:text-red-400 font-mono">
+                <span className="font-semibold text-[#C10A1E] dark:text-red-400 font-mono">
                   https://sabaichha.com
                 </span>
                 <span className="text-slate-300 dark:text-slate-700">•</span>
-                <span className="text-slate-500 dark:text-slate-400 font-medium">
+                <span className="text-slate-600 dark:text-slate-400 font-medium">
                   {language === 'ne' ? 'सूचना विभाग दर्ता नं. ५३२७' : 'Regd. No. 5327'}
                 </span>
               </div>
             </div>
           </Link>
 
-          {/* Mobile Search & Saved Articles */}
+          {/* Mobile Search & Saved Articles (Clean circular icon buttons) */}
           <div className="flex lg:hidden items-center gap-2">
-            <GlobalSearchBar />
-            <SavedArticlesModal />
+            <GlobalSearchBar variant="icon" />
+            <SavedArticlesModal variant="icon" />
           </div>
         </div>
 
-        {/* Right: Header Leaderboard Ad Banner (728x90) + Desktop Search & Saved */}
-        <div className="hidden lg:flex items-center gap-3 justify-end flex-1 max-w-[780px]">
-          <div className="flex-1 max-w-[728px]">
+        {/* Right: Scaled Header Leaderboard Ad Banner + Well-Spaced Search & Saved Icons */}
+        <div className="hidden lg:flex items-center gap-3 xl:gap-4 justify-end shrink-0">
+          <div className="w-[460px] xl:w-[520px] 2xl:w-[560px] max-w-full">
             <AdBanner placement="HEADER_LEADERBOARD" />
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <GlobalSearchBar />
-            <SavedArticlesModal />
+            <GlobalSearchBar variant="icon" />
+            <SavedArticlesModal variant="icon" />
           </div>
         </div>
       </div>
 
-      {/* Mobile-only Header Leaderboard Ad */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 pb-3 lg:hidden">
-        <AdBanner placement="HEADER_LEADERBOARD" />
-      </div>
+      {/* Mobile-only Header Leaderboard Ad (auto-hidden if no active ad in database) */}
+      <AdBanner
+        placement="HEADER_LEADERBOARD"
+        className="max-w-7xl mx-auto px-2.5 sm:px-4 pb-2.5 lg:hidden"
+      />
 
-      {/* 4. Primary Red & White Category Navigation Bar */}
-      <nav className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-x-auto scrollbar-none shadow-2xs touch-pan-x">
-        <div className="max-w-7xl mx-auto px-3 sm:px-8 flex items-center gap-1 sm:gap-2 min-w-max sm:min-w-0">
+      {/* 4. Official Royal Navy & Crimson Navigation Bar */}
+      <nav className="bg-[#02267C] dark:bg-[#031B56] border-t-2 border-[#C10A1E] shadow-md overflow-x-auto scrollbar-none touch-pan-x">
+        <div className="max-w-7xl mx-auto px-3 sm:px-8 flex items-center gap-1 min-w-max sm:min-w-0">
           
           {/* Mobile All Categories / Full Directory Hamburger Drawer */}
           <MobileNavDrawer categories={navCategories} />
 
           {/* Vertical Divider */}
-          <span className="h-4 w-px bg-slate-200 dark:bg-slate-800 shrink-0 mx-0.5" />
+          <span className="h-4 w-px bg-white/20 shrink-0 mx-0.5" />
 
           {/* Home Icon */}
           <Link
             href="/"
             title={t('home') || (language === 'ne' ? 'गृहपृष्ठ' : 'Home')}
             aria-label={t('home') || (language === 'ne' ? 'गृहपृष्ठ' : 'Home')}
-            className={`shrink-0 px-3 py-3 text-sm font-bold whitespace-nowrap transition flex items-center justify-center border-b-2 ${
+            className={`shrink-0 px-3.5 py-2.5 text-sm font-bold whitespace-nowrap transition flex items-center justify-center ${
               pathname === '/'
-                ? 'text-red-600 dark:text-red-400 border-red-600'
-                : 'text-slate-700 dark:text-slate-200 border-transparent hover:text-red-600 dark:hover:text-red-400 hover:border-red-600/40'
+                ? 'bg-[#C10A1E] text-white shadow-xs'
+                : 'text-white/90 hover:bg-[#011C5E] hover:text-white'
             }`}
           >
             <Home className="w-4 h-4" />
@@ -132,10 +133,10 @@ export function Header({
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
-                className={`shrink-0 px-3.5 py-3 text-xs sm:text-sm font-bold whitespace-nowrap transition border-b-2 ${
+                className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isCatActive
-                    ? 'text-red-600 dark:text-red-400 border-red-600'
-                    : 'text-slate-700 dark:text-slate-200 border-transparent hover:text-red-600 dark:hover:text-red-400 hover:border-red-600/40'
+                    ? 'bg-[#C10A1E] text-white shadow-xs'
+                    : 'text-white/95 hover:bg-[#011C5E] hover:text-white'
                 }`}
               >
                 {language === 'ne' ? cat.nameNe : cat.nameEn}
@@ -150,10 +151,10 @@ export function Header({
             return (
               <Link
                 href="/rashifal"
-                className={`shrink-0 px-3.5 py-3 text-xs sm:text-sm font-bold whitespace-nowrap transition border-b-2 ${
+                className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isRashifalActive
-                    ? 'text-purple-600 dark:text-purple-400 border-purple-600'
-                    : 'text-purple-600 dark:text-purple-400 border-transparent hover:text-purple-700 dark:hover:text-purple-300 hover:border-purple-600/40'
+                    ? 'bg-[#C10A1E] text-white shadow-xs'
+                    : 'text-amber-300 hover:bg-[#011C5E] hover:text-amber-200 font-bold'
                 }`}
               >
                 {language === 'ne' ? 'राशिफल' : 'Horoscope'}
@@ -169,10 +170,10 @@ export function Header({
             return (
               <Link
                 href="/tools"
-                className={`shrink-0 px-3.5 py-3 text-xs sm:text-sm font-bold whitespace-nowrap transition border-b-2 ${
+                className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isToolsActive
-                    ? 'text-amber-600 dark:text-amber-400 border-amber-600'
-                    : 'text-amber-600 dark:text-amber-400 border-transparent hover:text-amber-700 dark:hover:text-amber-300 hover:border-amber-600/40'
+                    ? 'bg-[#C10A1E] text-white shadow-xs'
+                    : 'text-emerald-300 hover:bg-[#011C5E] hover:text-emerald-200 font-bold'
                 }`}
               >
                 {language === 'ne' ? 'उपयोगी टुल्स' : 'Tools'}

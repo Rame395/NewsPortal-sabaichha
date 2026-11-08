@@ -7,7 +7,11 @@ import { Bookmark, X, Trash2, ExternalLink, BookOpen } from 'lucide-react'
 import { BookmarkArticleData } from './bookmark-button'
 import { useLanguage } from '@/context/language-context'
 
-export function SavedArticlesModal() {
+interface SavedArticlesModalProps {
+  variant?: 'pill' | 'icon'
+}
+
+export function SavedArticlesModal({ variant = 'pill' }: SavedArticlesModalProps) {
   const { language } = useLanguage()
   const [isOpen, setIsOpen] = React.useState(false)
   const [articles, setArticles] = React.useState<BookmarkArticleData[]>([])
@@ -51,22 +55,39 @@ export function SavedArticlesModal() {
   return (
     <>
       {/* Header Trigger Button */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="shrink-0 relative inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer shadow-2xs"
-        title="Saved Articles / पछि पढ्नका लागि सुरक्षित"
-      >
-        <Bookmark className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-        <span className="hidden md:inline">
-          {language === 'ne' ? 'सुरक्षित' : 'Saved'}
-        </span>
-        {articles.length > 0 && (
-          <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-red-600 text-white">
-            {articles.length}
+      {variant === 'icon' ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="shrink-0 relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-red-50 dark:bg-slate-800 dark:hover:bg-red-950/40 text-slate-700 dark:text-slate-200 hover:text-red-600 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition shadow-2xs cursor-pointer group"
+          title={language === 'ne' ? 'सुरक्षित गरिएका समाचारहरू' : 'Saved Articles'}
+          aria-label="Saved Articles"
+        >
+          <Bookmark className="w-4 h-4 text-slate-700 dark:text-slate-200 group-hover:text-red-600 transition" />
+          {articles.length > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-mono font-bold bg-red-600 text-white flex items-center justify-center shadow-xs">
+              {articles.length}
+            </span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="shrink-0 relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer shadow-2xs"
+          title="Saved Articles / पछि पढ्नका लागि सुरक्षित"
+        >
+          <Bookmark className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+          <span>
+            {language === 'ne' ? 'सुरक्षित' : 'Saved'}
           </span>
-        )}
-      </button>
+          {articles.length > 0 && (
+            <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-red-600 text-white">
+              {articles.length}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Slide-over Drawer / Modal */}
       {isOpen && (

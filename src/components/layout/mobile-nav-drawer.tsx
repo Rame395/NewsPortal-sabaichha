@@ -124,11 +124,11 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg text-slate-800 dark:text-slate-100 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg text-white hover:bg-white/10 transition cursor-pointer"
         aria-label="Open Navigation Menu"
         title={isNe ? 'सबै विधा र मेनु खोल्नुहोस्' : 'Open All Navigation Menu'}
       >
-        <Menu className="w-5 h-5 text-red-600 dark:text-red-400" />
+        <Menu className="w-5 h-5 text-amber-300 sm:text-white" />
         <span className="font-extrabold uppercase tracking-wide text-[11px] sm:text-xs">
           {isNe ? 'मेनु' : 'Menu'}
         </span>

@@ -167,9 +167,9 @@ export function TopUtilityBar() {
   return (
     <div
       translate="no"
-      className="notranslate relative z-30 w-full bg-slate-50 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 border-b border-slate-200/90 dark:border-slate-800 text-[11px] h-9.5 px-2 sm:px-4 transition-colors select-none flex items-center"
+      className="notranslate relative z-30 w-full bg-slate-50 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 border-b border-slate-200/90 dark:border-slate-800 text-[11px] h-9.5 px-4 sm:px-8 transition-colors select-none flex items-center"
     >
-      <div className="max-w-[1440px] w-full mx-auto flex items-center justify-between gap-2 min-w-0">
+      <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-2 min-w-0">
         
         {/* ======================================================== */}
         {/* 1. LEFT ZONE: Edition, Language Dropdown & Live Clock (shrink-0) */}

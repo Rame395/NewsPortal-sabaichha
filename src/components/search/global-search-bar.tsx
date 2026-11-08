@@ -49,7 +49,11 @@ const TRENDING_SEARCHES = {
   en: ['Politics', 'Economy', 'Nepal Cricket', 'Gold Rate', 'Weather', 'Parliament'],
 }
 
-export function GlobalSearchBar() {
+interface GlobalSearchBarProps {
+  variant?: 'inline' | 'icon'
+}
+
+export function GlobalSearchBar({ variant = 'inline' }: GlobalSearchBarProps) {
   const router = useRouter()
   const { language, t } = useLanguage()
   const isNe = language === 'ne'
@@ -252,6 +256,256 @@ export function GlobalSearchBar() {
 
   const trendingList = isNe ? TRENDING_SEARCHES.ne : TRENDING_SEARCHES.en
 
+  // 1. Mobile Icon Trigger Variant
+  if (variant === 'icon') {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(true)
+            setTimeout(() => inputRef.current?.focus(), 80)
+          }}
+          className="shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-red-50 dark:bg-slate-800 dark:hover:bg-red-950/40 text-slate-700 dark:text-slate-200 hover:text-red-600 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition shadow-2xs cursor-pointer group"
+          title={isNe ? 'समाचार खोज्नुहोस्' : 'Search news'}
+          aria-label="Search"
+        >
+          <Search className="w-4 h-4 text-slate-700 dark:text-slate-200 group-hover:text-red-600 transition" />
+        </button>
+
+        {isOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col p-3 sm:p-6 animate-in fade-in duration-200 justify-start">
+            <div
+              ref={containerRef}
+              className="w-full max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[88vh] animate-in zoom-in-95 duration-150 mt-2 sm:mt-8"
+            >
+              {/* Modal Search Header */}
+              <form onSubmit={handleSubmit} className="p-3 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2.5">
+                <div className="relative flex-1 flex items-center">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={query}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={t('searchPlaceholder') || (isNe ? 'समाचार, विषय वा लेखक खोज्नुहोस्...' : 'Search news, topics...')}
+                    className="w-full pl-9 pr-8 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-red-600 transition"
+                    autoComplete="off"
+                    autoFocus
+                  />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={clearInput}
+                      className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                >
+                  {isNe ? 'रद्द' : 'Close'}
+                </button>
+              </form>
+
+              {/* Modal Search Body */}
+              <div className="flex-1 overflow-y-auto">
+                {/* CASE A: User has not typed anything yet -> Show Recent & Trending Searches */}
+                {!query.trim() && (
+                  <div className="p-4 space-y-4">
+                    {/* Recent Searches */}
+                    {recentSearches.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5">
+                            <History className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{isNe ? 'हालै खोजिएका' : 'Recent Searches'}</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={clearAllRecent}
+                            className="text-[10px] text-red-600 hover:underline cursor-pointer lowercase"
+                          >
+                            {isNe ? 'सबै हटाउनुहोस्' : 'Clear all'}
+                          </button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5">
+                          {recentSearches.map((term) => (
+                            <div
+                              key={term}
+                              onClick={() => executeSearch(term)}
+                              className="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer border border-slate-200 dark:border-slate-700"
+                            >
+                              <Clock className="w-3.5 h-3.5 text-slate-400 group-hover:text-red-500" />
+                              <span>{term}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => removeRecentSearch(term, e)}
+                                className="text-slate-400 hover:text-red-600 ml-0.5 p-0.5 rounded-full"
+                                title="Remove"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Trending Searches */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <TrendingUp className="w-3.5 h-3.5 text-red-600" />
+                        <span>{isNe ? 'चर्चामा रहेका विषयहरू' : 'Trending Topics'}</span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {trendingList.map((topic) => (
+                          <button
+                            key={topic}
+                            type="button"
+                            onClick={() => executeSearch(topic)}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition cursor-pointer border border-slate-200/80 dark:border-slate-700/80"
+                          >
+                            <span className="text-red-600 font-bold">#</span>
+                            <span>{topic}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CASE B: User is typing -> Show Live Matches */}
+                {query.trim() && (
+                  <div>
+                    {/* Category shortcuts if found */}
+                    {categories.length > 0 && (
+                      <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          {isNe ? 'सम्बन्धित विधा' : 'Matching Categories'}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {categories.map((cat) => (
+                            <Link
+                              key={cat.id}
+                              href={`/category/${cat.slug}`}
+                              onClick={() => setIsOpen(false)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-red-600 hover:text-white text-xs font-bold text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition"
+                            >
+                              <Folder className="w-3.5 h-3.5 text-red-600" />
+                              <span>{isNe ? cat.nameNe : cat.nameEn}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Matching Articles */}
+                    {articles.length > 0 ? (
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[360px] overflow-y-auto">
+                        <div className="px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                          <span>{isNe ? 'ताजा समाचार नतिजा' : 'Matching Articles'}</span>
+                          <span className="text-red-600 font-mono">
+                            {isNe ? `${total} समाचार` : `${total} found`}
+                          </span>
+                        </div>
+
+                        {articles.map((art, idx) => {
+                          const isSelected = idx === selectedIndex
+                          return (
+                            <Link
+                              key={art.id}
+                              href={`/news/${art.slug}`}
+                              onClick={() => {
+                                saveRecentSearch(query)
+                                setIsOpen(false)
+                              }}
+                              className={`p-3 flex items-start gap-3 transition block ${
+                                isSelected
+                                  ? 'bg-red-50/60 dark:bg-red-950/30'
+                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                              }`}
+                            >
+                              {art.featuredImage ? (
+                                <div className="relative w-14 h-11 rounded-lg overflow-hidden shrink-0 bg-slate-950">
+                                  <Image
+                                    src={art.featuredImage}
+                                    alt={art.title}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-14 h-11 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center justify-center">
+                                  <Search className="w-4 h-4 text-slate-400" />
+                                </div>
+                              )}
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">
+                                    {isNe ? art.category.nameNe : art.category.nameEn}
+                                  </span>
+                                  {art.publishedAt && (
+                                    <span className="text-[10px] text-slate-400">
+                                      • {new Date(art.publishedAt).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+                                  {art.title}
+                                </h4>
+                              </div>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    ) : !isLoading ? (
+                      <div className="p-8 text-center space-y-2">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
+                          <Search className="w-5 h-5" />
+                        </div>
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          {isNe
+                            ? `"${query}" सँग सम्बन्धित कुनै समाचार फेला परेन`
+                            : `No news found for "${query}"`}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {/* View all results footer */}
+                    <div className="p-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => executeSearch(query)}
+                        className="w-full py-2 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <span>
+                          {isNe
+                            ? `"${query}" का सबै नतिजा हेर्नुहोस् (${total})`
+                            : `View all results for "${query}" (${total})`}
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  // 2. Desktop Inline Input Variant
   return (
     <div ref={containerRef} className="relative flex-1 min-w-0 md:w-80 lg:w-96 md:flex-initial">
       {/* 1. Main Search Bar Input */}

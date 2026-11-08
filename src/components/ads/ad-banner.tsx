@@ -185,7 +185,7 @@ export function AdBanner({ placement, className = '', initialAd }: AdBannerProps
 
   // Responsive container height classes tailored to standard ad dimensions
   const containerClasses = isLeaderboard
-    ? 'h-24 sm:h-28 md:h-[105px] max-w-5xl'
+    ? 'w-full aspect-[728/90] h-auto max-h-[90px]'
     : isBillboard
     ? 'h-36 sm:h-52 md:h-64 max-w-5xl'
     : isSidebar
@@ -195,7 +195,7 @@ export function AdBanner({ placement, className = '', initialAd }: AdBannerProps
   return (
     <div className={`w-full flex flex-col items-center justify-center ${className}`}>
       {/* Disclaimer tag */}
-      <div className="w-full max-w-5xl flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1 px-1">
+      <div className="w-full max-w-5xl flex items-center justify-between text-[9px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5 px-0.5">
         <span>{isNe ? 'विज्ञापन' : 'ADVERTISEMENT'}</span>
         {ad.sponsorName && (
           <span>{isNe ? `प्रायोजक: ${ad.sponsorName}` : `SPONSOR: ${ad.sponsorName}`}</span>
@@ -207,7 +207,7 @@ export function AdBanner({ placement, className = '', initialAd }: AdBannerProps
         target="_blank"
         rel="sponsored noopener noreferrer"
         onClick={handleAdClick}
-        className={`relative w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 group shadow-2xs hover:shadow-md transition block ${containerClasses}`}
+        className={`relative w-full rounded-lg sm:rounded-xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 group shadow-2xs hover:shadow-md transition block ${containerClasses}`}
       >
         {ad.imageUrl ? (
           isVideoMedia(ad.imageUrl) ? (
@@ -218,7 +218,7 @@ export function AdBanner({ placement, className = '', initialAd }: AdBannerProps
               muted
               playsInline
               preload="metadata"
-              className="w-full h-full object-contain p-0.5 group-hover:scale-[1.01] transition duration-300"
+              className="w-full h-full object-contain group-hover:scale-[1.01] transition duration-300"
             />
           ) : (
             <Image
@@ -227,7 +227,7 @@ export function AdBanner({ placement, className = '', initialAd }: AdBannerProps
               fill
               unoptimized={isGifMedia(ad.imageUrl)}
               sizes="(max-width: 768px) 100vw, 1200px"
-              className="object-contain p-0.5 group-hover:scale-[1.01] transition duration-300"
+              className="object-contain group-hover:scale-[1.01] transition duration-300"
               priority={isLeaderboard}
             />
           )
