@@ -20,6 +20,9 @@ export function BookmarkButton({
   size?: 'sm' | 'md'
   className?: string
 }) {
+  // Feature hidden per client request; easily re-enabled by removing this return
+  return null
+
   const [isSaved, setIsSaved] = React.useState(false)
 
   React.useEffect(() => {

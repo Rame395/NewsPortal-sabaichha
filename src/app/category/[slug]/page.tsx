@@ -8,7 +8,9 @@ import { Footer } from '@/components/layout/footer'
 import { CategoryHeroSection } from '@/components/home/category-hero-section'
 import { ArticleStatus } from '@/lib/prisma'
 import { Clock, Calendar, ArrowLeft, FolderTree } from 'lucide-react'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
+
+export const revalidate = 60
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'
 
@@ -83,12 +85,22 @@ export default async function CategoryArchivePage({ params }: PageProps) {
         },
         articles: {
           where: { status: ArticleStatus.PUBLISHED },
+          take: 24,
           orderBy: [
             { isCategoryLead: 'desc' },
             { publishedAt: 'desc' },
           ],
-          include: {
-            author: { select: { fullName: true } },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            subtitle: true,
+            excerpt: true,
+            featuredImage: true,
+            publishedAt: true,
+            readTimeMinutes: true,
+            isCategoryLead: true,
+            author: { select: { fullName: true, avatarUrl: true } },
           },
         },
       },

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useLanguage } from '@/context/language-context'
 import { getLocalizedTitle } from '@/lib/data/translations'
 import { Zap, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 
 interface BreakingStory {
   id: string

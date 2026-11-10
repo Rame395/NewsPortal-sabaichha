@@ -9,6 +9,8 @@ export function NewsletterBox({
 }: {
   variant?: 'default' | 'card' | 'sidebar'
 }) {
+  // Feature removed per client request
+  return null
   const { language } = useLanguage()
   const [email, setEmail] = React.useState('')
   const [loading, setLoading] = React.useState(false)

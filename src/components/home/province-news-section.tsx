@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, ChevronRight, Clock, ArrowRight } from 'lucide-react'
 import { useLanguage } from '@/context/language-context'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 import { CategoryStorySnippet } from '@/components/home/category-hero-section'
 
 const PROVINCES = [

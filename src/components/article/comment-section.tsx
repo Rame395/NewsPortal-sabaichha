@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useLanguage } from '@/context/language-context'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 import {
   MessageSquare,
   Send,
@@ -126,11 +127,11 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
     setErrorMessage(null)
     setSubmitSuccess(false)
 
-    if (!authorName.trim() || !authorEmail.trim() || !content.trim()) {
+    if (!content.trim()) {
       setErrorMessage(
         language === 'ne'
-          ? 'कृपया आफ्नो नाम, इमेल र प्रतिक्रिया सबै भर्नुहोस्।'
-          : 'Please fill out your name, email, and comment.'
+          ? 'कृपया आफ्नो प्रतिक्रिया लेख्नुहोस्।'
+          : 'Please enter your comment.'
       )
       return
     }
@@ -142,8 +143,8 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           articleId,
-          authorName: authorName.trim(),
-          authorEmail: authorEmail.trim(),
+          authorName: authorName.trim() || (language === 'ne' ? 'पाठक' : 'Reader'),
+          authorEmail: authorEmail.trim() || 'reader@sabaichha.com',
           content: content.trim(),
           honeypot,
         }),
@@ -178,11 +179,11 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
     setReplyError(null)
     setReplySuccess(false)
 
-    if (!replyName.trim() || !replyEmail.trim() || !replyContent.trim()) {
+    if (!replyContent.trim()) {
       setReplyError(
         language === 'ne'
-          ? 'कृपया सबै विवरणहरू भर्नुहोस्।'
-          : 'Please fill all required fields.'
+          ? 'कृपया आफ्नो जवाफ लेख्नुहोस्।'
+          : 'Please enter your reply.'
       )
       return
     }
@@ -195,8 +196,8 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
         body: JSON.stringify({
           articleId,
           parentId,
-          authorName: replyName.trim(),
-          authorEmail: replyEmail.trim(),
+          authorName: replyName.trim() || (language === 'ne' ? 'पाठक' : 'Reader'),
+          authorEmail: replyEmail.trim() || 'reader@sabaichha.com',
           content: replyContent.trim(),
         }),
       })
@@ -228,63 +229,45 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
   }
 
   return (
-    <section className="pt-10 border-t-2 border-red-600/60 dark:border-red-600/40 space-y-8" id="comments">
+    <section className="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6" id="comments">
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-red-600/10 text-red-600 flex items-center justify-center font-bold">
-            <MessageSquare className="w-5 h-5" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-red-600/10 text-red-600 flex items-center justify-center font-bold">
+            <MessageSquare className="w-4 h-4 text-[#C10A1E]" />
           </div>
-          <div>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <span>{language === 'ne' ? 'पाठक प्रतिक्रिया' : 'Reader Comments'}</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-900">
-                {totalCount}
+          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <span>{language === 'ne' ? 'पाठक प्रतिक्रिया' : 'Reader Comments'}</span>
+            {totalCount > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-900 font-mono">
+                {language === 'ne' ? toNepaliNumerals(totalCount) : totalCount}
               </span>
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              {language === 'ne'
-                ? 'यस समाचारप्रति आफ्ना विचार तथा टिप्पणीहरू व्यक्त गर्नुहोस्'
-                : 'Join the conversation and share your perspective'}
-            </p>
-          </div>
+            )}
+          </h3>
         </div>
       </div>
 
-      {/* Main Comment Submission Card */}
-      <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xs">
-        <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-600"></span>
-          <span>{language === 'ne' ? 'तपाईंको विचार राख्नुहोस्' : 'Leave a Comment'}</span>
-        </h4>
-
+      {/* Lightweight Comment Input Box */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
         {submitSuccess && (
-          <div className="mb-5 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-sm flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold">
-                {language === 'ne' ? 'प्रतिक्रिया दर्ता भयो!' : 'Comment Submitted!'}
-              </p>
-              <p className="text-xs mt-0.5 leading-relaxed">
-                {language === 'ne'
-                  ? 'धन्यवाद! तपाईंको टिप्पणी प्राप्त भयो। सम्पादकीय आचारसंहिता समीक्षापछि यो प्रकाशित हुनेछ।'
-                  : 'Thank you! Your comment has been received and will be published following editorial compliance review.'}
-              </p>
-            </div>
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              {language === 'ne'
+                ? 'धन्यवाद! तपाईंको प्रतिक्रिया प्राप्त भयो र समीक्षापछि प्रकाशित हुनेछ।'
+                : 'Thank you! Your comment has been received and will be published after review.'}
+            </span>
           </div>
         )}
 
         {errorMessage && (
-          <div className="mb-5 p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold">{language === 'ne' ? 'त्रुटि' : 'Error'}</p>
-              <p className="text-xs mt-0.5">{errorMessage}</p>
-            </div>
+          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{errorMessage}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Honeypot field for anti-bot defense */}
           <input
             type="text"
@@ -296,78 +279,29 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
             autoComplete="off"
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                {language === 'ne' ? 'पूरा नाम *' : 'Full Name *'}
-              </label>
-              <input
-                type="text"
-                required
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                placeholder={language === 'ne' ? 'उदा. सन्तोष श्रेष्ठ' : 'e.g. John Doe'}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 transition"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
-                <span>{language === 'ne' ? 'इमेल ठेगाना *' : 'Email Address *'}</span>
-                <span className="text-[10px] text-slate-400 font-normal">
-                  {language === 'ne' ? '(सार्वजनिक गरिने छैन)' : '(Will not be published)'}
-                </span>
-              </label>
-              <input
-                type="email"
-                required
-                value={authorEmail}
-                onChange={(e) => setAuthorEmail(e.target.value)}
-                placeholder={language === 'ne' ? 'yourname@example.com' : 'yourname@example.com'}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 transition"
-              />
-            </div>
-          </div>
+          <textarea
+            required
+            rows={3}
+            maxLength={2000}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={
+              language === 'ne'
+                ? 'यस समाचारप्रति आफ्नो विचार वा प्रतिक्रिया लेख्नुहोस्...'
+                : 'Write your comment here...'
+            }
+            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 transition resize-y"
+          />
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
-              <span>{language === 'ne' ? 'तपाईंको विचार / टिप्पणी *' : 'Your Comment *'}</span>
-              <span className="text-[10px] text-slate-400 font-mono">
-                {content.length}/2000
-              </span>
-            </label>
-            <textarea
-              required
-              rows={4}
-              maxLength={2000}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={
-                language === 'ne'
-                  ? 'यस समाचारसम्बन्धी मर्यादित र रचनात्मक विचार लेख्नुहोस्...'
-                  : 'Write your constructive thoughts on this story...'
-              }
-              className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-red-600/30 focus:border-red-600 transition resize-y"
-            />
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-2">
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>
-                {language === 'ne'
-                  ? 'प्रेस काउन्सिल नेपालको आचारसंहिताअनुसार मर्यादित अभिव्यक्ति मात्र मान्य हुनेछ।'
-                  : 'All comments adhere to ethical press standards and pre-moderation.'}
-              </span>
-            </div>
-
+          <div className="flex items-center justify-end">
             <button
               type="submit"
-              disabled={submitting}
-              className="px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md shadow-red-600/20 hover:shadow-red-600/30 active:scale-98 transition flex items-center gap-2 cursor-pointer disabled:opacity-60"
+              disabled={submitting || !content.trim()}
+              className="px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs hover:shadow-sm active:scale-98 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>{language === 'ne' ? 'पठाउँदै...' : 'Submitting...'}</span>
                 </>
               ) : (
@@ -384,23 +318,11 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
       {/* Comments List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="py-12 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+          <div className="py-6 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-red-600" />
             <span>{language === 'ne' ? 'प्रतिक्रियाहरू लोड हुँदैछ...' : 'Loading comments...'}</span>
           </div>
-        ) : comments.length === 0 ? (
-          <div className="py-10 text-center rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-8">
-            <MessageSquare className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
-              {language === 'ne' ? 'कुनै प्रतिक्रिया दर्ता भएको छैन' : 'No comments yet'}
-            </p>
-            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-              {language === 'ne'
-                ? 'यस समाचारमा पहिलो विचार तपाईंको हुनसक्छ। माथिको फारमबाट प्रतिक्रिया दिनुहोस्।'
-                : 'Be the first to share your thoughts on this article using the form above.'}
-            </p>
-          </div>
-        ) : (
+        ) : comments.length === 0 ? null : (
           <div className="space-y-4">
             {comments.map((comment) => (
               <div
@@ -481,27 +403,9 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
                       onSubmit={(e) => handleReplySubmit(e, comment.id)}
                       className="space-y-3"
                     >
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input
-                          type="text"
-                          required
-                          value={replyName}
-                          onChange={(e) => setReplyName(e.target.value)}
-                          placeholder={language === 'ne' ? 'तपाईंको नाम *' : 'Your Name *'}
-                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
-                        />
-                        <input
-                          type="email"
-                          required
-                          value={replyEmail}
-                          onChange={(e) => setReplyEmail(e.target.value)}
-                          placeholder={language === 'ne' ? 'इमेल (गोप्य रहनेछ) *' : 'Email (confidential) *'}
-                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
-                        />
-                      </div>
                       <textarea
                         required
-                        rows={3}
+                        rows={2}
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
                         placeholder={
@@ -514,8 +418,8 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
                       <div className="flex justify-end">
                         <button
                           type="submit"
-                          disabled={replySubmitting}
-                          className="px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                          disabled={replySubmitting || !replyContent.trim()}
+                          className="px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                         >
                           {replySubmitting ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />

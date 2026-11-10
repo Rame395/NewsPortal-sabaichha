@@ -2,6 +2,31 @@ import prisma from '@/lib/prisma'
 import { ArticleStatus } from '@/lib/prisma'
 import { getSiteSettings } from '@/lib/settings'
 
+// Lean field selector for homepage cards (avoids fetching megabytes of raw content/contentHtml)
+const HOMEPAGE_ARTICLE_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  subtitle: true,
+  excerpt: true,
+  featuredImage: true,
+  imageCaption: true,
+  videoUrl: true,
+  status: true,
+  viewCount: true,
+  readTimeMinutes: true,
+  isFeatured: true,
+  isBreaking: true,
+  isCategoryLead: true,
+  publishedAt: true,
+  category: {
+    select: { nameEn: true, nameNe: true, slug: true },
+  },
+  author: {
+    select: { fullName: true, avatarUrl: true },
+  },
+} as const
+
 export async function getHomepageData() {
   try {
     const [
@@ -33,10 +58,7 @@ export async function getHomepageData() {
               { isCategoryLead: 'desc' },
               { publishedAt: 'desc' },
             ],
-            include: {
-              category: { select: { nameEn: true, nameNe: true, slug: true } },
-              author: { select: { fullName: true, avatarUrl: true } },
-            },
+            select: HOMEPAGE_ARTICLE_SELECT,
           },
         },
       }),
@@ -60,30 +82,27 @@ export async function getHomepageData() {
         where: { status: ArticleStatus.PUBLISHED, isFeatured: true },
         take: 5,
         orderBy: { publishedAt: 'desc' },
-        include: {
-          author: { select: { fullName: true, avatarUrl: true } },
-          category: { select: { nameEn: true, nameNe: true, slug: true } },
-        },
+        select: HOMEPAGE_ARTICLE_SELECT,
       }),
 
-      // 4. Top Highlights Sidebar (Next 4 latest articles)
+      // 4. Top Highlights Sidebar (Next 4-5 latest articles)
       prisma.article.findMany({
         where: { status: ArticleStatus.PUBLISHED },
         take: 5,
         orderBy: { publishedAt: 'desc' },
-        include: {
-          category: { select: { nameEn: true, nameNe: true, slug: true } },
-        },
+        select: HOMEPAGE_ARTICLE_SELECT,
       }),
 
-      // 5. Trending / Most Read Articles (by viewCount)
+      // 5. Trending / Most Read Articles (Top 5 by isTrending & viewCount)
       prisma.article.findMany({
         where: { status: ArticleStatus.PUBLISHED },
-        take: 6,
-        orderBy: { viewCount: 'desc' },
-        include: {
-          category: { select: { nameEn: true, nameNe: true, slug: true } },
-        },
+        take: 5,
+        orderBy: [
+          { isTrending: 'desc' },
+          { viewCount: 'desc' },
+          { publishedAt: 'desc' },
+        ],
+        select: HOMEPAGE_ARTICLE_SELECT,
       }),
     ])
 

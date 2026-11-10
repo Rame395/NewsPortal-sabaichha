@@ -7,8 +7,10 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ArticleStatus } from '@/lib/prisma'
 import { MapPin, Clock, ChevronRight, Newspaper, ArrowLeft } from 'lucide-react'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 import { PROVINCES, getProvinceBySlug } from '@/lib/constants/provinces'
+
+export const revalidate = 60
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'
 
@@ -96,7 +98,16 @@ export default async function ProvinceArchivePage({ params }: PageProps) {
         { isCategoryLead: 'desc' },
         { publishedAt: 'desc' },
       ],
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        subtitle: true,
+        excerpt: true,
+        featuredImage: true,
+        publishedAt: true,
+        readTimeMinutes: true,
+        isCategoryLead: true,
         category: {
           select: { id: true, nameEn: true, nameNe: true, slug: true },
         },

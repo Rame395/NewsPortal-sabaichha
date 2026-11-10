@@ -8,12 +8,16 @@ import { Footer } from '@/components/layout/footer'
 import { useLanguage } from '@/context/language-context'
 import { formatBikramSambat } from '@/lib/date/nepali-calendar'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 import { CommentSection } from '@/components/article/comment-section'
 import { LiveTimeline } from '@/components/article/live-timeline'
 import { AdBanner } from '@/components/ads/ad-banner'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
-import { NewsletterBox } from '@/components/newsletter/newsletter-box'
+import {
+  FacebookIcon,
+  TwitterXIcon,
+  WhatsAppIcon,
+} from '@/components/ui/social-icons'
 import {
   Calendar,
   Clock,
@@ -29,6 +33,7 @@ import {
   ArrowLeft,
   TrendingUp,
   Sparkles,
+  Link2,
 } from 'lucide-react'
 
 interface CategoryNav {
@@ -47,9 +52,11 @@ interface ArticleDetail {
   excerpt: string | null
   featuredImage: string | null
   imageCaption: string | null
+  videoUrl?: string | null
   isBreaking: boolean
   isFeatured: boolean
   viewCount: number
+  shareCount?: number
   readTimeMinutes: number
   publishedAt: string | null | Date
   author: {
@@ -111,10 +118,39 @@ export function ArticleReader({
 }) {
   const { language, t } = useLanguage()
 
-  // Font size scale state: 'base' (A) | 'lg' (A+) | 'xl' (A++) - default is 'base' (A)
-  const [fontSize, setFontSize] = React.useState<'base' | 'lg' | 'xl'>('base')
+  // Font size scale state: default is 'lg' (A+) per client request
+  const [fontSize, setFontSize] = React.useState<'base' | 'lg' | 'xl'>('lg')
   const [copied, setCopied] = React.useState(false)
   const [showScrollTop, setShowScrollTop] = React.useState(false)
+
+  // Real-time total share count state
+  const [shareCount, setShareCount] = React.useState<number>(article.shareCount || 0)
+
+  const handleShare = (platform: 'facebook' | 'twitter' | 'whatsapp' | 'copy') => {
+    setShareCount((prev) => prev + 1)
+    if (article?.id) {
+      fetch(`/api/public/articles/${article.id}/share`, {
+        method: 'POST',
+      }).catch(() => {})
+    }
+
+    if (platform === 'facebook') shareOnFacebook()
+    else if (platform === 'twitter') shareOnTwitter()
+    else if (platform === 'whatsapp') shareOnWhatsApp()
+    else if (platform === 'copy') copyUrlToClipboard()
+  }
+
+  // Register view count asynchronously after 3 seconds of reader engagement
+  React.useEffect(() => {
+    if (!article?.id) return
+    const timer = setTimeout(() => {
+      fetch(`/api/public/articles/${article.id}/view`, {
+        method: 'POST',
+      }).catch(() => {})
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [article?.id])
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -195,6 +231,44 @@ export function ArticleReader({
     xl: 'text-[21px] sm:text-[22px] leading-[1.9]',
   }
 
+  // Parse YouTube video ID or direct MP4/WebM video if dedicated videoUrl is attached
+  const youtubeVideoId = React.useMemo(() => {
+    const url = article.videoUrl
+    if (!url) return null
+    try {
+      if (url.includes('youtu.be/')) {
+        return url.split('youtu.be/')[1].split('?')[0]
+      }
+      if (url.includes('youtube.com/watch')) {
+        return new URLSearchParams(new URL(url).search).get('v')
+      }
+      if (url.includes('youtube.com/embed/')) {
+        return url.split('youtube.com/embed/')[1].split('?')[0]
+      }
+    } catch {}
+    return null
+  }, [article.videoUrl])
+
+  const isDirectVideoFile = React.useMemo(() => {
+    const url = article.videoUrl?.toLowerCase().split('?')[0]
+    if (!url) return false
+    return url.endsWith('.mp4') || url.endsWith('.webm')
+  }, [article.videoUrl])
+
+  // Check if the video is already embedded directly inside article.content so we don't render it twice
+  const isVideoAlreadyInBody = React.useMemo(() => {
+    if (!article.content) return false
+    if (youtubeVideoId && article.content.includes(youtubeVideoId)) return true
+    if (isDirectVideoFile && article.videoUrl && article.content.includes(article.videoUrl)) return true
+    return false
+  }, [article.content, youtubeVideoId, isDirectVideoFile, article.videoUrl])
+
+  // Check if the featuredImage is already embedded as an <img> inside article.content so we don't render the same photo twice
+  const isFeaturedImageAlreadyInBody = React.useMemo(() => {
+    if (!article.content || !article.featuredImage) return false
+    return article.content.includes(article.featuredImage)
+  }, [article.content, article.featuredImage])
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <Header categories={categories} />
@@ -247,93 +321,104 @@ export function ArticleReader({
 
               {/* Byline & Metadata Controls */}
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                {/* Author info */}
-                <div className="flex items-center gap-3">
-                  {article.author.avatarUrl ? (
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 shrink-0">
-                      <Image src={article.author.avatarUrl} alt={article.author.fullName} fill className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 flex items-center justify-center shrink-0">
-                      <User className="w-5 h-5" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{article.author.fullName}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <span suppressHydrationWarning>{formattedDate}</span>
-                      <span>•</span>
-                      <span suppressHydrationWarning>{language === 'ne' ? toNepaliNumerals(article.readTimeMinutes) : article.readTimeMinutes} {t('readTime')}</span>
-                    </div>
-                  </div>
+                {/* Brand Logo Emblem, Publication Date & Reading Time */}
+                <div className="flex items-center gap-2 sm:gap-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium py-1">
+                  <Image
+                    src="/logo-circle.png"
+                    alt="SabaiChha.com"
+                    width={28}
+                    height={28}
+                    className="w-7 h-7 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs"
+                  />
+                  <Calendar className="w-4 h-4 text-red-600 shrink-0" />
+                  <span suppressHydrationWarning>{formattedDate}</span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span suppressHydrationWarning>
+                    {language === 'ne' ? toNepaliNumerals(article.readTimeMinutes) : article.readTimeMinutes} {t('readTime')}
+                  </span>
                 </div>
 
-                {/* Accessibility: Font Size Scaler */}
-                <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-400 px-2 uppercase">Text</span>
-                  {(['base', 'lg', 'xl'] as const).map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setFontSize(size)}
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold transition ${
-                        fontSize === size
-                          ? 'bg-red-600 text-white'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                      title={`Set text size to ${size}`}
-                    >
-                      {size === 'base' ? 'A' : size === 'lg' ? 'A+' : 'A++'}
-                    </button>
-                  ))}
+                {/* Accessibility: Font Size Scaler (A+ only per client request) */}
+                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full py-1 px-3 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Text</span>
+                  <button
+                    onClick={() => setFontSize((prev) => (prev === 'lg' ? 'base' : 'lg'))}
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-black transition cursor-pointer ${
+                      fontSize === 'lg'
+                        ? 'bg-red-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                    title={fontSize === 'lg' ? 'A+ size active' : 'Switch to A+ size'}
+                  >
+                    A+
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Social Sharing Bar */}
-            <div className="flex items-center justify-between py-3 border-y border-slate-200 dark:border-slate-800 text-xs">
-              <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Share2 className="w-4 h-4 text-red-600" />
-                <span>{language === 'ne' ? 'साझा गर्नुहोस्' : 'Share Article'}:</span>
-              </span>
+            {/* Social Sharing Bar: Total Share Count + Actual Branded Social Icons */}
+            <div className="flex items-center justify-between py-3 border-y border-slate-200 dark:border-slate-800 text-xs gap-3">
+              {/* Left: Share Label & Total Share Count Badge */}
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
+                  <Share2 className="w-4 h-4 text-[#C10A1E]" />
+                  <span>{language === 'ne' ? 'साझा गर्नुहोस्:' : 'Share:'}</span>
+                </span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-black text-[11px] sm:text-xs border border-red-200 dark:border-red-900/50 shadow-2xs font-mono shrink-0">
+                  {language === 'ne' ? toNepaliNumerals(shareCount) : shareCount} {language === 'ne' ? 'सेयर' : 'shares'}
+                </span>
+              </div>
 
-              <div className="flex items-center gap-2">
+              {/* Right: Actual Branded Social Icons */}
+              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                {/* Facebook */}
                 <button
-                  onClick={shareOnFacebook}
-                  className="px-3 py-1 rounded-full bg-[#1877F2]/10 hover:bg-[#1877F2]/20 text-[#1877F2] font-semibold transition cursor-pointer"
+                  type="button"
+                  onClick={() => handleShare('facebook')}
+                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#1877F2] hover:bg-[#1565C0] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer"
+                  title="Share on Facebook"
+                  aria-label="Share on Facebook"
                 >
-                  Facebook
-                </button>
-                <button
-                  onClick={shareOnTwitter}
-                  className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-semibold transition cursor-pointer"
-                >
-                  X / Twitter
-                </button>
-                <button
-                  onClick={shareOnWhatsApp}
-                  className="px-3 py-1 rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] font-semibold transition cursor-pointer"
-                >
-                  WhatsApp
-                </button>
-                <button
-                  onClick={copyUrlToClipboard}
-                  className="px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-semibold transition flex items-center gap-1 cursor-pointer"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : null}
-                  <span>{copied ? (language === 'ne' ? 'कपी भयो!' : 'Copied!') : (language === 'ne' ? 'लिङ्क कपी' : 'Copy Link')}</span>
+                  <FacebookIcon className="w-4 h-4 fill-white" />
                 </button>
 
-                {/* Bookmark button */}
-                <BookmarkButton
-                  article={{
-                    id: article.id,
-                    title: article.title,
-                    slug: article.slug,
-                    featuredImage: article.featuredImage,
-                    categoryName: language === 'ne' ? article.category.nameNe : article.category.nameEn,
-                  }}
-                  size="sm"
-                />
+                {/* Twitter / X */}
+                <button
+                  type="button"
+                  onClick={() => handleShare('twitter')}
+                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-black dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer border border-slate-800 dark:border-slate-700"
+                  title="Share on X"
+                  aria-label="Share on X"
+                >
+                  <TwitterXIcon className="w-3.5 h-3.5 fill-white" />
+                </button>
+
+                {/* WhatsApp */}
+                <button
+                  type="button"
+                  onClick={() => handleShare('whatsapp')}
+                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer"
+                  title="Share on WhatsApp"
+                  aria-label="Share on WhatsApp"
+                >
+                  <WhatsAppIcon className="w-4 h-4 fill-white" />
+                </button>
+
+                {/* Copy Link */}
+                <button
+                  type="button"
+                  onClick={() => handleShare('copy')}
+                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer"
+                  title={copied ? (language === 'ne' ? 'लिङ्क कपी भयो!' : 'Link copied!') : (language === 'ne' ? 'लिङ्क कपी गर्नुहोस्' : 'Copy link')}
+                  aria-label="Copy link"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <Link2 className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -350,8 +435,42 @@ export function ArticleReader({
               </div>
             )}
 
-            {/* Featured Cover Image with Controlled Editorial Height */}
-            {article.featuredImage && (
+            {/* Dedicated 16:9 Video Player (if article has videoUrl and it's not already embedded in body) */}
+            {isVideoAlreadyInBody ? null : youtubeVideoId ? (
+              <div className="space-y-2">
+                <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-black">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=0&rel=0`}
+                    title={article.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                </div>
+                {article.imageCaption && (
+                  <p className="text-xs text-slate-500 italic text-center px-4">
+                    {article.imageCaption}
+                  </p>
+                )}
+              </div>
+            ) : isDirectVideoFile && article.videoUrl ? (
+              <div className="space-y-2">
+                <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800 bg-black">
+                  <video
+                    src={article.videoUrl}
+                    poster={article.featuredImage || undefined}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                {article.imageCaption && (
+                  <p className="text-xs text-slate-500 italic text-center px-4">
+                    {article.imageCaption}
+                  </p>
+                )}
+              </div>
+            ) : article.featuredImage && !isFeaturedImageAlreadyInBody ? (
               <div className="space-y-2">
                 <div className="relative aspect-16/9 sm:aspect-21/10 w-full max-h-[360px] sm:max-h-[420px] rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-800 bg-slate-950">
                   <Image
@@ -368,7 +487,7 @@ export function ArticleReader({
                   </p>
                 )}
               </div>
-            )}
+            ) : null}
 
             {/* Live-Blogging Event Timeline */}
             <LiveTimeline articleId={article.id} initialUpdates={article.liveUpdates} />
@@ -431,10 +550,10 @@ export function ArticleReader({
                 </span>
               </div>
 
-              {/* Trending Items List */}
+              {/* Trending Items List (Top 5) */}
               {trendingArticles.length > 0 ? (
                 <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                  {trendingArticles.map((item, idx) => (
+                  {trendingArticles.slice(0, 5).map((item, idx) => (
                     <Link
                       key={item.id}
                       href={`/news/${item.slug}`}
@@ -487,9 +606,6 @@ export function ArticleReader({
 
             {/* Sidebar Rectangle Ad */}
             <AdBanner placement="SIDEBAR_RECTANGLE" />
-
-            {/* Daily Newsletter Subscription Card */}
-            <NewsletterBox variant="sidebar" />
           </aside>
         </div>
 

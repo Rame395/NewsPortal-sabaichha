@@ -5,7 +5,7 @@ import { ArticleReader } from '@/components/article/article-reader'
 import { ArticleStatus } from '@/lib/prisma'
 import { sanitizeArticleHtml } from '@/lib/security/sanitizer'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'
 
@@ -127,14 +127,8 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // 2. Increment view count asynchronously
-  await prisma.article.update({
-    where: { id: article.id },
-    data: { viewCount: { increment: 1 } },
-  }).catch(() => {})
-
-  // 3. Fetch header categories, related articles, and trending articles for sidebar
-  const [categories, initialRelatedArticles, trendingArticles] = await Promise.all([
+  // 2. Fetch header categories, related articles (strictly same category), and top 5 trending articles
+  const [categories, relatedArticles, trendingArticles] = await Promise.all([
     prisma.category.findMany({
       where: { showInMenu: true },
       orderBy: { orderIndex: 'asc' },
@@ -165,7 +159,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         status: ArticleStatus.PUBLISHED,
         NOT: { id: article.id },
       },
-      take: 6,
+      take: 5,
       orderBy: [
         { isTrending: 'desc' },
         { viewCount: 'desc' },
@@ -184,32 +178,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     }),
   ])
 
-  // If the category has fewer than 4 other articles, backfill with top recent published articles
-  let fullRelated = initialRelatedArticles
-  if (fullRelated.length < 4) {
-    const existingIds = [article.id, ...fullRelated.map((a) => a.id)]
-    const fallbackArticles = await prisma.article.findMany({
-      where: {
-        status: ArticleStatus.PUBLISHED,
-        id: { notIn: existingIds },
-      },
-      take: 4 - fullRelated.length,
-      orderBy: { publishedAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        subtitle: true,
-        excerpt: true,
-        featuredImage: true,
-        publishedAt: true,
-        readTimeMinutes: true,
-        category: { select: { nameEn: true, nameNe: true, slug: true } },
-      },
-    })
-    fullRelated = [...fullRelated, ...fallbackArticles]
-  }
-
   const serializedArticle = {
     ...article,
     content: sanitizeArticleHtml(article.content),
@@ -222,7 +190,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     })),
   }
 
-  const serializedRelated = fullRelated.map((r) => ({
+  const serializedRelated = relatedArticles.map((r) => ({
     ...r,
     publishedAt: r.publishedAt ? r.publishedAt.toISOString() : null,
   }))

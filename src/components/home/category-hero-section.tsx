@@ -20,7 +20,7 @@ import {
   getLocalizedSubtitle,
   getLocalizedExcerpt,
 } from '@/lib/data/translations'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 
 export interface CategoryStorySnippet {
@@ -30,6 +30,7 @@ export interface CategoryStorySnippet {
   subtitle?: string | null
   excerpt?: string | null
   featuredImage?: string | null
+  videoUrl?: string | null
   publishedAt: string | null | Date
   readTimeMinutes: number
   author?: { fullName: string; avatarUrl?: string | null }
@@ -66,12 +67,12 @@ export function CategoryHeroSection({
     if (diff < 1) return language === 'ne' ? 'भर्खरै' : 'Just now'
     if (diff < 60) {
       const num = language === 'ne' ? toNepaliNumerals(diff) : diff
-      return `${num} ${language === 'ne' ? 'मिनेट अगाडि' : 'm ago'}`
+      return `${num} ${language === 'ne' ? 'मिनेट अगाडि' : 'min ago'}`
     }
     const hours = Math.floor(diff / 60)
     if (hours < 24) {
       const num = language === 'ne' ? toNepaliNumerals(hours) : hours
-      return `${num} ${language === 'ne' ? 'घण्टा अगाडि' : 'h ago'}`
+      return `${num} ${language === 'ne' ? 'घण्टा अगाडि' : 'hr ago'}`
     }
     const days = Math.floor(hours / 24)
     const num = language === 'ne' ? toNepaliNumerals(days) : days
@@ -311,13 +312,14 @@ export function CategoryHeroSection({
                     </p>
                   )}
                   <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
+                    <Image
+                      src="/logo-circle.png"
+                      alt="SabaiChha.com"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5 rounded-full bg-white object-contain shrink-0"
+                    />
                     <span suppressHydrationWarning>{formatTimeAgo(leadStory.publishedAt)}</span>
-                    {leadStory.author && (
-                      <>
-                        <span>•</span>
-                        <span>{leadStory.author.fullName}</span>
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -424,12 +426,13 @@ export function CategoryHeroSection({
 
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
                     <div className="flex items-center gap-2">
-                      {story.author && (
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">
-                          {story.author.fullName}
-                        </span>
-                      )}
-                      {story.author && <span>•</span>}
+                      <Image
+                        src="/logo-circle.png"
+                        alt="SabaiChha.com"
+                        width={22}
+                        height={22}
+                        className="w-5.5 h-5.5 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+                      />
                       <span suppressHydrationWarning>{formatTimeAgo(story.publishedAt)}</span>
                     </div>
 
@@ -624,12 +627,13 @@ export function CategoryHeroSection({
               {/* Byline and Time */}
               <div className="flex items-center justify-between pt-2 text-[11px] text-slate-400">
                 <div className="flex items-center gap-2">
-                  {leadStory.author && (
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">
-                      {leadStory.author.fullName}
-                    </span>
-                  )}
-                  {leadStory.author && <span>•</span>}
+                  <Image
+                    src="/logo-circle.png"
+                    alt="SabaiChha.com"
+                    width={22}
+                    height={22}
+                    className="w-5.5 h-5.5 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+                  />
                   <span suppressHydrationWarning>{formatTimeAgo(leadStory.publishedAt)}</span>
                 </div>
 

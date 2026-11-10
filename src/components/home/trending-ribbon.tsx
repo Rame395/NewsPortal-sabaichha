@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/context/language-context'
 import { Flame, Sparkles } from 'lucide-react'
-import { TrendingTopicsSettings } from '@/lib/settings'
+import type { TrendingTopicsSettings } from '@/lib/settings/types'
 
 export function TrendingRibbon({
   trendingTopics,

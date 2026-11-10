@@ -1,7 +1,7 @@
 import { getHomepageData } from '@/lib/data/homepage'
 import { PublicHomepage } from '@/components/home/public-homepage'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function Home() {
   const data = await getHomepageData()

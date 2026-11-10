@@ -185,7 +185,7 @@ export function AdBanner({ placement, className = '', initialAd }: AdBannerProps
 
   // Responsive container height classes tailored to standard ad dimensions
   const containerClasses = isLeaderboard
-    ? 'w-full aspect-[728/90] h-auto max-h-[90px]'
+    ? 'w-full aspect-[728/90] h-auto max-h-[60px] sm:max-h-[90px]'
     : isBillboard
     ? 'h-36 sm:h-52 md:h-64 max-w-5xl'
     : isSidebar

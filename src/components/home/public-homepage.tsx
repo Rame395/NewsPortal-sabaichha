@@ -8,14 +8,13 @@ import { Footer } from '@/components/layout/footer'
 import { BreakingTicker } from '@/components/home/breaking-ticker'
 import { TrendingRibbon } from '@/components/home/trending-ribbon'
 import { useLanguage } from '@/context/language-context'
-import { TrendingTopicsSettings } from '@/lib/settings'
+import type { TrendingTopicsSettings } from '@/lib/settings/types'
 import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/lib/data/translations'
 import { AdBanner } from '@/components/ads/ad-banner'
-import { NewsletterBox } from '@/components/newsletter/newsletter-box'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import { CategoryHeroSection } from '@/components/home/category-hero-section'
 import { MultimediaShowcase } from '@/components/home/multimedia-showcase'
-import { toNepaliNumerals } from '@/lib/market/market-service'
+import { toNepaliNumerals } from '@/lib/utils/numerals'
 import {
   Clock,
   Flame,
@@ -35,6 +34,7 @@ interface ArticleSnippet {
   subtitle?: string | null
   excerpt?: string | null
   featuredImage?: string | null
+  videoUrl?: string | null
   viewCount: number
   readTimeMinutes: number
   publishedAt: string | null | Date
@@ -105,9 +105,10 @@ export function PublicHomepage({
   const formatTimeAgo = (dateStr: string | null | Date) => {
     if (!dateStr) return ''
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
-    if (diff < 60) return `${diff} ${language === 'ne' ? 'मिनेट अगाडि' : 'm ago'}`
+    if (diff < 1) return language === 'ne' ? 'भर्खरै' : 'Just now'
+    if (diff < 60) return `${diff} ${language === 'ne' ? 'मिनेट अगाडि' : 'min ago'}`
     const hours = Math.floor(diff / 60)
-    if (hours < 24) return `${hours} ${language === 'ne' ? 'घण्टा अगाडि' : 'h ago'}`
+    if (hours < 24) return `${hours} ${language === 'ne' ? 'घण्टा अगाडि' : 'hr ago'}`
     const days = Math.floor(hours / 24)
     return `${days} ${language === 'ne' ? 'दिन अगाडि' : 'd ago'}`
   }
@@ -198,10 +199,15 @@ export function PublicHomepage({
           {/* First Lead Story (Left 8 Cols) */}
           <div className="lg:col-span-8 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b-2 border-red-600 gap-2">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="p-1 rounded-md bg-amber-500 text-white shadow-2xs shrink-0">
-                  <Star className="w-3.5 h-3.5 fill-white" />
-                </span>
+              <div className="flex items-center gap-2">
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-white shadow-2xs shrink-0 border border-slate-200 dark:border-slate-700">
+                  <Image
+                    src="/logo-circle.png"
+                    alt="SabaiChha"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
                 <h2
                   className="text-sm sm:text-base md:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider"
                   style={{ whiteSpace: 'nowrap' }}
@@ -216,8 +222,14 @@ export function PublicHomepage({
                 {/* 1. TOP ZONE: Badges, Big Eye-Catching Headline & Subtitle ABOVE Image */}
                 <div className="p-4 sm:p-5 pb-2.5 sm:pb-3 space-y-2 sm:space-y-2.5">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-[#C10A1E] text-white flex items-center gap-1 shadow-xs uppercase tracking-wider">
-                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-[#C10A1E] text-white flex items-center gap-1.5 shadow-xs uppercase tracking-wider">
+                      <Image
+                        src="/logo-circle.png"
+                        alt=""
+                        width={14}
+                        height={14}
+                        className="w-3.5 h-3.5 rounded-full bg-white object-contain"
+                      />
                       <span>{language === 'ne' ? 'प्रमुख समाचार' : 'Featured'}</span>
                     </span>
 
@@ -284,10 +296,13 @@ export function PublicHomepage({
 
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
-                        {firstFeatured.author?.fullName || 'SabaiChha Desk'}
-                      </span>
-                      <span>•</span>
+                      <Image
+                        src="/logo-circle.png"
+                        alt="SabaiChha.com"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+                      />
                       <span suppressHydrationWarning>{formatTimeAgo(firstFeatured.publishedAt)}</span>
                     </div>
 
@@ -340,8 +355,14 @@ export function PublicHomepage({
                 {/* 1. TOP ZONE: Badges, Big Headline & Subtitle ABOVE Image (Full Width) */}
                 <div className="p-4 sm:p-6 pb-2.5 sm:pb-3 space-y-2 sm:space-y-2.5">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-[#C10A1E] text-white flex items-center gap-1 shadow-xs uppercase tracking-wider">
-                      <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold bg-[#C10A1E] text-white flex items-center gap-1.5 shadow-xs uppercase tracking-wider">
+                      <Image
+                        src="/logo-circle.png"
+                        alt=""
+                        width={14}
+                        height={14}
+                        className="w-3.5 h-3.5 rounded-full bg-white object-contain"
+                      />
                       <span>{language === 'ne' ? 'प्रमुख समाचार' : 'Featured'}</span>
                     </span>
 
@@ -405,10 +426,13 @@ export function PublicHomepage({
 
                   <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-slate-100">
-                        {story.author?.fullName || 'SabaiChha Desk'}
-                      </span>
-                      <span>•</span>
+                      <Image
+                        src="/logo-circle.png"
+                        alt="SabaiChha.com"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+                      />
                       <span suppressHydrationWarning>{formatTimeAgo(story.publishedAt)}</span>
                     </div>
 
@@ -451,9 +475,16 @@ export function PublicHomepage({
         {/* ========================================================= */}
         {/* ALL CATEGORIES IN EXACT ADMIN-CONFIGURED ORDER (orderIndex) */}
         {/* Automatically hides any category with 0 published articles */}
+        {/* Excludes 'video' and 'photo-feature' since they are showcased in MultimediaShowcase below */}
         {/* ========================================================= */}
         {categorySections
-          .filter((cat) => cat.articles && cat.articles.length > 0)
+          .filter(
+            (cat) =>
+              cat.articles &&
+              cat.articles.length > 0 &&
+              cat.slug !== 'video' &&
+              cat.slug !== 'photo-feature'
+          )
           .map((cat, index, activeCategories) => (
           <React.Fragment key={cat.id}>
             <CategoryHeroSection
@@ -512,9 +543,6 @@ export function PublicHomepage({
                 </div>
               </section>
             )}
-
-            {/* Insert Newsletter Box after the 4th category (or after the last if fewer than 4) */}
-            {index === Math.min(3, categorySections.length - 1) && <NewsletterBox />}
           </React.Fragment>
         ))}
 
