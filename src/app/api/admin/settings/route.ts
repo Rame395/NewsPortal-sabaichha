@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
-import { getSiteSettings, AllSettings } from '@/lib/settings'
+import { getSiteSettings, AllSettings, invalidateSiteSettingsCache } from '@/lib/settings'
 import { neutralizeDangerousUrls } from '@/lib/security/url'
 
 export async function GET() {
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     await prisma.$transaction(upserts)
+    invalidateSiteSettingsCache()
 
     // Audit log
     await prisma.auditLog.create({

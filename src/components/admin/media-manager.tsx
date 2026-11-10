@@ -200,7 +200,7 @@ export function MediaManager({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+          accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,video/mp4,video/webm"
           multiple
           className="hidden"
           onChange={(e) => handleFiles(e.target.files)}
@@ -222,10 +222,10 @@ export function MediaManager({
             <Upload className="w-5 h-5" />
           </div>
           <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-            यहाँ फोटोहरू तानेर छाड्नुहोस् वा क्लिक गरेर छान्नुहोस्
+            यहाँ फोटो वा भिडियो तानेर छाड्नुहोस् वा क्लिक गरेर छान्नुहोस्
           </p>
           <p className="text-xs text-slate-400">
-            JPG, PNG, WebP, GIF, SVG (अधिकतम १० MB प्रति फोटो)
+            JPG, PNG, WebP, GIF, SVG, MP4, WebM (अधिकतम १० MB प्रति फाइल)
           </p>
         </div>
       </div>
@@ -286,15 +286,30 @@ export function MediaManager({
                 setEditingAlt(item.altText || '')
               }}
             >
-              {/* Image Thumbnail */}
+              {/* Image / Video Thumbnail */}
               <div className="relative aspect-square w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <Image
-                  src={item.fileUrl}
-                  alt={item.altText || item.fileName}
-                  fill
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-                  className="object-cover group-hover:scale-105 transition duration-300"
-                />
+                {item.fileUrl.endsWith('.mp4') || item.fileUrl.endsWith('.webm') ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      src={item.fileUrl}
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/75 text-white">
+                      VIDEO
+                    </span>
+                  </div>
+                ) : (
+                  <Image
+                    src={item.fileUrl}
+                    alt={item.altText || item.fileName}
+                    fill
+                    unoptimized={item.fileUrl.endsWith('.gif') || item.fileUrl.endsWith('.svg')}
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+                    className="object-cover group-hover:scale-105 transition duration-300"
+                  />
+                )}
               </div>
 
               {/* Card Footer */}
@@ -357,14 +372,24 @@ export function MediaManager({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-              {/* Image Preview */}
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
-                <Image
-                  src={selectedItem.fileUrl}
-                  alt={selectedItem.altText || selectedItem.fileName}
-                  fill
-                  className="object-contain"
-                />
+              {/* Image / Video Preview */}
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center">
+                {selectedItem.fileUrl.endsWith('.mp4') || selectedItem.fileUrl.endsWith('.webm') ? (
+                  <video
+                    src={selectedItem.fileUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Image
+                    src={selectedItem.fileUrl}
+                    alt={selectedItem.altText || selectedItem.fileName}
+                    fill
+                    unoptimized={selectedItem.fileUrl.endsWith('.gif') || selectedItem.fileUrl.endsWith('.svg')}
+                    className="object-contain"
+                  />
+                )}
               </div>
 
               {/* Metadata & Controls */}

@@ -1,10 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import { ArticleStatus } from '@/lib/prisma'
 import { sanitizeArticleHtml, sanitizePlainText } from '@/lib/security/sanitizer'
 import { safeHttpUrl } from '@/lib/security/url'
+
+function extractYouTubeId(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1].split(/[?&/"']/)[0] || null
+    }
+    if (url.includes('youtube.com/watch')) {
+      const m = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/)
+      if (m) return m[1]
+    }
+    if (url.includes('youtube.com/embed/') || url.includes('youtube-nocookie.com/embed/')) {
+      return url.split('/embed/')[1].split(/[?&/"']/)[0] || null
+    }
+    if (url.includes('youtube.com/shorts/')) {
+      return url.split('/shorts/')[1].split(/[?&/"']/)[0] || null
+    }
+  } catch {}
+  return null
+}
+
+function resolveMediaFallbacks(
+  htmlContent: string,
+  rawVideoUrl?: string | null,
+  rawFeaturedImage?: string | null
+) {
+  let finalVideoUrl = typeof rawVideoUrl === 'string' && rawVideoUrl.trim() ? rawVideoUrl.trim() : null
+  let finalFeaturedImage = rawFeaturedImage ? safeHttpUrl(rawFeaturedImage) : null
+
+  if (!finalVideoUrl && htmlContent) {
+    const iframeMatch = htmlContent.match(/src=["']([^"']*(?:youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|youtu\.be\/)[^"']*)["']/i)
+    if (iframeMatch?.[1]) {
+      const ytId = extractYouTubeId(iframeMatch[1])
+      finalVideoUrl = ytId ? `https://www.youtube.com/watch?v=${ytId}` : iframeMatch[1]
+    } else {
+      const videoTagMatch = htmlContent.match(/<video[^>]+src=["']([^"']+)["']/i)
+      if (videoTagMatch?.[1]) {
+        finalVideoUrl = videoTagMatch[1]
+      }
+    }
+  }
+
+  if (!finalFeaturedImage) {
+    const imgMatch = htmlContent?.match(/<img[^>]+src=["']([^"']+)["']/i)
+    if (imgMatch?.[1]) {
+      finalFeaturedImage = safeHttpUrl(imgMatch[1])
+    }
+    if (!finalFeaturedImage && finalVideoUrl) {
+      const ytId = extractYouTubeId(finalVideoUrl)
+      if (ytId) {
+        finalFeaturedImage = `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
+      }
+    }
+  }
+
+  return { finalVideoUrl, finalFeaturedImage }
+}
 
 export async function GET(
   request: NextRequest,
@@ -82,6 +140,7 @@ export async function PATCH(
       excerpt,
       featuredImage,
       imageCaption,
+      videoUrl,
       categoryId,
       province,
       status,
@@ -100,6 +159,7 @@ export async function PATCH(
     if (excerpt !== undefined) updateData.excerpt = excerpt ? sanitizePlainText(String(excerpt)) : null
     if (featuredImage !== undefined) updateData.featuredImage = featuredImage ? safeHttpUrl(featuredImage) : null
     if (imageCaption !== undefined) updateData.imageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
+    if (videoUrl !== undefined) updateData.videoUrl = videoUrl ? String(videoUrl).trim() : null
     if (categoryId) updateData.categoryId = Number(categoryId)
     if (province !== undefined) {
       updateData.province = province ? String(province).toLowerCase().trim() : null
@@ -114,6 +174,17 @@ export async function PATCH(
       const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length
       updateData.readTimeMinutes = Math.max(1, Math.ceil(wordCount / 180))
     }
+
+    const effectiveContent = (updateData.content as string) || article.content
+    const effectiveRawVideo = videoUrl !== undefined ? videoUrl : article.videoUrl
+    const effectiveRawImage = featuredImage !== undefined ? featuredImage : article.featuredImage
+    const { finalVideoUrl, finalFeaturedImage } = resolveMediaFallbacks(
+      effectiveContent,
+      effectiveRawVideo,
+      effectiveRawImage
+    )
+    updateData.videoUrl = finalVideoUrl
+    updateData.featuredImage = finalFeaturedImage
 
     if (slug) {
       const cleanSlug = String(slug)
@@ -183,6 +254,17 @@ export async function PATCH(
       },
     }).catch(() => {})
 
+    // Instant on-demand cache revalidation
+    try {
+      revalidatePath('/')
+      revalidatePath(`/news/${updatedArticle.slug}`)
+      if (updatedArticle.category?.slug) {
+        revalidatePath(`/category/${updatedArticle.category.slug}`)
+      }
+    } catch (err) {
+      console.error('Revalidation error:', err)
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Article updated successfully.',
@@ -229,6 +311,14 @@ export async function DELETE(
         details: `Deleted article "${article.title}"`,
       },
     }).catch(() => {})
+
+    // Revalidate on article deletion
+    try {
+      revalidatePath('/')
+      revalidatePath(`/news/${article.slug}`)
+    } catch (err) {
+      console.error('Revalidation error:', err)
+    }
 
     return NextResponse.json({ success: true, message: 'Article deleted successfully.' })
   } catch (error) {

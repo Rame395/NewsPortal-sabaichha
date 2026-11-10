@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
         'articles:create',
         'articles:edit_own',
         'articles:edit_all',
+        'ads:manage',
       ])
     ) {
       return NextResponse.json(

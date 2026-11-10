@@ -3,31 +3,18 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   allowedDevOrigins: ['192.168.100.27', 'localhost', '127.0.0.1'],
-  experimental: {
-    turbopackPluginRuntimeStrategy: 'forceWorkerThreads' as any,
-  },
+  serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
+    formats: ['image/avif', 'image/webp'],
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: '**',
       },
       {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'sabaichha.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.sabaichha.com',
-      },
-      {
-        protocol: 'https',
+        protocol: 'http',
         hostname: '**',
       },
     ],

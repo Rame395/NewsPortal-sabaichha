@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
         'articles:create',
         'articles:edit_own',
         'articles:edit_all',
+        'ads:manage',
       ])
     ) {
       return NextResponse.json(

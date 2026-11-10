@@ -24,6 +24,8 @@ import {
   ExternalLink,
   TrendingUp,
   Pin,
+  Upload,
+  RefreshCw,
 } from 'lucide-react'
 import { MediaPickerModal } from '@/components/admin/media-picker-modal'
 import { RichTextEditor } from '@/components/admin/rich-text-editor'
@@ -49,6 +51,7 @@ interface InitialArticleData {
   excerpt?: string | null
   featuredImage?: string | null
   imageCaption?: string | null
+  videoUrl?: string | null
   categoryId: number
   province?: string | null
   status: 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED'
@@ -75,9 +78,10 @@ export function ArticleForm({
   const [excerpt, setExcerpt] = React.useState(initialData?.excerpt || '')
   const [featuredImage, setFeaturedImage] = React.useState(initialData?.featuredImage || '')
   const [imageCaption, setImageCaption] = React.useState(initialData?.imageCaption || '')
+  const [videoUrl, setVideoUrl] = React.useState(initialData?.videoUrl || '')
   const [categoryId, setCategoryId] = React.useState<number | ''>(initialData?.categoryId || '')
   const [province, setProvince] = React.useState(initialData?.province || '')
-  const [status, setStatus] = React.useState(initialData?.status || 'DRAFT')
+  const [status, setStatus] = React.useState(initialData?.status || 'PUBLISHED')
   const [isBreaking, setIsBreaking] = React.useState(initialData?.isBreaking || false)
   const [isFeatured, setIsFeatured] = React.useState(initialData?.isFeatured || false)
   const [isTrending, setIsTrending] = React.useState(initialData?.isTrending || false)
@@ -97,6 +101,81 @@ export function ArticleForm({
   const [error, setError] = React.useState<string | null>(null)
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
   const [isMediaPickerOpen, setIsMediaPickerOpen] = React.useState(false)
+  const [mediaPickerTarget, setMediaPickerTarget] = React.useState<'image' | 'video'>('image')
+  const [isUploadingFeatured, setIsUploadingFeatured] = React.useState(false)
+  const featuredFileInputRef = React.useRef<HTMLInputElement | null>(null)
+
+  // Auto-detect embedded YouTube video or image from RichTextEditor content / videoUrl
+  React.useEffect(() => {
+    const getYtId = (url: string) => {
+      if (!url) return null
+      if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split(/[?&/"']/)[0]
+      if (url.includes('youtube.com/watch')) {
+        const m = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/)
+        if (m) return m[1]
+      }
+      if (url.includes('/embed/')) return url.split('/embed/')[1].split(/[?&/"']/)[0]
+      if (url.includes('/shorts/')) return url.split('/shorts/')[1].split(/[?&/"']/)[0]
+      return null
+    }
+
+    let currentVid = videoUrl
+    if (!currentVid && content) {
+      const iframeMatch = content.match(/src=["']([^"']*(?:youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|youtu\.be\/)[^"']*)["']/i)
+      if (iframeMatch?.[1]) {
+        const yId = getYtId(iframeMatch[1])
+        currentVid = yId ? `https://www.youtube.com/watch?v=${yId}` : iframeMatch[1]
+        setVideoUrl(currentVid)
+      } else {
+        const vidMatch = content.match(/<video[^>]+src=["']([^"']+)["']/i)
+        if (vidMatch?.[1]) {
+          currentVid = vidMatch[1]
+          setVideoUrl(currentVid)
+        }
+      }
+    }
+
+    if (!featuredImage) {
+      const imgMatch = content?.match(/<img[^>]+src=["']([^"']+)["']/i)
+      if (imgMatch?.[1]) {
+        setFeaturedImage(imgMatch[1])
+      } else if (currentVid) {
+        const yId = getYtId(currentVid)
+        if (yId) {
+          setFeaturedImage(`https://i.ytimg.com/vi/${yId}/hqdefault.jpg`)
+        }
+      }
+    }
+  }, [content, videoUrl, featuredImage])
+
+  const handleDirectFeaturedUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setIsUploadingFeatured(true)
+    setError(null)
+    const formData = new FormData()
+    formData.append('file', files[0])
+
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.media) {
+        setFeaturedImage(data.media.fileUrl)
+        if (data.media.altText && !imageCaption) {
+          setImageCaption(data.media.altText)
+        }
+      } else {
+        setError(data.error || 'Failed to upload featured image.')
+      }
+    } catch {
+      setError('Error uploading featured image.')
+    } finally {
+      setIsUploadingFeatured(false)
+      if (featuredFileInputRef.current) featuredFileInputRef.current.value = ''
+    }
+  }
 
   // Fetch categories and tags
   React.useEffect(() => {
@@ -197,6 +276,7 @@ export function ArticleForm({
         excerpt,
         featuredImage,
         imageCaption,
+        videoUrl,
         categoryId: Number(categoryId),
         province: province ? province.toLowerCase().trim() : null,
         status,
@@ -273,7 +353,17 @@ export function ArticleForm({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {status === 'PUBLISHED' && (
+            <button
+              type="submit"
+              disabled={loading}
+              onClick={() => setStatus('DRAFT')}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer disabled:opacity-60"
+            >
+              {language === 'ne' ? 'मस्यौदा (Save Draft)' : 'Save as Draft'}
+            </button>
+          )}
           <button
             type="submit"
             disabled={loading}
@@ -287,7 +377,7 @@ export function ArticleForm({
                   : 'Saving...'
                 : status === 'PUBLISHED'
                 ? language === 'ne'
-                  ? 'प्रकाशित गर्नुहोस्'
+                  ? 'प्रकाशित गर्नुहोस् (Publish)'
                   : 'Publish Live'
                 : language === 'ne'
                 ? 'मस्यौदा सुरक्षित'
@@ -553,36 +643,94 @@ export function ArticleForm({
             {featuredImage ? (
               <div className="space-y-2">
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-100 border border-slate-200 dark:border-slate-800">
-                  <Image src={featuredImage} alt="Featured Preview" fill className="object-cover" />
+                  <Image
+                    src={featuredImage}
+                    alt="Featured Preview"
+                    fill
+                    unoptimized={featuredImage.endsWith('.gif') || featuredImage.endsWith('.svg')}
+                    className="object-cover"
+                  />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setFeaturedImage('')}
-                  className="text-[11px] text-red-600 hover:underline"
-                >
-                  {language === 'ne' ? 'तस्बिर हटाउनुहोस्' : 'Remove Image'}
-                </button>
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => featuredFileInputRef.current?.click()}
+                    disabled={isUploadingFeatured}
+                    className="text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:text-red-600 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>{language === 'ne' ? 'अर्को तस्बिर अपलोड' : 'Replace Image'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeaturedImage('')}
+                    className="text-[11px] text-red-600 hover:underline cursor-pointer"
+                  >
+                    {language === 'ne' ? 'तस्बिर हटाउनुहोस्' : 'Remove Image'}
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs text-slate-400">
-                <ImageIcon className="w-6 h-6 mx-auto mb-1 text-slate-300" />
-                <span>{language === 'ne' ? 'तस्बिरको URL तल राख्नुहोस्' : 'Provide Image URL below'}</span>
+              <div
+                onClick={() => featuredFileInputRef.current?.click()}
+                className="p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-red-500 text-center text-xs text-slate-400 cursor-pointer transition group"
+              >
+                {isUploadingFeatured ? (
+                  <RefreshCw className="w-6 h-6 mx-auto mb-1 text-red-600 animate-spin" />
+                ) : (
+                  <Upload className="w-6 h-6 mx-auto mb-1 text-slate-400 group-hover:text-red-600 transition" />
+                )}
+                <span className="font-semibold text-slate-700 dark:text-slate-300 block">
+                  {isUploadingFeatured
+                    ? language === 'ne'
+                      ? 'अपलोड हुँदैछ...'
+                      : 'Uploading...'
+                    : language === 'ne'
+                    ? 'यहाँ क्लिक गरेर मुख्य तस्बिर अपलोड गर्नुहोस्'
+                    : 'Click here to upload Featured Image'}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {language === 'ne' ? 'वा तल URL राख्नुहोस् / लाइब्रेरीबाट छान्नुहोस्' : 'or paste URL / browse library below'}
+                </span>
               </div>
             )}
+
+            <input
+              ref={featuredFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleDirectFeaturedUpload(e.target.files)}
+            />
 
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-                  Image URL (Unsplash, CDN or Upload)
+                  Image URL
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setIsMediaPickerOpen(true)}
-                  className="text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 flex items-center gap-1 cursor-pointer"
-                >
-                  <ImageIcon className="w-3.5 h-3.5" />
-                  <span>{language === 'ne' ? 'मिडिया लाइब्रेरीबाट छान्नुहोस्' : 'Browse Media'}</span>
-                </button>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => featuredFileInputRef.current?.click()}
+                    disabled={isUploadingFeatured}
+                    className="text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:text-red-600 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-red-600" />
+                    <span>{language === 'ne' ? 'सिधै अपलोड' : 'Upload File'}</span>
+                  </button>
+                  <span className="text-slate-300 dark:text-slate-700">|</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMediaPickerTarget('image')
+                      setIsMediaPickerOpen(true)
+                    }}
+                    className="text-[11px] font-bold text-red-600 hover:text-red-700 dark:text-red-400 flex items-center gap-1 cursor-pointer"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>{language === 'ne' ? 'लाइब्रेरी' : 'Browse Library'}</span>
+                  </button>
+                </div>
               </div>
               <input
                 type="text"
@@ -604,6 +752,37 @@ export function ArticleForm({
                 placeholder="e.g., Photo: Reuters / File"
                 className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
               />
+            </div>
+
+            {/* Video URL (Optional YouTube link or Uploaded MP4/WebM) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                  {language === 'ne' ? 'भिडियो लिङ्क (YouTube वा MP4)' : 'Video URL (YouTube or MP4)'}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMediaPickerTarget('video')
+                    setIsMediaPickerOpen(true)
+                  }}
+                  className="text-[10px] font-bold text-red-600 hover:underline cursor-pointer"
+                >
+                  {language === 'ne' ? 'भिडियो छान्नुहोस्/अपलोड' : 'Pick/Upload Video'}
+                </button>
+              </div>
+              <input
+                type="text"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=... or /uploads/video.mp4"
+                className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                {language === 'ne'
+                  ? 'भिडियो समाचार तथा मल्टिमिडिया फिचरका लागि युट्युब लिङ्क वा MP4 भिडियो राख्नुहोस्।'
+                  : 'Add YouTube link or uploaded MP4 video for video news and multimedia showcase.'}
+              </p>
             </div>
           </div>
 
@@ -657,9 +836,13 @@ export function ArticleForm({
         isOpen={isMediaPickerOpen}
         onClose={() => setIsMediaPickerOpen(false)}
         onSelect={(url, alt) => {
-          setFeaturedImage(url)
-          if (alt && !imageCaption) {
-            setImageCaption(alt)
+          if (mediaPickerTarget === 'video') {
+            setVideoUrl(url)
+          } else {
+            setFeaturedImage(url)
+            if (alt && !imageCaption) {
+              setImageCaption(alt)
+            }
           }
         }}
       />

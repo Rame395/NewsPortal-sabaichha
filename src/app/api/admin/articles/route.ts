@@ -1,10 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
 import { ArticleStatus } from '@/lib/prisma'
 import { sanitizeArticleHtml, sanitizePlainText } from '@/lib/security/sanitizer'
 import { safeHttpUrl } from '@/lib/security/url'
+
+function extractYouTubeId(url: string | null | undefined): string | null {
+  if (!url) return null
+  try {
+    if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1].split(/[?&/"']/)[0] || null
+    }
+    if (url.includes('youtube.com/watch')) {
+      const m = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/)
+      if (m) return m[1]
+    }
+    if (url.includes('youtube.com/embed/') || url.includes('youtube-nocookie.com/embed/')) {
+      return url.split('/embed/')[1].split(/[?&/"']/)[0] || null
+    }
+    if (url.includes('youtube.com/shorts/')) {
+      return url.split('/shorts/')[1].split(/[?&/"']/)[0] || null
+    }
+  } catch {}
+  return null
+}
+
+function resolveMediaFallbacks(
+  htmlContent: string,
+  rawVideoUrl?: string | null,
+  rawFeaturedImage?: string | null
+) {
+  let finalVideoUrl = typeof rawVideoUrl === 'string' && rawVideoUrl.trim() ? rawVideoUrl.trim() : null
+  let finalFeaturedImage = rawFeaturedImage ? safeHttpUrl(rawFeaturedImage) : null
+
+  // 1. If videoUrl was not explicitly filled in the sidebar, check if content has an embedded YouTube iframe or <video>
+  if (!finalVideoUrl && htmlContent) {
+    const iframeMatch = htmlContent.match(/src=["']([^"']*(?:youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|youtu\.be\/)[^"']*)["']/i)
+    if (iframeMatch?.[1]) {
+      const ytId = extractYouTubeId(iframeMatch[1])
+      finalVideoUrl = ytId ? `https://www.youtube.com/watch?v=${ytId}` : iframeMatch[1]
+    } else {
+      const videoTagMatch = htmlContent.match(/<video[^>]+src=["']([^"']+)["']/i)
+      if (videoTagMatch?.[1]) {
+        finalVideoUrl = videoTagMatch[1]
+      }
+    }
+  }
+
+  // 2. If featuredImage was not explicitly set, try first <img> in content or YouTube thumbnail
+  if (!finalFeaturedImage) {
+    const imgMatch = htmlContent?.match(/<img[^>]+src=["']([^"']+)["']/i)
+    if (imgMatch?.[1]) {
+      finalFeaturedImage = safeHttpUrl(imgMatch[1])
+    }
+    if (!finalFeaturedImage && finalVideoUrl) {
+      const ytId = extractYouTubeId(finalVideoUrl)
+      if (ytId) {
+        finalFeaturedImage = `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
+      }
+    }
+  }
+
+  return { finalVideoUrl, finalFeaturedImage }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -129,6 +189,7 @@ export async function POST(request: NextRequest) {
       excerpt,
       featuredImage,
       imageCaption,
+      videoUrl,
       categoryId,
       province,
       status = 'DRAFT',
@@ -179,8 +240,12 @@ export async function POST(request: NextRequest) {
     const cleanTitle = sanitizePlainText(String(title))
     const cleanSubtitle = subtitle ? sanitizePlainText(String(subtitle)) : null
     const cleanExcerpt = excerpt ? sanitizePlainText(String(excerpt)) : null
-    const cleanFeaturedImage = featuredImage ? safeHttpUrl(featuredImage) : null
     const cleanImageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
+    const { finalVideoUrl, finalFeaturedImage } = resolveMediaFallbacks(
+      cleanContent,
+      videoUrl,
+      featuredImage
+    )
 
     const newArticle = await prisma.article.create({
       data: {
@@ -189,8 +254,9 @@ export async function POST(request: NextRequest) {
         subtitle: cleanSubtitle,
         content: cleanContent,
         excerpt: cleanExcerpt,
-        featuredImage: cleanFeaturedImage,
+        featuredImage: finalFeaturedImage,
         imageCaption: cleanImageCaption,
+        videoUrl: finalVideoUrl,
         status: finalStatus,
         isBreaking: Boolean(isBreaking),
         isFeatured: Boolean(isFeatured),
@@ -226,6 +292,19 @@ export async function POST(request: NextRequest) {
         details: `Created article "${newArticle.title}" with status ${newArticle.status}`,
       },
     }).catch(() => {})
+
+    // Instant on-demand cache revalidation for published articles
+    if (finalStatus === 'PUBLISHED') {
+      try {
+        revalidatePath('/')
+        revalidatePath(`/news/${newArticle.slug}`)
+        if (newArticle.category?.slug) {
+          revalidatePath(`/category/${newArticle.category.slug}`)
+        }
+      } catch (err) {
+        console.error('Revalidation error:', err)
+      }
+    }
 
     return NextResponse.json({
       success: true,

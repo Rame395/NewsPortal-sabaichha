@@ -72,6 +72,14 @@ async function main() {
       orderIndex: 6,
       showInMenu: true,
     },
+    {
+      nameEn: 'Photo Feature',
+      nameNe: 'फोटो फिचर',
+      slug: 'photo-feature',
+      description: 'Visual journalism, photo essays, and picture stories.',
+      orderIndex: 7,
+      showInMenu: true,
+    },
   ]
 
   for (const cat of defaultCategories) {
@@ -103,7 +111,7 @@ async function main() {
       permissions: ALL_PERMISSIONS,
       mustChangePassword: !process.env.SEED_ADMIN_PASSWORD,
       bio: 'Principal administrator with full platform authorization at SabaiChha.com.',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+      avatarUrl: '/logo-circle.png',
       isActive: true,
     },
   })

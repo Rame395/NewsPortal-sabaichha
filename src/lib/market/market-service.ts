@@ -1,4 +1,7 @@
 import { getSiteSettings } from '@/lib/settings'
+import { toNepaliNumerals, toEnglishNumerals } from '@/lib/utils/numerals'
+
+export { toNepaliNumerals, toEnglishNumerals }
 
 interface CachedItem<T> {
   data: T
@@ -37,28 +40,7 @@ let nepseCache: CachedItem<{
   positive: boolean
 }> | null = null
 
-// Helper to convert English numbers to Nepali Devanagari numerals
-export function toNepaliNumerals(num: string | number): string {
-  const nepaliDigits = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
-  return String(num).replace(/[0-9]/g, (digit) => nepaliDigits[parseInt(digit, 10)])
-}
 
-// Helper to convert Nepali Devanagari numerals to English numerals
-export function toEnglishNumerals(str: string | number): string {
-  const nepaliToEng: Record<string, string> = {
-    '०': '0',
-    '१': '1',
-    '२': '2',
-    '३': '3',
-    '४': '4',
-    '५': '5',
-    '६': '6',
-    '७': '7',
-    '८': '8',
-    '९': '9',
-  }
-  return String(str).replace(/[०-९]/g, (ch) => nepaliToEng[ch] ?? ch)
-}
 
 // 1. Live Weather from Open-Meteo (Kathmandu, Nepal)
 export async function getLiveWeather() {

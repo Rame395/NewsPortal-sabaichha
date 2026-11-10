@@ -46,6 +46,7 @@ interface ArticleItem {
   subtitle: string | null
   excerpt: string | null
   featuredImage: string | null
+  videoUrl?: string | null
   status: 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED'
   isBreaking: boolean
   isFeatured: boolean
@@ -202,6 +203,47 @@ export default function ArticlesListPage() {
     } catch {
       alert('Network error while deleting.')
     }
+  }
+
+  // 1-Click Quick Status Toggle (Draft <-> Published)
+  const handleQuickToggleStatus = async (article: ArticleItem) => {
+    const nextStatus = article.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED'
+    try {
+      const res = await fetch(`/api/admin/articles/${article.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+      if (res.ok) {
+        setSuccessMsg(
+          nextStatus === 'PUBLISHED'
+            ? language === 'ne'
+              ? `"${article.title}" प्रत्यक्ष प्रकाशित भयो!`
+              : `"${article.title}" is now Published Live!`
+            : language === 'ne'
+            ? `"${article.title}" मस्यौदामा सारियो।`
+            : `"${article.title}" moved to Draft.`
+        )
+        fetchArticles()
+      }
+    } catch {
+      console.error('Failed to toggle article status')
+    }
+  }
+
+  const getArticleThumb = (art: ArticleItem): string | null => {
+    if (art.featuredImage) return art.featuredImage
+    if (art.videoUrl) {
+      const url = art.videoUrl
+      let ytId: string | null = null
+      if (url.includes('youtu.be/')) ytId = url.split('youtu.be/')[1].split(/[?&/"']/)[0]
+      else if (url.includes('youtube.com/watch')) {
+        const m = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/)
+        if (m) ytId = m[1]
+      } else if (url.includes('/embed/')) ytId = url.split('/embed/')[1].split(/[?&/"']/)[0]
+      if (ytId) return `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
+    }
+    return null
   }
 
   const statusBadges: Record<string, { labelEn: string; labelNe: string; color: string }> = {
@@ -655,20 +697,42 @@ export default function ArticlesListPage() {
                       {/* Title & Preview */}
                       <td className="px-5 py-4 max-w-md">
                         <div className="flex items-start gap-3">
-                          {art.featuredImage ? (
-                            <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200 dark:border-slate-800">
-                              <Image
-                                src={art.featuredImage}
-                                alt={art.title}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-16 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center justify-center text-slate-400">
-                              <FileText className="w-5 h-5" />
-                            </div>
-                          )}
+                          {(() => {
+                            const thumb = getArticleThumb(art)
+                            const isMp4 =
+                              thumb?.toLowerCase().endsWith('.mp4') ||
+                              thumb?.toLowerCase().endsWith('.webm') ||
+                              art.videoUrl?.toLowerCase().endsWith('.mp4') ||
+                              art.videoUrl?.toLowerCase().endsWith('.webm')
+                            return thumb ? (
+                              <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200 dark:border-slate-800">
+                                {isMp4 && !art.featuredImage ? (
+                                  <video
+                                    src={art.videoUrl || thumb}
+                                    muted
+                                    playsInline
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Image
+                                    src={thumb}
+                                    alt={art.title}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                )}
+                                {art.videoUrl && (
+                                  <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-red-600 text-white text-[8px] font-black uppercase">
+                                    ▶ VID
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="w-16 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center justify-center text-slate-400">
+                                <FileText className="w-5 h-5" />
+                              </div>
+                            )
+                          })()}
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                               {art.isBreaking && (
@@ -722,13 +786,20 @@ export default function ArticlesListPage() {
                         </div>
                       </td>
 
-                      {/* Status */}
+                      {/* Status (1-Click Toggle between Published & Draft) */}
                       <td className="px-5 py-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.color}`}
+                        <button
+                          type="button"
+                          onClick={() => handleQuickToggleStatus(art)}
+                          title={
+                            art.status === 'PUBLISHED'
+                              ? 'Click to move to Draft'
+                              : 'Click to Publish Live immediately'
+                          }
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer hover:scale-105 transition ${badge.color}`}
                         >
                           {language === 'ne' ? badge.labelNe : badge.labelEn}
-                        </span>
+                        </button>
                       </td>
 
                       {/* Author */}

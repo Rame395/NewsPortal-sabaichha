@@ -89,6 +89,7 @@ model Category {
 
   articles    Article[]
 
+  @@index([showInMenu, orderIndex])
   @@map("categories")
 }
 
@@ -101,12 +102,14 @@ model Article {
   excerpt         String?       @db.Text
   featuredImage   String?       @map("featured_image")
   imageCaption    String?       @map("image_caption")
+  videoUrl        String?       @map("video_url")
   status          ArticleStatus @default(DRAFT)
   isBreaking      Boolean       @default(false) @map("is_breaking")
   isFeatured      Boolean       @default(false) @map("is_featured")
   isTrending      Boolean       @default(false) @map("is_trending")
   isCategoryLead  Boolean       @default(false) @map("is_category_lead")
   viewCount       Int           @default(0) @map("view_count")
+  shareCount      Int           @default(0) @map("share_count")
   readTimeMinutes Int           @default(3) @map("read_time_minutes")
   province        String?       @map("province")
   
@@ -126,6 +129,9 @@ model Article {
   liveUpdates     LiveUpdate[]
 
   @@index([status, publishedAt(sort: Desc)])
+  @@index([status, isFeatured, publishedAt(sort: Desc)])
+  @@index([status, viewCount(sort: Desc)])
+  @@index([categoryId, status, isCategoryLead(sort: Desc), publishedAt(sort: Desc)])
   @@index([categoryId, publishedAt(sort: Desc)])
   @@index([province, publishedAt(sort: Desc)])
   @@index([isBreaking, publishedAt(sort: Desc)])

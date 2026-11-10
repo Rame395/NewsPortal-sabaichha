@@ -39,6 +39,8 @@ import {
   Trash2,
   X,
   Palette,
+  Upload,
+  RefreshCw,
 } from 'lucide-react'
 
 interface RichTextEditorProps {
@@ -77,12 +79,14 @@ export function RichTextEditor({
 
   const editorRef = React.useRef<HTMLDivElement | null>(null)
   const savedSelectionRef = React.useRef<Range | null>(null)
+  const directUploadRef = React.useRef<HTMLInputElement | null>(null)
 
   const [isFullscreen, setIsFullscreen] = React.useState(false)
   const [viewMode, setViewMode] = React.useState<'visual' | 'code'>('visual')
   const [zoomLevel, setZoomLevel] = React.useState<number>(100)
   const [fontSize, setFontSize] = React.useState<number>(14)
   const [fontFamily, setFontFamily] = React.useState<string>('sans-serif')
+  const [isDirectUploading, setIsDirectUploading] = React.useState(false)
 
   // Modals & Popovers
   const [isMediaModalOpen, setIsMediaModalOpen] = React.useState(false)
@@ -128,22 +132,53 @@ export function RichTextEditor({
 
   // Save selection before opening popovers so commands apply to the intended text
   const saveSelection = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && editorRef.current) {
       const sel = window.getSelection()
-      if (sel && sel.rangeCount > 0) {
+      if (sel && sel.rangeCount > 0 && editorRef.current.contains(sel.anchorNode)) {
         savedSelectionRef.current = sel.getRangeAt(0).cloneRange()
       }
     }
   }
 
   const restoreSelection = () => {
-    if (typeof window !== 'undefined' && savedSelectionRef.current) {
+    if (typeof window !== 'undefined' && savedSelectionRef.current && editorRef.current) {
       const sel = window.getSelection()
       if (sel) {
-        sel.removeAllRanges()
-        sel.addRange(savedSelectionRef.current)
+        try {
+          sel.removeAllRanges()
+          sel.addRange(savedSelectionRef.current)
+        } catch {}
       }
     }
+  }
+
+  // Reliable HTML insertion helper that works even if editor was not previously focused
+  const insertHtmlAtCursor = (html: string) => {
+    if (viewMode === 'code') {
+      const nextVal = (value || '') + '\n' + html
+      onChange(nextVal)
+      updateStats(nextVal)
+      return
+    }
+    if (!editorRef.current) return
+
+    editorRef.current.focus()
+    restoreSelection()
+
+    const sel = typeof window !== 'undefined' ? window.getSelection() : null
+    const hasSelectionInsideEditor =
+      sel && sel.rangeCount > 0 && editorRef.current.contains(sel.anchorNode)
+
+    if (hasSelectionInsideEditor) {
+      const ok = document.execCommand('insertHTML', false, html)
+      if (!ok) {
+        editorRef.current.insertAdjacentHTML('beforeend', html)
+      }
+    } else {
+      editorRef.current.insertAdjacentHTML('beforeend', html)
+    }
+
+    handleInput()
   }
 
   // Generic document command executor
@@ -214,8 +249,8 @@ export function RichTextEditor({
     setIsLinkModalOpen(true)
   }
 
-  const insertLink = (e: React.FormEvent) => {
-    e.preventDefault()
+  const insertLink = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault()
     restoreSelection()
     if (!linkUrl.trim()) return
 
@@ -225,30 +260,65 @@ export function RichTextEditor({
 
     if (linkText.trim()) {
       const linkHtml = `<a href="${formattedUrl}" target="_blank" rel="noopener noreferrer" class="text-red-600 underline font-semibold hover:text-red-700">${linkText.trim()}</a>`
-      execCmd('insertHTML', linkHtml)
+      insertHtmlAtCursor(linkHtml)
     } else {
       execCmd('createLink', formattedUrl)
     }
     setIsLinkModalOpen(false)
   }
 
-  // Image insertion from Media Library
-  const handleMediaSelect = (imageUrl: string, altText?: string) => {
-    restoreSelection()
-    const imgHtml = `
+  // Image / Video insertion from Media Library or Direct Upload
+  const handleMediaSelect = (mediaUrl: string, altText?: string) => {
+    const cleanUrl = mediaUrl.toLowerCase().split('?')[0]
+    const isVideo = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm')
+
+    const mediaHtml = isVideo
+      ? `
       <figure class="my-6 text-center">
-        <img src="${imageUrl}" alt="${altText || 'News story photo'}" class="rounded-2xl max-w-full h-auto mx-auto shadow-sm border border-slate-200" />
+        <video src="${mediaUrl}" controls playsinline class="rounded-2xl w-full max-w-full aspect-video mx-auto shadow-sm border border-slate-200 bg-black"></video>
         ${altText ? `<figcaption class="text-xs text-slate-500 italic mt-2 text-center">${altText}</figcaption>` : ''}
       </figure>
       <p><br></p>
     `
-    execCmd('insertHTML', imgHtml)
+      : `
+      <figure class="my-6 text-center">
+        <img src="${mediaUrl}" alt="${altText || 'News story photo'}" class="rounded-2xl max-w-full h-auto mx-auto shadow-sm border border-slate-200" />
+        ${altText ? `<figcaption class="text-xs text-slate-500 italic mt-2 text-center">${altText}</figcaption>` : ''}
+      </figure>
+      <p><br></p>
+    `
+    insertHtmlAtCursor(mediaHtml)
     setIsMediaModalOpen(false)
+  }
+
+  // Direct 1-click file upload from device into article body
+  const handleDirectUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setIsDirectUploading(true)
+    const formData = new FormData()
+    formData.append('file', files[0])
+
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.media) {
+        handleMediaSelect(data.media.fileUrl, data.media.altText || undefined)
+      } else {
+        alert(data.error || 'Failed to upload media file.')
+      }
+    } catch {
+      alert('Error uploading media file.')
+    } finally {
+      setIsDirectUploading(false)
+      if (directUploadRef.current) directUploadRef.current.value = ''
+    }
   }
 
   // Table Insertion (Google Docs style)
   const insertTable = (rows: number, cols: number) => {
-    restoreSelection()
     let tableHtml = `
       <table class="w-full my-6 border-collapse border border-slate-300 dark:border-slate-700 text-sm">
         <thead>
@@ -268,14 +338,13 @@ export function RichTextEditor({
     }
     tableHtml += `</tbody></table><p><br></p>`
 
-    execCmd('insertHTML', tableHtml)
+    insertHtmlAtCursor(tableHtml)
     setShowTablePicker(false)
   }
 
   // YouTube Embed
-  const insertYoutube = (e: React.FormEvent) => {
-    e.preventDefault()
-    restoreSelection()
+  const insertYoutube = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault()
     let videoId = ''
     try {
       if (youtubeUrl.includes('youtu.be/')) {
@@ -283,6 +352,8 @@ export function RichTextEditor({
       } else if (youtubeUrl.includes('youtube.com/watch')) {
         const urlParams = new URLSearchParams(new URL(youtubeUrl).search)
         videoId = urlParams.get('v') || ''
+      } else if (youtubeUrl.includes('youtube.com/embed/')) {
+        videoId = youtubeUrl.split('youtube.com/embed/')[1].split('?')[0]
       }
     } catch {}
 
@@ -293,7 +364,7 @@ export function RichTextEditor({
         </div>
         <p><br></p>
       `
-      execCmd('insertHTML', embedHtml)
+      insertHtmlAtCursor(embedHtml)
     }
     setIsYoutubeModalOpen(false)
     setYoutubeUrl('')
@@ -301,13 +372,14 @@ export function RichTextEditor({
 
   // Editorial Blockquote
   const insertEditorialQuote = () => {
+    saveSelection()
     const quoteHtml = `
       <blockquote class="my-6 p-4 sm:p-5 border-l-4 border-red-600 bg-red-50/60 dark:bg-red-950/20 rounded-r-2xl font-serif text-slate-800 dark:text-slate-200 italic leading-relaxed">
         "यहाँ समाचारको महत्वपूर्ण भनाइ वा उद्धरण लेख्नुहोस्..."
       </blockquote>
       <p><br></p>
     `
-    execCmd('insertHTML', quoteHtml)
+    insertHtmlAtCursor(quoteHtml)
   }
 
   return (
@@ -349,7 +421,10 @@ export function RichTextEditor({
             </button>
             <button
               type="button"
-              onClick={() => setIsMediaModalOpen(true)}
+              onClick={() => {
+                saveSelection()
+                setIsMediaModalOpen(true)
+              }}
               className="hover:text-red-600 transition"
             >
               {language === 'ne' ? 'फोटो थप्नुहोस्' : 'Insert Image'}
@@ -605,11 +680,37 @@ export function RichTextEditor({
               setIsMediaModalOpen(true)
             }}
             className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950/40 text-red-600 font-bold transition flex items-center gap-1"
-            title="Insert Image from Media Library"
+            title="Insert Image or Video from Media Library"
           >
             <ImageIcon className="w-4 h-4" />
-            <span className="text-[11px] hidden sm:inline">Image</span>
+            <span className="text-[11px] hidden sm:inline">Library</span>
           </button>
+
+          {/* Direct 1-Click Upload into Editor */}
+          <button
+            type="button"
+            disabled={isDirectUploading}
+            onClick={() => {
+              saveSelection()
+              directUploadRef.current?.click()
+            }}
+            className="p-1.5 rounded-md hover:bg-slate-200/70 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1 disabled:opacity-50"
+            title="Upload Photo/Video Directly from Computer"
+          >
+            {isDirectUploading ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-red-600" />
+            ) : (
+              <Upload className="w-4 h-4 text-red-600" />
+            )}
+            <span className="text-[11px] hidden sm:inline">Upload</span>
+          </button>
+          <input
+            ref={directUploadRef}
+            type="file"
+            accept="image/*,video/mp4,video/webm"
+            className="hidden"
+            onChange={(e) => handleDirectUpload(e.target.files)}
+          />
 
           {/* Insert Table Grid Selector */}
           <div className="relative">
@@ -875,7 +976,7 @@ export function RichTextEditor({
               </button>
             </div>
 
-            <form onSubmit={insertLink} className="space-y-3">
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
                   {language === 'ne' ? 'लिङ्क टेक्स्ट (Text)' : 'Link Text'}
@@ -884,6 +985,12 @@ export function RichTextEditor({
                   type="text"
                   value={linkText}
                   onChange={(e) => setLinkText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      insertLink()
+                    }
+                  }}
                   placeholder="e.g. Read full report here"
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
                 />
@@ -895,9 +1002,14 @@ export function RichTextEditor({
                 </label>
                 <input
                   type="text"
-                  required
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      insertLink()
+                    }
+                  }}
                   placeholder="https://sabaichha.com/..."
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white font-mono"
                 />
@@ -912,13 +1024,14 @@ export function RichTextEditor({
                   {language === 'ne' ? 'रद्द' : 'Cancel'}
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={insertLink}
                   className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20"
                 >
                   {language === 'ne' ? 'लिङ्क जोड्नुहोस्' : 'Apply Link'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -941,16 +1054,21 @@ export function RichTextEditor({
               </button>
             </div>
 
-            <form onSubmit={insertYoutube} className="space-y-3">
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
                   YouTube Video Link / URL *
                 </label>
                 <input
                   type="url"
-                  required
                   value={youtubeUrl}
                   onChange={(e) => setYoutubeUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      insertYoutube()
+                    }
+                  }}
                   placeholder="https://www.youtube.com/watch?v=..."
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white font-mono"
                 />
@@ -965,13 +1083,14 @@ export function RichTextEditor({
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={insertYoutube}
                   className="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20"
                 >
                   Embed Video
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

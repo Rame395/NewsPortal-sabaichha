@@ -23,6 +23,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
   const [search, setSearch] = React.useState('')
   const [loading, setLoading] = React.useState(false)
   const [uploading, setUploading] = React.useState(false)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
   const [selectedItem, setSelectedItem] = React.useState<MediaItem | null>(null)
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
@@ -46,12 +47,14 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
     if (isOpen) {
       loadMedia(search)
       setSelectedItem(null)
+      setUploadError(null)
     }
   }, [isOpen, loadMedia, search])
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return
     setUploading(true)
+    setUploadError(null)
     const formData = new FormData()
     formData.append('file', files[0])
 
@@ -60,15 +63,18 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
         method: 'POST',
         body: formData,
       })
+      const data = await res.json()
       if (res.ok) {
-        const data = await res.json()
         await loadMedia('')
         if (data.media) {
           setSelectedItem(data.media)
         }
+      } else {
+        setUploadError(data.error || 'Failed to upload file.')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload error:', err)
+      setUploadError(err.message || 'Upload failed.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -120,8 +126,20 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
           </div>
         </div>
 
-        {/* Search */}
-        <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+        {/* Search & Upload Error */}
+        <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+          {uploadError && (
+            <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center justify-between">
+              <span>{uploadError}</span>
+              <button
+                type="button"
+                onClick={() => setUploadError(null)}
+                className="text-red-500 hover:text-red-700 font-bold ml-2"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           <div className="relative">
             <input
               type="text"
@@ -179,7 +197,7 @@ export function MediaPickerModal({ isOpen, onClose, onSelect }: MediaPickerModal
                         src={item.fileUrl}
                         alt={item.altText || item.fileName}
                         fill
-                        unoptimized={item.fileUrl.endsWith('.gif')}
+                        unoptimized={item.fileUrl.endsWith('.gif') || item.fileUrl.endsWith('.svg')}
                         className="object-cover group-hover:scale-105 transition duration-300"
                       />
                     )}

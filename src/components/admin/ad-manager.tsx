@@ -22,6 +22,8 @@ import {
   Code2,
   Upload,
   Film,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 import { MediaPickerModal } from './media-picker-modal'
 
@@ -101,6 +103,35 @@ export function AdManager() {
   const [startDate, setStartDate] = React.useState(new Date().toISOString().split('T')[0])
   const [endDate, setEndDate] = React.useState('')
   const [saving, setSaving] = React.useState(false)
+  const [uploadingAdMedia, setUploadingAdMedia] = React.useState(false)
+  const [formError, setFormError] = React.useState<string | null>(null)
+  const adFileInputRef = React.useRef<HTMLInputElement | null>(null)
+
+  const handleDirectAdUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setUploadingAdMedia(true)
+    setFormError(null)
+    const formData = new FormData()
+    formData.append('file', files[0])
+
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.media) {
+        setImageUrl(data.media.fileUrl)
+      } else {
+        setFormError(data.error || 'Failed to upload banner media.')
+      }
+    } catch {
+      setFormError('Error uploading banner media.')
+    } finally {
+      setUploadingAdMedia(false)
+      if (adFileInputRef.current) adFileInputRef.current.value = ''
+    }
+  }
 
   const fetchAds = async () => {
     setLoading(true)
@@ -144,6 +175,7 @@ export function AdManager() {
     setScriptCode('')
     setStartDate(new Date().toISOString().split('T')[0])
     setEndDate('')
+    setFormError(null)
     setIsModalOpen(true)
   }
 
@@ -159,12 +191,14 @@ export function AdManager() {
     setScriptCode(ad.scriptCode || '')
     setStartDate(ad.startDate ? new Date(ad.startDate).toISOString().split('T')[0] : '')
     setEndDate(ad.endDate ? new Date(ad.endDate).toISOString().split('T')[0] : '')
+    setFormError(null)
     setIsModalOpen(true)
   }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    setFormError(null)
 
     try {
       const payload = {
@@ -193,10 +227,11 @@ export function AdManager() {
         setIsModalOpen(false)
         fetchAds()
       } else {
-        alert('Failed to save advertisement.')
+        const data = await res.json().catch(() => ({}))
+        setFormError(data.error || 'Failed to save advertisement.')
       }
     } catch {
-      alert('Error saving advertisement.')
+      setFormError('Error saving advertisement.')
     } finally {
       setSaving(false)
     }
@@ -525,6 +560,13 @@ export function AdManager() {
             </div>
 
             <form onSubmit={handleSave} className="space-y-4">
+              {formError && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
               {/* Title & Sponsor */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -626,22 +668,44 @@ export function AdManager() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         value={imageUrl}
                         onChange={(e) => setImageUrl(e.target.value)}
-                        placeholder="https://... or /uploads/... or select from Media"
+                        placeholder="https://... or /uploads/... or upload below"
                         className="w-full px-3.5 py-2 text-xs font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setIsMediaPickerOpen(true)}
-                        className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <ImageIcon className="w-3.5 h-3.5 text-red-600" />
-                        <span>मिडिया छान्नुहोस्</span>
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          disabled={uploadingAdMedia}
+                          onClick={() => adFileInputRef.current?.click()}
+                          className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          {uploadingAdMedia ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
+                          <span>अपलोड (Upload)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsMediaPickerOpen(true)}
+                          className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold shrink-0 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <ImageIcon className="w-3.5 h-3.5 text-red-600" />
+                          <span>लाइब्रेरी</span>
+                        </button>
+                      </div>
+                      <input
+                        ref={adFileInputRef}
+                        type="file"
+                        accept="image/*,video/mp4,video/webm"
+                        className="hidden"
+                        onChange={(e) => handleDirectAdUpload(e.target.files)}
+                      />
                     </div>
 
                     {imageUrl && (

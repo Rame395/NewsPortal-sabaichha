@@ -137,6 +137,7 @@ export function AdminNav({
       icon: Megaphone,
       allowed: hasPermission(activeUser.role, activeUser.permissions, 'ads:manage'),
     },
+    /* Hidden per client request
     {
       nameEn: 'Newsletter',
       nameNe: 'इमेल बुलेटिन',
@@ -144,6 +145,7 @@ export function AdminNav({
       icon: Mail,
       allowed: hasPermission(activeUser.role, activeUser.permissions, 'newsletter:manage'),
     },
+    */
     {
       nameEn: 'Staff & Roles',
       nameNe: 'कर्मचारी तथा भूमिका',
@@ -228,17 +230,26 @@ export function AdminNav({
           </Link>
 
           <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between gap-2">
-            <div className="overflow-hidden">
-              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {activeUser.fullName}
-              </p>
-              <span
-                className={`inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                  roleColors[activeUser.role] || roleColors.CUSTOM
-                }`}
-              >
-                {activeUser.role}
-              </span>
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <Image
+                src="/logo-circle.png"
+                alt="SabaiChha.com"
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+              />
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  {activeUser.fullName}
+                </p>
+                <span
+                  className={`inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                    roleColors[activeUser.role] || roleColors.CUSTOM
+                  }`}
+                >
+                  {activeUser.role}
+                </span>
+              </div>
             </div>
 
             <button
