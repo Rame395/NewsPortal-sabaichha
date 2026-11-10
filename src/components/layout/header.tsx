@@ -8,7 +8,7 @@ import { useLanguage } from '@/context/language-context'
 import { TopUtilityBar } from '@/components/layout/top-utility-bar'
 import { AdBanner } from '@/components/ads/ad-banner'
 import { MobileNavDrawer } from '@/components/layout/mobile-nav-drawer'
-import { Home, ChevronDown } from 'lucide-react'
+import { Home, ChevronDown, MapPin } from 'lucide-react'
 import { PROVINCES } from '@/lib/constants/provinces'
 
 interface CategoryNav {
@@ -17,6 +17,9 @@ interface CategoryNav {
   nameNe: string
   slug: string
 }
+
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
 
 export function Header({
   categories = [],
@@ -27,23 +30,123 @@ export function Header({
   const { language, t } = useLanguage()
 
   const [isProvinceOpen, setIsProvinceOpen] = React.useState(false)
-  const provinceDropdownRef = React.useRef<HTMLDivElement>(null)
+  const [dropdownCoords, setDropdownCoords] = React.useState<{ top: number; left: number }>({
+    top: 0,
+    left: 0,
+  })
+
+  const navScrollRef = React.useRef<HTMLDivElement>(null)
+  const provinceWrapperRef = React.useRef<HTMLDivElement>(null)
+  const provinceBtnRef = React.useRef<HTMLButtonElement>(null)
+  const provinceMenuRef = React.useRef<HTMLDivElement>(null)
+  const closeTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Detect active province if user is on /province/[slug]
+  const activeProvince = React.useMemo(() => {
+    if (!pathname?.startsWith('/province/')) return null
+    const slug = pathname.split('/province/')[1]?.split('/')[0]
+    return PROVINCES.find((p) => p.slug === slug) || null
+  }, [pathname])
+
+  const updateDropdownPosition = React.useCallback(() => {
+    if (!provinceBtnRef.current || typeof window === 'undefined') return
+    const rect = provinceBtnRef.current.getBoundingClientRect()
+    const menuWidth = 230
+    const maxLeft = Math.max(8, window.innerWidth - menuWidth - 8)
+    setDropdownCoords({
+      top: rect.bottom + 2,
+      left: Math.min(Math.max(8, rect.left), maxLeft),
+    })
+  }, [])
+
+  const openProvinceDropdown = React.useCallback(() => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+    updateDropdownPosition()
+    setIsProvinceOpen(true)
+  }, [updateDropdownPosition])
+
+  const scheduleCloseProvinceDropdown = React.useCallback(() => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsProvinceOpen(false)
+    }, 150)
+  }, [])
 
   // Auto-close dropdown when route changes
   React.useEffect(() => {
     setIsProvinceOpen(false)
   }, [pathname])
 
+  // Keep dropdown anchored to button on scroll or resize
+  React.useEffect(() => {
+    if (!isProvinceOpen) return
+    updateDropdownPosition()
+    const handleUpdate = () => updateDropdownPosition()
+    window.addEventListener('scroll', handleUpdate, true)
+    window.addEventListener('resize', handleUpdate)
+    return () => {
+      window.removeEventListener('scroll', handleUpdate, true)
+      window.removeEventListener('resize', handleUpdate)
+    }
+  }, [isProvinceOpen, updateDropdownPosition])
+
   // Click outside listener
   React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (provinceDropdownRef.current && !provinceDropdownRef.current.contains(e.target as Node)) {
+    if (!isProvinceOpen) return
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node
+      if (
+        provinceWrapperRef.current &&
+        !provinceWrapperRef.current.contains(target) &&
+        provinceMenuRef.current &&
+        !provinceMenuRef.current.contains(target)
+      ) {
         setIsProvinceOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [isProvinceOpen])
+
+  // Preserve horizontal scroll position of the navbar across route navigations
+  // so the navbar stays exactly where the user clicked
+  useIsomorphicLayoutEffect(() => {
+    const container = navScrollRef.current
+    if (!container || typeof window === 'undefined') return
+
+    try {
+      const savedScroll = sessionStorage.getItem('sabaichha_nav_scroll')
+      if (savedScroll !== null) {
+        container.scrollLeft = Number(savedScroll)
+      }
+    } catch {}
+
+    // Ensure the active link is comfortably visible inside the horizontal bar
+    const activeEl = container.querySelector<HTMLElement>('[data-nav-active="true"]')
+    if (activeEl) {
+      const cRect = container.getBoundingClientRect()
+      const aRect = activeEl.getBoundingClientRect()
+      if (aRect.left < cRect.left + 12) {
+        container.scrollLeft -= cRect.left + 16 - aRect.left
+      } else if (aRect.right > cRect.right - 12) {
+        container.scrollLeft += aRect.right - (cRect.right - 16)
+      }
+    }
+  }, [pathname])
+
+  const handleNavScroll = () => {
+    if (!navScrollRef.current) return
+    try {
+      sessionStorage.setItem('sabaichha_nav_scroll', String(navScrollRef.current.scrollLeft))
+    } catch {}
+  }
 
   // Fallback categories if not passed
   const navCategories = categories.length > 0 ? categories : [
@@ -60,11 +163,11 @@ export function Header({
       {/* 1. Times of India Style Top Utility Bar (Live Weather, Market Rates & Circular Social Icons) */}
       <TopUtilityBar />
 
-      {/* 2. Main Branding & Leaderboard Bar (Side-by-Side on Desktop matching thurpaonline style) */}
+      {/* 2. Main Branding & Leaderboard Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-1.5 sm:py-3.5 flex flex-col lg:flex-row items-center justify-between gap-2 lg:gap-4">
         {/* Left: Logo & Official Tagline (Centered on Mobile, Left-aligned on Desktop) */}
         <div className="flex items-center justify-center lg:justify-start w-full lg:w-auto gap-4 shrink-0">
-          <Link href="/" className="flex items-center justify-center gap-3 sm:gap-4 group shrink-0">
+          <Link href="/" prefetch={true} className="flex items-center justify-center gap-3 sm:gap-4 group shrink-0">
             <div className="relative h-14 sm:h-20 md:h-22 shrink-0 flex items-center justify-center bg-white rounded-xl px-2 py-1">
               <Image
                 src="/logo-v2.jpg"
@@ -102,10 +205,13 @@ export function Header({
         </div>
       </div>
 
-      {/* 4. Official Royal Navy & Crimson Navigation Bar */}
-      <nav className="bg-[#02267C] dark:bg-[#031B56] border-t-2 border-[#C10A1E] shadow-md overflow-x-auto md:overflow-visible scrollbar-none touch-pan-x">
+      {/* 3. Official Royal Navy & Crimson Navigation Bar */}
+      <nav
+        ref={navScrollRef}
+        onScroll={handleNavScroll}
+        className="bg-[#02267C] dark:bg-[#031B56] border-t-2 border-[#C10A1E] shadow-md overflow-x-auto scrollbar-none touch-pan-x"
+      >
         <div className="max-w-7xl mx-auto px-3 sm:px-8 flex items-center gap-1 min-w-max sm:min-w-0 relative">
-          
           {/* Mobile All Categories / Full Directory Hamburger Drawer */}
           <MobileNavDrawer categories={navCategories} />
 
@@ -115,6 +221,8 @@ export function Header({
           {/* Home Icon */}
           <Link
             href="/"
+            prefetch={true}
+            data-nav-active={pathname === '/' ? 'true' : undefined}
             title={t('home') || (language === 'ne' ? 'गृहपृष्ठ' : 'Home')}
             aria-label={t('home') || (language === 'ne' ? 'गृहपृष्ठ' : 'Home')}
             className={`shrink-0 px-3.5 py-2.5 text-sm font-bold whitespace-nowrap transition flex items-center justify-center ${
@@ -136,6 +244,9 @@ export function Header({
               <Link
                 key={firstCat.id}
                 href={`/category/${firstCat.slug}`}
+                prefetch={true}
+                data-nav-active={isFirstActive ? 'true' : undefined}
+                onClick={handleNavScroll}
                 className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isFirstActive
                     ? 'bg-[#C10A1E] text-white shadow-xs'
@@ -149,64 +260,50 @@ export function Header({
 
           {/* Province News Dropdown (प्रदेश समाचार - ७ प्रदेश) */}
           <div
-            ref={provinceDropdownRef}
-            className="relative group shrink-0"
-            onMouseEnter={() => setIsProvinceOpen(true)}
-            onMouseLeave={() => setIsProvinceOpen(false)}
+            ref={provinceWrapperRef}
+            className="relative shrink-0"
+            onPointerEnter={(e) => {
+              if (e.pointerType === 'mouse') openProvinceDropdown()
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType === 'mouse') scheduleCloseProvinceDropdown()
+            }}
           >
             <button
+              ref={provinceBtnRef}
               type="button"
-              onClick={() => setIsProvinceOpen((prev) => !prev)}
+              data-nav-active={pathname.startsWith('/province') ? 'true' : undefined}
+              onClick={() => {
+                handleNavScroll()
+                if (isProvinceOpen) {
+                  setIsProvinceOpen(false)
+                } else {
+                  openProvinceDropdown()
+                }
+              }}
               className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition flex items-center gap-1.5 cursor-pointer ${
-                pathname.startsWith('/province')
+                pathname.startsWith('/province') || isProvinceOpen
                   ? 'bg-[#C10A1E] text-white shadow-xs'
                   : 'text-white/95 hover:bg-[#011C5E] hover:text-white'
               }`}
               aria-expanded={isProvinceOpen}
               aria-haspopup="true"
             >
-              <span>{language === 'ne' ? 'प्रदेश' : 'Province'}</span>
+              <span>
+                {activeProvince
+                  ? language === 'ne'
+                    ? `${activeProvince.nameNe}`
+                    : `${activeProvince.nameEn}`
+                  : language === 'ne'
+                  ? 'प्रदेश'
+                  : 'Province'}
+              </span>
               <ChevronDown
                 className={`w-3.5 h-3.5 transition-transform duration-200 ${
                   isProvinceOpen ? 'rotate-180' : ''
                 }`}
               />
             </button>
-
-            {/* Dropdown Menu Popup */}
-            <div
-              className={`absolute left-0 top-full pt-1 z-50 min-w-[210px] transition-all duration-150 ${
-                isProvinceOpen
-                  ? 'opacity-100 visible translate-y-0 pointer-events-auto'
-                  : 'opacity-0 invisible -translate-y-1 pointer-events-none'
-              }`}
-            >
-              <div className="bg-[#02267C] dark:bg-[#031B56] border-2 border-[#C10A1E] rounded-b-xl shadow-2xl py-1 overflow-hidden">
-                <div className="px-3.5 py-1.5 border-b border-white/10 text-[10.5px] font-extrabold uppercase tracking-wider text-white/70">
-                  {language === 'ne' ? '७ वटै प्रदेश समाचार' : 'All 7 Provinces'}
-                </div>
-                {PROVINCES.map((prov) => {
-                  const isProvActive = pathname === `/province/${prov.slug}`
-                  return (
-                    <Link
-                      key={prov.slug}
-                      href={`/province/${prov.slug}`}
-                      onClick={() => setIsProvinceOpen(false)}
-                      className={`px-3.5 py-2 text-xs font-bold transition flex items-center justify-between ${
-                        isProvActive
-                          ? 'bg-[#C10A1E] text-white'
-                          : 'text-white/90 hover:bg-[#011C5E] hover:text-white'
-                      }`}
-                    >
-                      <span>{language === 'ne' ? prov.nameNe : prov.nameEn}</span>
-                      <span className="text-[10px] text-white/50 font-normal">
-                        {language === 'ne' ? prov.nameEn : prov.nameNe}
-                      </span>
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
           </div>
 
           {/* Remaining Categories */}
@@ -219,6 +316,9 @@ export function Header({
               <Link
                 key={cat.id}
                 href={`/category/${cat.slug}`}
+                prefetch={true}
+                data-nav-active={isCatActive ? 'true' : undefined}
+                onClick={handleNavScroll}
                 className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isCatActive
                     ? 'bg-[#C10A1E] text-white shadow-xs'
@@ -237,6 +337,9 @@ export function Header({
             return (
               <Link
                 href="/rashifal"
+                prefetch={true}
+                data-nav-active={isRashifalActive ? 'true' : undefined}
+                onClick={handleNavScroll}
                 className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isRashifalActive
                     ? 'bg-[#C10A1E] text-white shadow-xs'
@@ -256,6 +359,9 @@ export function Header({
             return (
               <Link
                 href="/tools"
+                prefetch={true}
+                data-nav-active={isToolsActive ? 'true' : undefined}
+                onClick={handleNavScroll}
                 className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
                   isToolsActive
                     ? 'bg-[#C10A1E] text-white shadow-xs'
@@ -269,7 +375,57 @@ export function Header({
         </div>
       </nav>
 
-      {/* Mobile-only Header Leaderboard Ad (positioned below Nav Bar so branding connects directly to menu) */}
+      {/* Fixed-Position Province Dropdown Portal (Never clipped by horizontal overflow) */}
+      {isProvinceOpen && (
+        <div
+          ref={provinceMenuRef}
+          style={{
+            position: 'fixed',
+            top: `${dropdownCoords.top}px`,
+            left: `${dropdownCoords.left}px`,
+          }}
+          onPointerEnter={(e) => {
+            if (e.pointerType === 'mouse') openProvinceDropdown()
+          }}
+          onPointerLeave={(e) => {
+            if (e.pointerType === 'mouse') scheduleCloseProvinceDropdown()
+          }}
+          className="z-[100] w-[230px] animate-in fade-in zoom-in-95 duration-150"
+        >
+          <div className="bg-[#02267C] dark:bg-[#031B56] border-2 border-[#C10A1E] rounded-xl shadow-2xl py-1.5 overflow-hidden">
+            <div className="px-3.5 py-1.5 border-b border-white/15 text-[10.5px] font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+              <MapPin className="w-3 h-3 text-amber-300" />
+              <span>{language === 'ne' ? '७ वटै प्रदेश समाचार' : 'All 7 Provinces'}</span>
+            </div>
+            {PROVINCES.map((prov) => {
+              const isProvActive = pathname === `/province/${prov.slug}`
+              return (
+                <Link
+                  key={prov.slug}
+                  href={`/province/${prov.slug}`}
+                  prefetch={true}
+                  onClick={() => {
+                    handleNavScroll()
+                    setIsProvinceOpen(false)
+                  }}
+                  className={`px-3.5 py-2.5 text-xs font-bold transition flex items-center justify-between ${
+                    isProvActive
+                      ? 'bg-[#C10A1E] text-white'
+                      : 'text-white/95 hover:bg-[#011C5E] hover:text-white'
+                  }`}
+                >
+                  <span>{language === 'ne' ? prov.nameNe : prov.nameEn}</span>
+                  <span className="text-[10px] text-white/60 font-normal">
+                    {language === 'ne' ? prov.nameEn : prov.nameNe}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile-only Header Leaderboard Ad */}
       <AdBanner
         placement="HEADER_LEADERBOARD"
         className="max-w-7xl mx-auto px-2.5 sm:px-4 py-2 lg:hidden"

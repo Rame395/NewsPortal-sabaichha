@@ -303,9 +303,16 @@ export default async function ProvinceArchivePage({ params }: PageProps) {
 
                 {/* Author footer */}
                 <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 dark:border-slate-800">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
-                    {leadStory.author?.fullName || 'सबै छ संवाददाता'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src="/logo-circle.png"
+                      alt="SabaiChha.com"
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+                    />
+                    <span>{formatRelativeTime(leadStory.publishedAt)}</span>
+                  </div>
                   <Link
                     href={`/news/${leadStory.slug}`}
                     className="font-bold text-[#C10A1E] flex items-center gap-1 hover:underline"
@@ -377,7 +384,13 @@ export default async function ProvinceArchivePage({ params }: PageProps) {
                         </div>
 
                         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-                          <span>{art.author?.fullName || 'सबै छ डेस्क'}</span>
+                          <Image
+                            src="/logo-circle.png"
+                            alt="SabaiChha.com"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0"
+                          />
                           <span className="text-[#C10A1E] font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
                             थप <ChevronRight className="w-3 h-3" />
                           </span>
@@ -392,7 +405,7 @@ export default async function ProvinceArchivePage({ params }: PageProps) {
         )}
       </main>
 
-      <Footer />
+      <Footer categories={allCategories} />
     </div>
   )
 }
