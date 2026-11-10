@@ -49,8 +49,11 @@ export function ThemeProvider({
     }
   }
 
-  // Ensure theme is applied on initial mount
-  React.useEffect(() => {
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect
+
+  // Ensure theme is applied synchronously before paint on initial mount
+  useIsomorphicLayoutEffect(() => {
     try {
       const saved = localStorage.getItem('sabaichha_theme') as Theme
       const active = saved === 'dark' || saved === 'light' ? saved : defaultTheme === 'dark' ? 'dark' : 'light'

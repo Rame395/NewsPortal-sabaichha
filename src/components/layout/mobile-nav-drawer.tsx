@@ -18,7 +18,6 @@ import {
   Coins,
   DollarSign,
   Keyboard,
-  Newspaper,
   Bookmark,
   ChevronRight,
   ShieldCheck,
@@ -33,6 +32,7 @@ import {
   TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
+  TikTokIcon,
 } from '@/components/ui/social-icons'
 
 interface CategoryItem {
@@ -51,6 +51,7 @@ const DEFAULT_SOCIAL = {
   twitter: 'https://x.com/sabaichha',
   youtube: 'https://youtube.com/@sabaichha',
   instagram: 'https://instagram.com/sabaichha',
+  tiktok: 'https://tiktok.com/@sabaichha',
 }
 
 export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
@@ -71,6 +72,7 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
             twitter: data.social.twitter || DEFAULT_SOCIAL.twitter,
             youtube: data.social.youtube || DEFAULT_SOCIAL.youtube,
             instagram: data.social.instagram || DEFAULT_SOCIAL.instagram,
+            tiktok: data.social.tiktok || DEFAULT_SOCIAL.tiktok,
           })
         }
       })
@@ -182,13 +184,13 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
             {/* Drawer Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex items-center justify-between">
               <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2">
-                <div className="relative h-12 w-48 bg-white rounded-lg p-1.5 shadow-2xs flex items-center justify-center">
+                <div className="relative h-14 bg-white rounded-xl px-2.5 py-1 shadow-2xs flex items-center justify-center">
                   <Image
                     src="/logo-v2.jpg"
-                    alt="SabaiChha.com"
-                    width={200}
-                    height={50}
-                    className="object-contain max-h-10 w-auto"
+                    alt="SabaiChha.com - सबै छ डट कम"
+                    width={240}
+                    height={100}
+                    className="object-contain h-12 w-auto"
                   />
                 </div>
               </Link>
@@ -220,22 +222,6 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                   <span className="flex items-center gap-2.5">
                     <Home className="w-4 h-4 text-red-600" />
                     <span>{isNe ? 'गृहपृष्ठ (Home)' : 'Home'}</span>
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
-                </Link>
-
-                <Link
-                  href="/epaper"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition ${
-                    pathname === '/epaper'
-                      ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400'
-                      : 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Newspaper className="w-4 h-4 text-red-600" />
-                    <span>{isNe ? 'ई-पत्रिका (ePaper)' : 'Read ePaper'}</span>
                   </span>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </Link>
@@ -371,15 +357,6 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
               {/* Portal Information & Policies */}
               <div className="pt-4 space-y-1">
                 <Link
-                  href="/about"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
-                >
-                  <Info className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{isNe ? 'हाम्रो बारेमा (About Us)' : 'About Us'}</span>
-                </Link>
-
-                <Link
                   href="/contact"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
@@ -409,18 +386,18 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                   {socialLinks.facebook && (
                     <a
                       href={socialLinks.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-blue-500/20 bg-blue-50/60 dark:bg-blue-950/30 text-[#1877F2] hover:bg-blue-600 hover:text-white transition group shadow-2xs"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl border border-blue-500/20 bg-blue-50/60 dark:bg-blue-950/30 text-[#1877F2] hover:bg-blue-600 hover:text-white transition group shadow-2xs"
                       title="Facebook"
                     >
-                      <FacebookIcon className="w-5 h-5 group-hover:scale-110 transition" />
-                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white">
-                        Facebook
+                      <FacebookIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white truncate">
+                        FB
                       </span>
                     </a>
                   )}
@@ -430,11 +407,11 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                       href={socialLinks.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition group shadow-2xs"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition group shadow-2xs"
                       title="X (Twitter)"
                     >
-                      <TwitterXIcon className="w-4.5 h-4.5 group-hover:scale-110 transition" />
-                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white dark:group-hover:text-black">
+                      <TwitterXIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:scale-110 transition" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white dark:group-hover:text-black truncate">
                         X
                       </span>
                     </a>
@@ -445,12 +422,12 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                       href={socialLinks.youtube}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-red-500/20 bg-red-50/60 dark:bg-red-950/30 text-[#FF0000] hover:bg-red-600 hover:text-white transition group shadow-2xs"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl border border-red-500/20 bg-red-50/60 dark:bg-red-950/30 text-[#FF0000] hover:bg-red-600 hover:text-white transition group shadow-2xs"
                       title="YouTube"
                     >
-                      <YoutubeIcon className="w-5 h-5 group-hover:scale-110 transition" />
-                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white">
-                        YouTube
+                      <YoutubeIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white truncate">
+                        YT
                       </span>
                     </a>
                   )}
@@ -460,12 +437,27 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                       href={socialLinks.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-pink-500/20 bg-pink-50/60 dark:bg-pink-950/30 text-[#E4405F] hover:bg-pink-600 hover:text-white transition group shadow-2xs"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl border border-pink-500/20 bg-pink-50/60 dark:bg-pink-950/30 text-[#E4405F] hover:bg-pink-600 hover:text-white transition group shadow-2xs"
                       title="Instagram"
                     >
-                      <InstagramIcon className="w-5 h-5 group-hover:scale-110 transition" />
-                      <span className="text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white">
+                      <InstagramIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white truncate">
                         Insta
+                      </span>
+                    </a>
+                  )}
+
+                  {socialLinks.tiktok && (
+                    <a
+                      href={socialLinks.tiktok}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-700/30 bg-slate-100/80 dark:bg-slate-800/80 text-black dark:text-white hover:bg-black hover:text-white transition group shadow-2xs"
+                      title="TikTok"
+                    >
+                      <TikTokIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition" />
+                      <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white truncate">
+                        TikTok
                       </span>
                     </a>
                   )}

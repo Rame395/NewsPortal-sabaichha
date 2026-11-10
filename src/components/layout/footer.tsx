@@ -9,6 +9,7 @@ import {
   TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
+  TikTokIcon,
 } from '@/components/ui/social-icons'
 import {
   MapPin,
@@ -45,6 +46,7 @@ interface SiteSettingsState {
     instagram: string
     linkedin: string
     telegram: string
+    tiktok?: string
   }
   footer: {
     aboutNe: string
@@ -83,10 +85,10 @@ export function Footer({ categories = [] }: FooterProps) {
     addressEn: 'Kathmandu Metropolitan City, Bagmati Province, Nepal',
     phone: '+977 1-4240000 / 9851000000',
     email: 'info@sabaichha.com',
-    pressCouncilNo: 'प्रेस काउन्सिल दर्ता नं.: १२३/०८०-८१',
-    deptOfInfoNo: 'सूचना विभाग दर्ता नं.: ५३२७',
-    editorName: 'सन्तोष श्रेष्ठ (प्रधान सम्पादक)',
-    publisherName: 'सबै छ मिडिया नेटवर्क प्रा. लि.',
+    pressCouncilNo: '',
+    deptOfInfoNo: '',
+    editorName: '',
+    publisherName: '',
   }
 
   const social = settings?.socialLinks || {
@@ -94,6 +96,7 @@ export function Footer({ categories = [] }: FooterProps) {
     twitter: 'https://x.com/sabaichha',
     youtube: 'https://youtube.com/@sabaichha',
     instagram: 'https://instagram.com/sabaichha',
+    tiktok: 'https://tiktok.com/@sabaichha',
   }
 
   const footerText = settings?.footer || {
@@ -119,13 +122,13 @@ export function Footer({ categories = [] }: FooterProps) {
         {/* Top Branding & Social Ribbon */}
         <div className="flex flex-col md:flex-row items-center justify-between pb-10 border-b border-slate-800 gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <Link href="/" className="relative h-16 w-64 bg-white rounded-xl p-2 flex items-center justify-center shrink-0 shadow-2xs">
+            <Link href="/" className="relative h-14 sm:h-20 md:h-22 bg-white rounded-xl px-3 py-1.5 flex items-center justify-center shrink-0 shadow-sm">
               <Image
                 src="/logo-v2.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
-                width={260}
-                height={64}
-                className="object-contain max-h-13 w-auto"
+                width={320}
+                height={134}
+                className="object-contain h-12 sm:h-18 md:h-20 w-auto"
               />
             </Link>
             <div className="sm:border-l sm:border-slate-700 sm:pl-4">
@@ -188,6 +191,18 @@ export function Footer({ categories = [] }: FooterProps) {
                 <InstagramIcon className="w-4 h-4" />
               </a>
             )}
+
+            {social.tiktok && (
+              <a
+                href={social.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-slate-700 bg-black text-white hover:bg-slate-800 flex items-center justify-center transition shadow-2xs"
+                title="TikTok"
+              >
+                <TikTokIcon className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
 
@@ -202,17 +217,41 @@ export function Footer({ categories = [] }: FooterProps) {
             <p className="text-slate-400 leading-relaxed font-serif text-xs">
               {language === 'ne' ? footerText.aboutNe : footerText.aboutEn}
             </p>
+            {(siteInfo.deptOfInfoNo || siteInfo.pressCouncilNo || siteInfo.publisherName || siteInfo.editorName) && (
+              <div className="pt-1 space-y-1 text-[11px] text-slate-400 border-t border-slate-800/80">
+                {siteInfo.deptOfInfoNo && (
+                  <p>
+                    <span className="text-slate-500">{language === 'ne' ? 'सूचना विभाग दर्ता नं:' : 'Reg. No:'}</span>{' '}
+                    <span className="text-slate-300 font-semibold">{siteInfo.deptOfInfoNo}</span>
+                  </p>
+                )}
+                {siteInfo.pressCouncilNo && (
+                  <p>
+                    <span className="text-slate-500">{language === 'ne' ? 'प्रेस काउन्सिल सूचीकरण:' : 'Press Council:'}</span>{' '}
+                    <span className="text-slate-300 font-semibold">{siteInfo.pressCouncilNo}</span>
+                  </p>
+                )}
+                {siteInfo.publisherName && (
+                  <p>
+                    <span className="text-slate-500">{language === 'ne' ? 'अध्यक्ष/प्रकाशक:' : 'Publisher:'}</span>{' '}
+                    <span className="text-slate-300 font-semibold">{siteInfo.publisherName}</span>
+                  </p>
+                )}
+                {siteInfo.editorName && (
+                  <p>
+                    <span className="text-slate-500">{language === 'ne' ? 'सम्पादक:' : 'Editor:'}</span>{' '}
+                    <span className="text-slate-300 font-semibold">{siteInfo.editorName}</span>
+                  </p>
+                )}
+              </div>
+            )}
             <div className="pt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-              <Link href="/about" className="hover:text-red-400 transition underline underline-offset-2">
-                {language === 'ne' ? 'विस्तृत जानकारी' : 'About Details'}
-              </Link>
-              <span>•</span>
               <Link href="/contact" className="hover:text-red-400 transition underline underline-offset-2">
                 {language === 'ne' ? 'सम्पर्क' : 'Contact'}
               </Link>
               <span>•</span>
               <Link href="/privacy" className="hover:text-red-400 transition underline underline-offset-2">
-                {language === 'ne' ? 'गोपनीयता' : 'Privacy'}
+                {language === 'ne' ? 'गोपनीयता नीति' : 'Privacy Policy'}
               </Link>
             </div>
           </div>
@@ -311,8 +350,8 @@ export function Footer({ categories = [] }: FooterProps) {
               गोपनीयता नीति (Privacy Policy)
             </Link>
             <span>•</span>
-            <Link href="/terms" className="hover:text-slate-300 transition">
-              नियम तथा सर्तहरू (Terms)
+            <Link href="/contact" className="hover:text-slate-300 transition">
+              सम्पर्क (Contact Us)
             </Link>
           </div>
         </div>

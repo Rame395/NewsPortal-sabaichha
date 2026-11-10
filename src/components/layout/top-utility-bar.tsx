@@ -11,6 +11,7 @@ import {
   TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
+  TikTokIcon,
 } from '@/components/ui/social-icons'
 import {
   Calendar,
@@ -18,7 +19,6 @@ import {
   Coins,
   TrendingUp,
   TrendingDown,
-  Newspaper,
   Sun,
   DollarSign,
 } from 'lucide-react'
@@ -60,6 +60,7 @@ interface MarketWeatherData {
     linkedin?: string
     telegram?: string
     whatsapp?: string
+    tiktok?: string
   }
 }
 
@@ -89,27 +90,43 @@ export function TopUtilityBar() {
     return () => clearInterval(timer)
   }, [language])
 
-  // Fetch real-time weather and market tickers (live background polling every 15 seconds)
+  // Fetch real-time weather and market tickers (smart polling every 60s, pauses on hidden tabs)
   React.useEffect(() => {
     let isMounted = true
+    let lastFetched = 0
 
     const loadMarketWeather = () => {
+      // Don't poll if browser tab is in background
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return
+      }
+
       fetch(`/api/public/market-weather?t=${Date.now()}`, { cache: 'no-store' })
         .then((res) => res.json())
         .then((resData) => {
           if (isMounted && resData && !resData.error) {
             setData(resData)
+            lastFetched = Date.now()
           }
         })
         .catch((err) => console.error('Failed to load market-weather:', err))
     }
 
     loadMarketWeather()
-    const interval = setInterval(loadMarketWeather, 15 * 1000)
+    const interval = setInterval(loadMarketWeather, 60 * 1000)
+
+    // When user returns to tab, refresh if more than 60s have passed
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastFetched > 60 * 1000) {
+        loadMarketWeather()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       isMounted = false
       clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [])
 
@@ -118,6 +135,7 @@ export function TopUtilityBar() {
     twitter: 'https://x.com/sabaichha',
     youtube: 'https://youtube.com/@sabaichha',
     instagram: 'https://instagram.com/sabaichha',
+    tiktok: 'https://tiktok.com/@sabaichha',
   }
 
   const weather = data?.weather || {
@@ -163,7 +181,7 @@ export function TopUtilityBar() {
   return (
     <div
       translate="no"
-      className="notranslate relative z-30 w-full bg-slate-50 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 border-b border-slate-200/90 dark:border-slate-800 text-[11px] h-9.5 px-4 sm:px-8 transition-colors select-none flex items-center"
+      className="notranslate relative z-30 w-full bg-slate-50 dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 border-b border-slate-200/90 dark:border-slate-800 text-[11px] h-8 sm:h-9.5 px-2.5 sm:px-8 transition-colors select-none flex items-center"
     >
       <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-2 min-w-0">
         
@@ -350,7 +368,7 @@ export function TopUtilityBar() {
         </div>
 
         {/* ======================================================== */}
-        {/* 3. RIGHT ZONE: Circular Social Icons, ePaper, Login, Theme Toggle (shrink-0) */}
+        {/* 3. RIGHT ZONE: Circular Social Icons, Login, Theme Toggle (shrink-0) */}
         {/* ======================================================== */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Times of India-style Circular Social Icons (Facebook, X, YouTube, Instagram) */}
@@ -402,17 +420,19 @@ export function TopUtilityBar() {
                 <InstagramIcon className="w-2.5 h-2.5" />
               </a>
             )}
-          </div>
 
-          {/* Read ePaper Pill (TOI style) - Desktop/Tablet */}
-          <Link
-            href="/epaper"
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border border-red-600 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white text-[10px] font-bold transition shadow-2xs bg-white dark:bg-slate-900 whitespace-nowrap"
-            title="Read ePaper / ई-पत्रिका"
-          >
-            <Newspaper className="w-3 h-3 text-red-600 dark:text-red-400" />
-            <span>{language === 'ne' ? 'ई-पत्रिका' : 'Read ePaper'}</span>
-          </Link>
+            {socialLinks.tiktok && (
+              <a
+                href={socialLinks.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-5.5 h-5.5 rounded-full border border-slate-700 text-black dark:text-white hover:bg-black hover:text-white flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
+                title="Follow on TikTok"
+              >
+                <TikTokIcon className="w-2.5 h-2.5" />
+              </a>
+            )}
+          </div>
 
           {/* Theme Toggle (Light / Dark) */}
           <ThemeToggle />
