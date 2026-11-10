@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { ArticleStatus } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
 export const revalidate = 300 // Revalidate every 5 minutes
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'

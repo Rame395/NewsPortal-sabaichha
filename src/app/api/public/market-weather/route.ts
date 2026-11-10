@@ -8,7 +8,7 @@ export async function GET() {
     const data = await getAggregatedMarketWeatherData()
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
       },
     })
   } catch (error) {

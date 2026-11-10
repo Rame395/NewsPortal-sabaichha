@@ -10,6 +10,7 @@ import {
   TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
+  TikTokIcon,
 } from '@/components/ui/social-icons'
 import {
   MapPin,
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
   },
 }
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export default async function ContactPage() {
   const [categories, settings] = await Promise.all([
@@ -263,6 +264,18 @@ export default async function ContactPage() {
                     >
                       <InstagramIcon className="w-4 h-4 shrink-0" />
                       <span className="text-xs font-bold truncate">Instagram</span>
+                    </a>
+                  )}
+
+                  {socialLinks.tiktok && (
+                    <a
+                      href={socialLinks.tiktok}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-700/30 bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition shadow-2xs group"
+                    >
+                      <TikTokIcon className="w-4 h-4 shrink-0" />
+                      <span className="text-xs font-bold truncate">TikTok</span>
                     </a>
                   )}
                 </div>

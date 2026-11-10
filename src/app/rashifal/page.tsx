@@ -6,7 +6,7 @@ import { getDailyRashifal } from '@/lib/horoscope/rashifal-service'
 import { prisma, ArticleStatus } from '@/lib/prisma'
 import { formatBikramSambat } from '@/lib/date/nepali-calendar'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 1800
 
 export async function generateMetadata(): Promise<Metadata> {
   const bsDate = formatBikramSambat(new Date())

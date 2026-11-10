@@ -7,7 +7,7 @@ import { computeAllForexRates } from '@/lib/market/forex-service'
 import { prisma, ArticleStatus } from '@/lib/prisma'
 import { formatBikramSambat } from '@/lib/date/nepali-calendar'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export async function generateMetadata(): Promise<Metadata> {
   const bsDate = formatBikramSambat(new Date())

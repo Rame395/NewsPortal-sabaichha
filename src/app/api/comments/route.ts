@@ -77,28 +77,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid article ID.' }, { status: 400 })
     }
 
-    const trimmedName = typeof authorName === 'string' ? authorName.trim() : ''
-    const trimmedEmail = typeof authorEmail === 'string' ? authorEmail.trim() : ''
+    const trimmedName = typeof authorName === 'string' && authorName.trim() ? authorName.trim() : 'पाठक'
+    const trimmedEmail = typeof authorEmail === 'string' && authorEmail.trim() ? authorEmail.trim() : 'reader@sabaichha.com'
     const trimmedContent = typeof content === 'string' ? content.trim() : ''
 
-    if (trimmedName.length < 2 || trimmedName.length > 80) {
+    if (trimmedContent.length < 2 || trimmedContent.length > 2000) {
       return NextResponse.json(
-        { error: 'Name must be between 2 and 80 characters.' },
-        { status: 400 }
-      )
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(trimmedEmail)) {
-      return NextResponse.json(
-        { error: 'Please provide a valid email address.' },
-        { status: 400 }
-      )
-    }
-
-    if (trimmedContent.length < 3 || trimmedContent.length > 2000) {
-      return NextResponse.json(
-        { error: 'Comment must be between 3 and 2000 characters.' },
+        { error: 'Comment must be between 2 and 2000 characters.' },
         { status: 400 }
       )
     }

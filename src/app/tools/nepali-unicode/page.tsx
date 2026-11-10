@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/footer'
 import { NepaliUnicodeClient } from '@/components/tools/nepali-unicode-client'
 import { prisma, ArticleStatus } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'नेपाली युनिकोड कन्भर्टर (Nepali Unicode Typing Online) | SabaiChha',

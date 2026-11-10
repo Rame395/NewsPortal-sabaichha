@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { ArticleStatus } from '@/lib/prisma'
+import { checkRateLimit } from '@/lib/security/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {
+    // 0. Rate limiting: Max 45 searches per minute per IP
+    const rateLimitResponse = checkRateLimit(request, 'search_query', {
+      maxRequests: 45,
+      windowMs: 60 * 1000,
+      messageEn: 'Too many search requests. Please slow down and try again shortly.',
+      messageNe: 'धेरै पटक खोज अनुरोध गरियो। कृपया केही क्षण पर्खनुहोस्।',
+    })
+    if (rateLimitResponse) return rateLimitResponse
+
     const { searchParams } = new URL(request.url)
-    const rawQuery = searchParams.get('q')?.trim() || ''
+    const rawQuery = (searchParams.get('q')?.trim() || '').slice(0, 100)
     const categorySlug = searchParams.get('category')?.trim() || ''
     const sort = searchParams.get('sort')?.trim() || 'latest'
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10), 1), 50)

@@ -18,7 +18,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'उपयोगी अनलाइन टुल्स तथा सामग्रीहरू (Utility Tools) | SabaiChha',

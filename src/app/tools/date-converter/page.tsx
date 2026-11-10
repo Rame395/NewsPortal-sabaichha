@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/footer'
 import { DateConverterClient } from '@/components/tools/date-converter-client'
 import { prisma, ArticleStatus } from '@/lib/prisma'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'नेपाली मिति रूपान्तरक (Nepali Date Converter B.S. to A.D.) | SabaiChha',
