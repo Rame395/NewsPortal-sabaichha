@@ -178,6 +178,65 @@ export function PublicHomepage({
     </div>
   )
 
+  // Reusable Most Viewed / Trending (धेरै पढिएको) block
+  const renderMostViewed = (includeSidebarAd = false) => {
+    const listGrid = (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-2xs">
+        {trendingArticles.map((story, i) => (
+          <div
+            key={story.id}
+            className="flex items-start gap-3 group p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+          >
+            <span className="text-xl font-mono font-black text-red-600 shrink-0">
+              {language === 'ne' ? toNepaliNumerals(i + 1) : i + 1}
+            </span>
+            <div className="min-w-0">
+              <Link
+                href={`/news/${story.slug}`}
+                className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
+              >
+                {getLocalizedTitle(story, language)}
+              </Link>
+              <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3 h-3 text-red-500" />
+                  <span>
+                    {language === 'ne'
+                      ? `${toNepaliNumerals(story.viewCount)} पटक पढिएको`
+                      : `${story.viewCount.toLocaleString()} views`}
+                  </span>
+                </span>
+                <span>{formatTimeAgo(story.publishedAt)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b-2 border-red-600">
+          <h3 className="text-base sm:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-red-600" />
+            <span>{language === 'ne' ? 'धेरै पढिएको' : 'Most Read / Trending'}</span>
+          </h3>
+        </div>
+
+        {includeSidebarAd ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="lg:col-span-8">{listGrid}</div>
+            <div className="lg:col-span-4">
+              <AdBanner placement="SIDEBAR_RECTANGLE" />
+            </div>
+          </div>
+        ) : (
+          listGrid
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* 1. Header with Red & White Theme */}
@@ -462,10 +521,10 @@ export function PublicHomepage({
           </section>
         )}
 
-        {/* Small Devices Only: Latest Updates placed cleanly UNDER all featured stories */}
-        {topHighlights.length > 0 && (
+        {/* Mobile Only: Most Viewed / Trending placed above (right under Featured Stories) */}
+        {trendingArticles.length > 0 && (
           <section className="block lg:hidden w-full">
-            {renderLatestUpdates()}
+            {renderMostViewed(false)}
           </section>
         )}
 
@@ -497,51 +556,24 @@ export function PublicHomepage({
               articles={cat.articles}
             />
 
-            {/* Insert Most Read / Trending + Sidebar Ad after the 3rd category (or after the last if fewer than 3) */}
-            {index === Math.min(2, activeCategories.length - 1) && trendingArticles.length > 0 && (
-              <section className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b-2 border-red-600">
-                  <h3 className="text-base sm:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-red-600" />
-                    <span>{language === 'ne' ? 'धेरै पढिएको' : 'Most Read / Trending'}</span>
-                  </h3>
-                </div>
+            {/* After the 3rd category (or last if fewer than 3):
+                - Desktop: Most Read / Trending + Sidebar Ad
+                - Mobile: Latest Updates (moved down here) + Sidebar Ad */}
+            {index === Math.min(2, activeCategories.length - 1) && (
+              <>
+                {trendingArticles.length > 0 && (
+                  <section className="hidden lg:block">
+                    {renderMostViewed(true)}
+                  </section>
+                )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                  <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-2xs">
-                    {trendingArticles.map((story, i) => (
-                      <div key={story.id} className="flex items-start gap-3 group p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                        <span className="text-xl font-mono font-black text-red-600 shrink-0">
-                          {language === 'ne' ? toNepaliNumerals(i + 1) : i + 1}
-                        </span>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/news/${story.slug}`}
-                            className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
-                          >
-                            {getLocalizedTitle(story, language)}
-                          </Link>
-                          <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
-                            <span className="flex items-center gap-1">
-                              <Eye className="w-3 h-3 text-red-500" />
-                              <span>
-                                {language === 'ne'
-                                  ? `${toNepaliNumerals(story.viewCount)} पटक पढिएको`
-                                  : `${story.viewCount.toLocaleString()} views`}
-                              </span>
-                            </span>
-                            <span>{formatTimeAgo(story.publishedAt)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="lg:col-span-4">
+                {topHighlights.length > 0 && (
+                  <section className="block lg:hidden space-y-6">
+                    {renderLatestUpdates()}
                     <AdBanner placement="SIDEBAR_RECTANGLE" />
-                  </div>
-                </div>
-              </section>
+                  </section>
+                )}
+              </>
             )}
           </React.Fragment>
         ))}
