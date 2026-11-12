@@ -838,6 +838,24 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
                   <Shield className="w-3.5 h-3.5 text-red-600" />
+                  <span>{language === 'ne' ? 'सूचना विभाग दर्ता नं.' : 'Dept. of Information Reg. No.'}</span>
+                </label>
+                <input
+                  type="text"
+                  value={settings.siteInfo.deptOfInfoNo || ''}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      siteInfo: { ...settings.siteInfo, deptOfInfoNo: e.target.value },
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
+                  <Shield className="w-3.5 h-3.5 text-red-600" />
                   <span>{language === 'ne' ? 'प्रेस काउन्सिल दर्ता नं.' : 'Press Council Reg. No.'}</span>
                 </label>
                 <input
@@ -855,7 +873,7 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {language === 'ne' ? 'प्रधान सम्पादक' : 'Editor-in-Chief'}
+                  {language === 'ne' ? 'सम्पादक' : 'Editor'}
                 </label>
                 <input
                   type="text"
@@ -864,6 +882,23 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                     setSettings({
                       ...settings,
                       siteInfo: { ...settings.siteInfo, editorName: e.target.value },
+                    })
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  {language === 'ne' ? 'सह-सम्पादक' : 'Co-Editor'}
+                </label>
+                <input
+                  type="text"
+                  value={settings.siteInfo.coEditorName || ''}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      siteInfo: { ...settings.siteInfo, coEditorName: e.target.value },
                     })
                   }
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold"

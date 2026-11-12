@@ -32,6 +32,7 @@ interface SiteSettingsState {
     pressCouncilNo: string
     deptOfInfoNo: string
     editorName: string
+    coEditorName?: string
     publisherName: string
   }
   socialLinks: {
@@ -72,18 +73,22 @@ export function Footer({ categories = [] }: FooterProps) {
       .catch(() => {})
   }, [])
 
-  const siteInfo = settings?.siteInfo || {
-    portalName: 'SabaiChha.com',
-    sloganNe: 'सूचना संवाद र मनोरञ्जनको संगम, सबै छ डट कम',
-    sloganEn: 'Confluence of Information, Dialogue & Entertainment',
-    addressNe: 'काठमाडौँ महानगरपालिका, बागमती प्रदेश, नेपाल',
-    addressEn: 'Kathmandu Metropolitan City, Bagmati Province, Nepal',
-    phone: '+977 1-4240000 / 9851000000',
-    email: 'info@sabaichha.com',
-    pressCouncilNo: '',
-    deptOfInfoNo: '',
-    editorName: '',
-    publisherName: '',
+  const siteInfo = {
+    portalName: settings?.siteInfo?.portalName || 'SabaiChha.com',
+    sloganNe: settings?.siteInfo?.sloganNe || 'सूचना संवाद र मनोरञ्जनको संगम, सबै छ डट कम',
+    sloganEn: settings?.siteInfo?.sloganEn || 'Confluence of Information, Dialogue & Entertainment',
+    addressNe: settings?.siteInfo?.addressNe || 'काठमाडौँ महानगरपालिका, बागमती प्रदेश, नेपाल',
+    addressEn: settings?.siteInfo?.addressEn || 'Kathmandu Metropolitan City, Bagmati Province, Nepal',
+    phone:
+      settings?.siteInfo?.phone && settings.siteInfo.phone !== '+977 1-4240000 / 9851000000'
+        ? settings.siteInfo.phone
+        : '9860207171',
+    email: settings?.siteInfo?.email || 'info@sabaichha.com',
+    pressCouncilNo: settings?.siteInfo?.pressCouncilNo || '',
+    deptOfInfoNo: settings?.siteInfo?.deptOfInfoNo || '५३२७',
+    editorName: settings?.siteInfo?.editorName || 'जुनमायाँ पुन मगर',
+    coEditorName: settings?.siteInfo?.coEditorName || 'बिरेन्द्र घर्ति',
+    publisherName: settings?.siteInfo?.publisherName || '',
   }
 
   const social = {
@@ -190,11 +195,11 @@ export function Footer({ categories = [] }: FooterProps) {
             <p className="text-slate-400 leading-relaxed font-serif text-xs">
               {language === 'ne' ? footerText.aboutNe : footerText.aboutEn}
             </p>
-            {(siteInfo.deptOfInfoNo || siteInfo.pressCouncilNo || siteInfo.publisherName || siteInfo.editorName) && (
+            {(siteInfo.deptOfInfoNo || siteInfo.pressCouncilNo || siteInfo.publisherName || siteInfo.editorName || siteInfo.coEditorName) && (
               <div className="pt-1 space-y-1 text-[11px] text-slate-400 border-t border-slate-800/80">
                 {siteInfo.deptOfInfoNo && (
                   <p>
-                    <span className="text-slate-500">{language === 'ne' ? 'सूचना विभाग दर्ता नं:' : 'Reg. No:'}</span>{' '}
+                    <span className="text-slate-500">{language === 'ne' ? 'सूचना विभाग दर्ता नं.' : 'Reg. No:'}</span>{' '}
                     <span className="text-slate-300 font-semibold">{siteInfo.deptOfInfoNo}</span>
                   </p>
                 )}
@@ -212,8 +217,14 @@ export function Footer({ categories = [] }: FooterProps) {
                 )}
                 {siteInfo.editorName && (
                   <p>
-                    <span className="text-slate-500">{language === 'ne' ? 'सम्पादक:' : 'Editor:'}</span>{' '}
+                    <span className="text-slate-500">{language === 'ne' ? 'सम्पादक :' : 'Editor:'}</span>{' '}
                     <span className="text-slate-300 font-semibold">{siteInfo.editorName}</span>
+                  </p>
+                )}
+                {siteInfo.coEditorName && (
+                  <p>
+                    <span className="text-slate-500">{language === 'ne' ? 'सह-सम्पादक :' : 'Co-Editor:'}</span>{' '}
+                    <span className="text-slate-300 font-semibold">{siteInfo.coEditorName}</span>
                   </p>
                 )}
               </div>
@@ -242,7 +253,10 @@ export function Footer({ categories = [] }: FooterProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span className="font-mono">{siteInfo.phone}</span>
+                <span>
+                  {language === 'ne' ? 'कार्यालय सम्पर्क न.' : 'Contact No:'}{' '}
+                  <span className="font-mono text-slate-200 font-semibold">{siteInfo.phone}</span>
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400 shrink-0" />

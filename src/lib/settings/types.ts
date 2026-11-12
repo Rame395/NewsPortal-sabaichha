@@ -9,6 +9,7 @@ export interface SiteInfoSettings {
   pressCouncilNo: string
   deptOfInfoNo: string
   editorName: string
+  coEditorName?: string
   publisherName: string
 }
 

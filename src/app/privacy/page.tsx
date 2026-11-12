@@ -271,7 +271,7 @@ export default async function PrivacyPage() {
                     इमेल: <a href={`mailto:${siteInfo.email}`} className="text-[#02267C] dark:text-blue-400 font-bold hover:underline">{siteInfo.email || 'info@sabaichha.com'}</a>
                   </p>
                   <p className="font-mono text-slate-700 dark:text-slate-300">
-                    फोन: {siteInfo.phone || '+977 1-4240000'}
+                    फोन: {siteInfo.phone || '9860207171'}
                   </p>
                 </div>
               </div>

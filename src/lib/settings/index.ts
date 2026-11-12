@@ -46,9 +46,20 @@ export async function getSiteSettings(): Promise<AllSettings> {
       }
     }
 
+    const rawSite = map.get('site_info') || {}
     const rawSocial = map.get('social_links') || {}
     const settings: AllSettings = {
-      siteInfo: { ...DEFAULT_SITE_SETTINGS.siteInfo, ...(map.get('site_info') || {}) },
+      siteInfo: {
+        ...DEFAULT_SITE_SETTINGS.siteInfo,
+        ...rawSite,
+        phone:
+          rawSite.phone && rawSite.phone !== '+977 1-4240000 / 9851000000'
+            ? rawSite.phone
+            : DEFAULT_SITE_SETTINGS.siteInfo.phone,
+        deptOfInfoNo: rawSite.deptOfInfoNo || DEFAULT_SITE_SETTINGS.siteInfo.deptOfInfoNo,
+        editorName: rawSite.editorName || DEFAULT_SITE_SETTINGS.siteInfo.editorName,
+        coEditorName: rawSite.coEditorName || DEFAULT_SITE_SETTINGS.siteInfo.coEditorName,
+      },
       socialLinks: {
         ...DEFAULT_SITE_SETTINGS.socialLinks,
         ...rawSocial,
