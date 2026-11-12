@@ -15,7 +15,7 @@ import { AdBanner } from '@/components/ads/ad-banner'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import {
   FacebookIcon,
-  TwitterXIcon,
+  TikTokIcon,
   WhatsAppIcon,
 } from '@/components/ui/social-icons'
 import {
@@ -126,7 +126,7 @@ export function ArticleReader({
   // Real-time total share count state
   const [shareCount, setShareCount] = React.useState<number>(article.shareCount || 0)
 
-  const handleShare = (platform: 'facebook' | 'twitter' | 'whatsapp' | 'copy') => {
+  const handleShare = (platform: 'facebook' | 'tiktok' | 'whatsapp' | 'copy') => {
     setShareCount((prev) => prev + 1)
     if (article?.id) {
       fetch(`/api/public/articles/${article.id}/share`, {
@@ -135,7 +135,7 @@ export function ArticleReader({
     }
 
     if (platform === 'facebook') shareOnFacebook()
-    else if (platform === 'twitter') shareOnTwitter()
+    else if (platform === 'tiktok') shareOnTikTok()
     else if (platform === 'whatsapp') shareOnWhatsApp()
     else if (platform === 'copy') copyUrlToClipboard()
   }
@@ -182,13 +182,12 @@ export function ArticleReader({
     }
   }
 
-  const shareOnTwitter = () => {
+  const shareOnTikTok = () => {
     if (typeof window !== 'undefined') {
-      window.open(
-        `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article.title)}`,
-        '_blank',
-        'width=600,height=400'
-      )
+      navigator.clipboard?.writeText(window.location.href).catch(() => {})
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+      window.open('https://www.tiktok.com/@sabaichha', '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -383,15 +382,15 @@ export function ArticleReader({
                   <FacebookIcon className="w-4 h-4 fill-white" />
                 </button>
 
-                {/* Twitter / X */}
+                {/* TikTok */}
                 <button
                   type="button"
-                  onClick={() => handleShare('twitter')}
+                  onClick={() => handleShare('tiktok')}
                   className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-black dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer border border-slate-800 dark:border-slate-700"
-                  title="Share on X"
-                  aria-label="Share on X"
+                  title="TikTok"
+                  aria-label="TikTok"
                 >
-                  <TwitterXIcon className="w-3.5 h-3.5 fill-white" />
+                  <TikTokIcon className="w-4 h-4 fill-white" />
                 </button>
 
                 {/* WhatsApp */}

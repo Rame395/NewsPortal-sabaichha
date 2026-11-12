@@ -368,15 +368,6 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                   <FacebookIcon className="w-3.5 h-3.5" />
                 </a>
                 <a
-                  href={settings.socialLinks.twitter || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-7 h-7 rounded-full border border-slate-700/40 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white flex items-center justify-center transition shadow-2xs"
-                  title="X (Twitter)"
-                >
-                  <TwitterXIcon className="w-3 h-3" />
-                </a>
-                <a
                   href={settings.socialLinks.youtube || '#'}
                   target="_blank"
                   rel="noreferrer"
@@ -422,25 +413,6 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                     })
                   }
                   placeholder="https://facebook.com/sabaichha"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
-                  <TwitterXIcon className="w-3.5 h-3.5" />
-                  <span>X (Twitter) Profile URL</span>
-                </label>
-                <input
-                  type="url"
-                  value={settings.socialLinks.twitter}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      socialLinks: { ...settings.socialLinks, twitter: e.target.value },
-                    })
-                  }
-                  placeholder="https://x.com/sabaichha"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-white"
                 />
               </div>

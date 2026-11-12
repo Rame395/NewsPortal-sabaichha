@@ -29,7 +29,6 @@ import {
 import { PROVINCES } from '@/lib/constants/provinces'
 import {
   FacebookIcon,
-  TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
   TikTokIcon,
@@ -48,7 +47,6 @@ interface MobileNavDrawerProps {
 
 const DEFAULT_SOCIAL = {
   facebook: 'https://facebook.com/sabaichha',
-  twitter: 'https://x.com/sabaichha',
   youtube: 'https://youtube.com/@sabaichha',
   instagram: 'https://instagram.com/sabaichha',
   tiktok: 'https://tiktok.com/@sabaichha',
@@ -69,7 +67,6 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
         if (data?.social) {
           setSocialLinks({
             facebook: data.social.facebook || DEFAULT_SOCIAL.facebook,
-            twitter: data.social.twitter || DEFAULT_SOCIAL.twitter,
             youtube: data.social.youtube || DEFAULT_SOCIAL.youtube,
             instagram: data.social.instagram || DEFAULT_SOCIAL.instagram,
             tiktok: data.social.tiktok || DEFAULT_SOCIAL.tiktok,
@@ -386,7 +383,7 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                   {socialLinks.facebook && (
                     <a
                       href={socialLinks.facebook}
@@ -398,21 +395,6 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                       <FacebookIcon className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition" />
                       <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white truncate">
                         FB
-                      </span>
-                    </a>
-                  )}
-
-                  {socialLinks.twitter && (
-                    <a
-                      href={socialLinks.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex flex-col items-center justify-center p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition group shadow-2xs"
-                      title="X (Twitter)"
-                    >
-                      <TwitterXIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:scale-110 transition" />
-                      <span className="text-[9px] sm:text-[10px] font-bold mt-1 text-slate-700 dark:text-slate-300 group-hover:text-white dark:group-hover:text-black truncate">
-                        X
                       </span>
                     </a>
                   )}

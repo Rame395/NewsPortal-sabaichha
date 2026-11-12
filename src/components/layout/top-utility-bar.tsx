@@ -8,7 +8,6 @@ import { LanguageToggle } from '@/components/language-toggle'
 import { formatBikramSambat, formatNepaliTime } from '@/lib/date/nepali-calendar'
 import {
   FacebookIcon,
-  TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
   TikTokIcon,
@@ -130,12 +129,11 @@ export function TopUtilityBar() {
     }
   }, [])
 
-  const socialLinks = data?.social || {
-    facebook: 'https://facebook.com/sabaichha',
-    twitter: 'https://x.com/sabaichha',
-    youtube: 'https://youtube.com/@sabaichha',
-    instagram: 'https://instagram.com/sabaichha',
-    tiktok: 'https://tiktok.com/@sabaichha',
+  const socialLinks = {
+    facebook: data?.social?.facebook || 'https://facebook.com/sabaichha',
+    youtube: data?.social?.youtube || 'https://youtube.com/@sabaichha',
+    instagram: data?.social?.instagram || 'https://instagram.com/@sabaichha',
+    tiktok: data?.social?.tiktok || 'https://tiktok.com/@sabaichha',
   }
 
   const weather = data?.weather || {
@@ -371,7 +369,7 @@ export function TopUtilityBar() {
         {/* 3. RIGHT ZONE: Circular Social Icons, Login, Theme Toggle (shrink-0) */}
         {/* ======================================================== */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Times of India-style Circular Social Icons (Facebook, X, YouTube, Instagram) */}
+          {/* Times of India-style Circular Social Icons (Facebook, YouTube, Instagram, TikTok) */}
           <div className="hidden lg:flex items-center gap-1 pr-1.5 border-r border-slate-300 dark:border-slate-800">
             {socialLinks.facebook && (
               <a
@@ -382,18 +380,6 @@ export function TopUtilityBar() {
                 title="Follow on Facebook"
               >
                 <FacebookIcon className="w-2.5 h-2.5" />
-              </a>
-            )}
-
-            {socialLinks.twitter && (
-              <a
-                href={socialLinks.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-5.5 h-5.5 rounded-full border border-slate-400 dark:border-slate-600 text-slate-800 dark:text-slate-300 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black flex items-center justify-center transition shadow-2xs bg-white dark:bg-slate-900"
-                title="Follow on X / Twitter"
-              >
-                <TwitterXIcon className="w-2.5 h-2.5" />
               </a>
             )}
 

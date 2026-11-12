@@ -46,9 +46,14 @@ export async function getSiteSettings(): Promise<AllSettings> {
       }
     }
 
+    const rawSocial = map.get('social_links') || {}
     const settings: AllSettings = {
       siteInfo: { ...DEFAULT_SITE_SETTINGS.siteInfo, ...(map.get('site_info') || {}) },
-      socialLinks: { ...DEFAULT_SITE_SETTINGS.socialLinks, ...(map.get('social_links') || {}) },
+      socialLinks: {
+        ...DEFAULT_SITE_SETTINGS.socialLinks,
+        ...rawSocial,
+        tiktok: rawSocial.tiktok || DEFAULT_SITE_SETTINGS.socialLinks.tiktok,
+      },
       liveTickers: { ...DEFAULT_SITE_SETTINGS.liveTickers, ...(map.get('live_tickers') || {}) },
       trendingTopics: { ...DEFAULT_SITE_SETTINGS.trendingTopics, ...(map.get('trending_topics') || {}) },
       footer: { ...DEFAULT_SITE_SETTINGS.footer, ...(map.get('footer_info') || {}) },

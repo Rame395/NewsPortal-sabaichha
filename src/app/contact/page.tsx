@@ -7,7 +7,6 @@ import { getSiteSettings } from '@/lib/settings'
 import { ContactForm } from '@/components/pages/contact-form'
 import {
   FacebookIcon,
-  TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
   TikTokIcon,
@@ -228,18 +227,6 @@ export default async function ContactPage() {
                     >
                       <FacebookIcon className="w-4 h-4 shrink-0" />
                       <span className="text-xs font-bold truncate">Facebook</span>
-                    </a>
-                  )}
-
-                  {socialLinks.twitter && (
-                    <a
-                      href={socialLinks.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition shadow-2xs group"
-                    >
-                      <TwitterXIcon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="text-xs font-bold truncate">X / Twitter</span>
                     </a>
                   )}
 
