@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { useLanguage } from '@/context/language-context'
 import {
   FacebookIcon,
-  TwitterXIcon,
   YoutubeIcon,
   InstagramIcon,
   TikTokIcon,
@@ -15,10 +14,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  Shield,
-  Newspaper,
-  ChevronRight,
-  Send,
 } from 'lucide-react'
 
 interface FooterProps {
@@ -91,12 +86,11 @@ export function Footer({ categories = [] }: FooterProps) {
     publisherName: '',
   }
 
-  const social = settings?.socialLinks || {
-    facebook: 'https://facebook.com/sabaichha',
-    twitter: 'https://x.com/sabaichha',
-    youtube: 'https://youtube.com/@sabaichha',
-    instagram: 'https://instagram.com/sabaichha',
-    tiktok: 'https://tiktok.com/@sabaichha',
+  const social = {
+    facebook: settings?.socialLinks?.facebook || 'https://facebook.com/sabaichha',
+    youtube: settings?.socialLinks?.youtube || 'https://youtube.com/@sabaichha',
+    instagram: settings?.socialLinks?.instagram || 'https://instagram.com/sabaichha',
+    tiktok: settings?.socialLinks?.tiktok || 'https://tiktok.com/@sabaichha',
   }
 
   const footerText = settings?.footer || {
@@ -107,27 +101,18 @@ export function Footer({ categories = [] }: FooterProps) {
     copyrightText: '© 2026 SabaiChha.com. सर्वाधिकार सुरक्षित।',
   }
 
-  const defaultCategories = categories.length > 0 ? categories : [
-    { id: 1, nameEn: 'Politics', nameNe: 'राजनीति', slug: 'politics' },
-    { id: 2, nameEn: 'Society', nameNe: 'समाज', slug: 'society' },
-    { id: 3, nameEn: 'Economy', nameNe: 'अर्थ / बजार', slug: 'economy' },
-    { id: 4, nameEn: 'Opinion', nameNe: 'विचार', slug: 'opinion' },
-    { id: 5, nameEn: 'Sports', nameNe: 'खेलकुद', slug: 'sports' },
-    { id: 6, nameEn: 'World', nameNe: 'विश्व', slug: 'world' },
-  ]
-
   return (
     <footer className="w-full bg-[#0B1120] text-slate-300 border-t-4 border-red-600 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
         {/* Top Branding & Social Ribbon */}
         <div className="flex flex-col md:flex-row items-center justify-between pb-10 border-b border-slate-800 gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <Link href="/" className="relative h-14 sm:h-20 md:h-22 bg-white rounded-xl px-3 py-1.5 flex items-center justify-center shrink-0 shadow-sm">
+            <Link href="/" className="relative h-14 sm:h-20 md:h-22 flex items-center justify-center shrink-0">
               <Image
-                src="/logo-v2.jpg"
+                src="/logo-transparent.png"
                 alt="SabaiChha.com - सबै छ डट कम"
                 width={320}
-                height={134}
+                height={127}
                 className="object-contain h-12 sm:h-18 md:h-20 w-auto"
               />
             </Link>
@@ -153,18 +138,6 @@ export function Footer({ categories = [] }: FooterProps) {
                 title="Facebook"
               >
                 <FacebookIcon className="w-4 h-4" />
-              </a>
-            )}
-
-            {social.twitter && (
-              <a
-                href={social.twitter}
-                target="_blank"
-                rel="noreferrer"
-                className="w-9 h-9 rounded-full border border-slate-700 bg-slate-800 text-slate-200 hover:bg-white hover:text-black flex items-center justify-center transition shadow-2xs"
-                title="X (Twitter)"
-              >
-                <TwitterXIcon className="w-3.5 h-3.5" />
               </a>
             )}
 
@@ -206,8 +179,8 @@ export function Footer({ categories = [] }: FooterProps) {
           </div>
         </div>
 
-        {/* 4-Column Grid: About, Categories, Utility Tools & Contact */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 py-10 border-b border-slate-800 text-xs">
+        {/* 2-Column Grid: About & Contact */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-10 border-b border-slate-800 text-xs">
           {/* Col 1: About SabaiChha */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -256,68 +229,7 @@ export function Footer({ categories = [] }: FooterProps) {
             </div>
           </div>
 
-          {/* Col 2: News Sections */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-600"></span>
-              <span>{language === 'ne' ? 'प्रमुख विधाहरू' : 'News Categories'}</span>
-            </h4>
-            <ul className="space-y-1.5 text-slate-400">
-              {defaultCategories.slice(0, 6).map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/category/${c.slug}`}
-                    className="hover:text-red-400 transition flex items-center gap-1"
-                  >
-                    <ChevronRight className="w-3 h-3 text-red-500" />
-                    <span>{language === 'ne' ? c.nameNe : c.nameEn}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Col 3: Utility Tools (SEO Powerhouse) */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span>{language === 'ne' ? 'उपयोगी टुल्स' : 'Utility Tools'}</span>
-            </h4>
-            <ul className="space-y-1.5 text-slate-400">
-              <li>
-                <Link href="/tools/gold-silver-rate" className="hover:text-amber-400 transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-amber-500" />
-                  <span>{language === 'ne' ? 'सुनचाँदीको भाउ' : 'Gold & Silver Rates'}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/tools/date-converter" className="hover:text-amber-400 transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-amber-500" />
-                  <span>{language === 'ne' ? 'नेपाली मिति रूपान्तरक' : 'Date Converter'}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/tools/forex-converter" className="hover:text-amber-400 transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-amber-500" />
-                  <span>{language === 'ne' ? 'विदेशी मुद्रा विनिमय' : 'Forex Rates'}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/tools/nepali-unicode" className="hover:text-amber-400 transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-amber-500" />
-                  <span>{language === 'ne' ? 'नेपाली युनिकोड' : 'Nepali Unicode'}</span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/rashifal" className="hover:text-amber-400 transition flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3 text-amber-500" />
-                  <span>{language === 'ne' ? 'दैनिक राशिफल' : 'Daily Horoscope'}</span>
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 4: Contact & Office */}
+          {/* Col 2: Contact & Office */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-600"></span>
