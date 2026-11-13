@@ -570,10 +570,16 @@ export function PublicHomepage({
             />
 
             {/* After the 3rd category (or last if fewer than 3):
+                - Desktop: Video feature (MultimediaShowcase) ABOVE Most Viewed
                 - Desktop: Most Read / Trending + Sidebar Ad
                 - Mobile: Sidebar Ad */}
             {index === Math.min(2, activeCategories.length - 1) && (
               <>
+                {/* Desktop: Video feature (मल्टिमिडिया तथा भिडियो) placed ABOVE Most Viewed */}
+                <div className="hidden lg:block space-y-8">
+                  <MultimediaShowcase articles={allArticlesPool} />
+                </div>
+
                 {trendingArticles.length > 0 && (
                   <section className="hidden lg:block">
                     {renderMostViewed(true)}
@@ -601,8 +607,10 @@ export function PublicHomepage({
           </section>
         )}
 
-        {/* Multimedia Showcase: Photo Feature & Video Reports (मल्टिमिडिया) */}
-        <MultimediaShowcase articles={allArticlesPool} />
+        {/* Mobile Only: Multimedia Showcase at the bottom */}
+        <div className="block lg:hidden">
+          <MultimediaShowcase articles={allArticlesPool} />
+        </div>
       </main>
 
       {/* Phase 6: Sticky Bottom Floating Ad Banner */}

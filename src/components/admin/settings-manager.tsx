@@ -31,6 +31,10 @@ import {
   Users,
   UserCheck,
   UserPlus,
+  Upload,
+  Camera,
+  X,
+  Pencil,
 } from 'lucide-react'
 
 // Custom SVGs for Times of India-style social icons
@@ -82,7 +86,7 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
     trendingTopics: initialSettings.trendingTopics || DEFAULT_SITE_SETTINGS.trendingTopics,
     team: initialSettings.team || DEFAULT_TEAM_SETTINGS,
   }))
-  const [activeTab, setActiveTab] = React.useState<'site' | 'social' | 'tickers' | 'trending' | 'footer' | 'team'>('trending')
+  const [activeTab, setActiveTab] = React.useState<'site' | 'social' | 'tickers' | 'trending' | 'footer' | 'team'>('team')
   const [saving, setSaving] = React.useState(false)
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
@@ -96,16 +100,217 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
   const [newMemberAvatarUrl, setNewMemberAvatarUrl] = React.useState('')
   const [newMemberPhone, setNewMemberPhone] = React.useState('')
   const [newMemberEmail, setNewMemberEmail] = React.useState('')
+  const [uploadingAvatar, setUploadingAvatar] = React.useState(false)
+  const [avatarUploadError, setAvatarUploadError] = React.useState<string | null>(null)
 
-  const handleAddMember = () => {
-    if (!newMemberNameNe.trim() || !newMemberRoleNe.trim()) return
+  const readFileAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleAvatarFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    setAvatarUploadError(null)
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('files', file)
+    formData.append('altText', newMemberNameNe.trim() || newMemberNameEn.trim() || 'Team Member Avatar')
+
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.media) {
+        const url = Array.isArray(data.media) ? data.media[0]?.fileUrl : data.media?.fileUrl
+        if (url) {
+          setNewMemberAvatarUrl(url)
+          return
+        }
+      }
+      // Fallback: read directly as base64 data URL so user is never blocked
+      const dataUrl = await readFileAsDataUrl(file)
+      setNewMemberAvatarUrl(dataUrl)
+    } catch {
+      try {
+        const dataUrl = await readFileAsDataUrl(file)
+        setNewMemberAvatarUrl(dataUrl)
+      } catch {
+        setAvatarUploadError('तस्बिर लोड गर्न सकिएन। कृपया अर्को तस्बिर छान्नुहोस्।')
+      }
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  const handleExistingMemberAvatarUpload = async (
+    targetId: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file || !targetId) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('files', file)
+    formData.append('altText', 'Team Member Avatar')
+
+    let newUrl = ''
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.media) {
+        newUrl = Array.isArray(data.media) ? data.media[0]?.fileUrl : data.media?.fileUrl
+      }
+    } catch {}
+
+    if (!newUrl) {
+      try {
+        newUrl = await readFileAsDataUrl(file)
+      } catch {}
+    }
+
+    if (newUrl) {
+      const updatedTeam = {
+        ...(settings.team || DEFAULT_TEAM_SETTINGS),
+        members: (settings.team?.members || []).map((m) =>
+          m.id === targetId ? { ...m, avatarUrl: newUrl } : m
+        ),
+      }
+      const updatedSettings = {
+        ...settings,
+        team: updatedTeam,
+      }
+      setSettings(updatedSettings)
+
+      // Auto-save immediately to database
+      try {
+        await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedSettings),
+        })
+      } catch {}
+    }
+  }
+
+  // Editing state for existing member
+  const [editingMemberId, setEditingMemberId] = React.useState<string | null>(null)
+  const [editMemberForm, setEditMemberForm] = React.useState<TeamMemberItem | null>(null)
+  const [uploadingEditAvatar, setUploadingEditAvatar] = React.useState(false)
+
+  const handleStartEditMember = (member: TeamMemberItem) => {
+    setEditingMemberId(member.id)
+    setEditMemberForm({ ...member })
+  }
+
+  const handleCancelEditMember = () => {
+    setEditingMemberId(null)
+    setEditMemberForm(null)
+  }
+
+  const handleSaveEditMember = async () => {
+    if (!editMemberForm) return
+    const name = editMemberForm.nameNe.trim() || editMemberForm.nameEn?.trim() || ''
+    const role = editMemberForm.roleNe.trim() || editMemberForm.roleEn?.trim() || ''
+    if (!name || !role) return
+
+    const sanitizedMember: TeamMemberItem = {
+      ...editMemberForm,
+      nameNe: editMemberForm.nameNe.trim() || name,
+      nameEn: editMemberForm.nameEn?.trim() || name,
+      roleNe: editMemberForm.roleNe.trim() || role,
+      roleEn: editMemberForm.roleEn?.trim() || role,
+    }
+
+    const updatedTeam = {
+      ...(settings.team || DEFAULT_TEAM_SETTINGS),
+      members: (settings.team?.members || []).map((m) =>
+        m.id === sanitizedMember.id ? sanitizedMember : m
+      ),
+    }
+
+    const updatedSettings = {
+      ...settings,
+      team: updatedTeam,
+    }
+
+    setSettings(updatedSettings)
+    setEditingMemberId(null)
+    setEditMemberForm(null)
+
+    // Auto-save immediately to database
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      })
+      setSuccessMsg(
+        language === 'ne'
+          ? 'सदस्यको विवरण सुरक्षित भयो!'
+          : 'Member details saved successfully!'
+      )
+      setTimeout(() => setSuccessMsg(null), 3000)
+    } catch {}
+  }
+
+  const handleEditAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !editMemberForm) return
+    setUploadingEditAvatar(true)
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('files', file)
+    formData.append('altText', editMemberForm.nameNe || 'Team Member Avatar')
+
+    let url = ''
+    try {
+      const res = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.media) {
+        url = Array.isArray(data.media) ? data.media[0]?.fileUrl : data.media?.fileUrl
+      }
+    } catch {}
+
+    if (!url) {
+      try {
+        url = await readFileAsDataUrl(file)
+      } catch {}
+    }
+
+    if (url) {
+      setEditMemberForm((prev) => (prev ? { ...prev, avatarUrl: url } : null))
+    }
+    setUploadingEditAvatar(false)
+  }
+
+  const handleAddMember = async () => {
+    const name = newMemberNameNe.trim() || newMemberNameEn.trim()
+    const role = newMemberRoleNe.trim() || newMemberRoleEn.trim()
+    if (!name || !role) return
 
     const newMember: TeamMemberItem = {
       id: Date.now().toString(),
-      nameNe: newMemberNameNe.trim(),
-      nameEn: newMemberNameEn.trim() || newMemberNameNe.trim(),
-      roleNe: newMemberRoleNe.trim(),
-      roleEn: newMemberRoleEn.trim() || newMemberRoleNe.trim(),
+      nameNe: newMemberNameNe.trim() || name,
+      nameEn: newMemberNameEn.trim() || name,
+      roleNe: newMemberRoleNe.trim() || role,
+      roleEn: newMemberRoleEn.trim() || role,
       department: newMemberDept,
       avatarUrl: newMemberAvatarUrl.trim() || undefined,
       phone: newMemberPhone.trim() || undefined,
@@ -114,14 +319,19 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
       isActive: true,
     }
 
-    setSettings((prev) => ({
-      ...prev,
-      team: {
-        ...(prev.team || DEFAULT_TEAM_SETTINGS),
-        members: [...(prev.team?.members || []), newMember],
-      },
-    }))
+    const updatedTeam = {
+      ...(settings.team || DEFAULT_TEAM_SETTINGS),
+      members: [...(settings.team?.members || []), newMember],
+    }
 
+    const updatedSettings = {
+      ...settings,
+      team: updatedTeam,
+    }
+
+    setSettings(updatedSettings)
+
+    // Clear inputs
     setNewMemberNameNe('')
     setNewMemberNameEn('')
     setNewMemberRoleNe('')
@@ -129,31 +339,65 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
     setNewMemberAvatarUrl('')
     setNewMemberPhone('')
     setNewMemberEmail('')
+    setAvatarUploadError(null)
+
+    // Auto-save immediately to database
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      })
+      setSuccessMsg(
+        language === 'ne'
+          ? 'नयाँ सदस्य सफलतापूर्वक थपियो र सुरक्षित भयो!'
+          : 'New member added and saved successfully!'
+      )
+      setTimeout(() => setSuccessMsg(null), 3000)
+    } catch {}
   }
 
-  const handleDeleteMember = (id: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      team: {
-        ...(prev.team || DEFAULT_TEAM_SETTINGS),
-        members: (prev.team?.members || []).filter((m) => m.id !== id),
-      },
-    }))
+  const handleDeleteMember = async (id: string) => {
+    const updatedTeam = {
+      ...(settings.team || DEFAULT_TEAM_SETTINGS),
+      members: (settings.team?.members || []).filter((m) => m.id !== id),
+    }
+    const updatedSettings = {
+      ...settings,
+      team: updatedTeam,
+    }
+    setSettings(updatedSettings)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      })
+    } catch {}
   }
 
-  const handleToggleMemberActive = (id: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      team: {
-        ...(prev.team || DEFAULT_TEAM_SETTINGS),
-        members: (prev.team?.members || []).map((m) =>
-          m.id === id ? { ...m, isActive: !m.isActive } : m
-        ),
-      },
-    }))
+  const handleToggleMemberActive = async (id: string) => {
+    const updatedTeam = {
+      ...(settings.team || DEFAULT_TEAM_SETTINGS),
+      members: (settings.team?.members || []).map((m) =>
+        m.id === id ? { ...m, isActive: !m.isActive } : m
+      ),
+    }
+    const updatedSettings = {
+      ...settings,
+      team: updatedTeam,
+    }
+    setSettings(updatedSettings)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      })
+    } catch {}
   }
 
-  const handleMoveMember = (index: number, direction: 'up' | 'down') => {
+  const handleMoveMember = async (index: number, direction: 'up' | 'down') => {
     const list = [...(settings.team?.members || [])]
     const targetIdx = direction === 'up' ? index - 1 : index + 1
     if (targetIdx < 0 || targetIdx >= list.length) return
@@ -161,13 +405,22 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
     list[index] = list[targetIdx]
     list[targetIdx] = temp
     const reordered = list.map((item, idx) => ({ ...item, orderIndex: idx + 1 }))
-    setSettings((prev) => ({
-      ...prev,
-      team: {
-        ...(prev.team || DEFAULT_TEAM_SETTINGS),
-        members: reordered,
-      },
-    }))
+    const updatedTeam = {
+      ...(settings.team || DEFAULT_TEAM_SETTINGS),
+      members: reordered,
+    }
+    const updatedSettings = {
+      ...settings,
+      team: updatedTeam,
+    }
+    setSettings(updatedSettings)
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+      })
+    } catch {}
   }
 
   // New trending topic form state
@@ -368,32 +621,21 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
           <span>{language === 'ne' ? 'सामाजिक सञ्जाल (Social Icons)' : 'Social Links (TOI Style)'}</span>
         </button>
 
+        {/* TAB 2 (Swapped): Our Team Members */}
         <button
           type="button"
-          onClick={() => setActiveTab('tickers')}
+          onClick={() => setActiveTab('team')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeTab === 'tickers'
+            activeTab === 'team'
               ? 'bg-red-600 text-white shadow-sm'
               : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
           }`}
         >
-          <TrendingUp className="w-3.5 h-3.5" />
-          <span>{language === 'ne' ? 'मौसम तथा बजार दर (Weather & Rates)' : 'Live Weather & Market Rates'}</span>
+          <Users className="w-3.5 h-3.5" />
+          <span>{language === 'ne' ? 'हाम्रो टिम (Our Team)' : 'Our Team Members'}</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('trending')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeTab === 'trending'
-              ? 'bg-red-600 text-white shadow-sm'
-              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5 text-amber-500" />
-          <span>{language === 'ne' ? 'चर्चामा रहेका विषय (Trending Topics)' : 'Trending Topics Ribbon'}</span>
-        </button>
-
+        {/* TAB 3: General & Contact Info */}
         <button
           type="button"
           onClick={() => setActiveTab('site')}
@@ -407,6 +649,7 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
           <span>{language === 'ne' ? 'कार्यालय तथा सम्पर्क (Contact Info)' : 'General & Contact Info'}</span>
         </button>
 
+        {/* TAB 4: Footer & Legal */}
         <button
           type="button"
           onClick={() => setActiveTab('footer')}
@@ -420,17 +663,18 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
           <span>{language === 'ne' ? 'फुटर तथा प्रतिलिपि अधिकार' : 'Footer & Legal'}</span>
         </button>
 
+        {/* TAB 5 (Swapped): Live Weather & Market Rates */}
         <button
           type="button"
-          onClick={() => setActiveTab('team')}
+          onClick={() => setActiveTab('tickers')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
-            activeTab === 'team'
+            activeTab === 'tickers'
               ? 'bg-red-600 text-white shadow-sm'
               : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
           }`}
         >
-          <Users className="w-3.5 h-3.5 text-blue-500" />
-          <span>{language === 'ne' ? 'हाम्रो टिम (Our Team)' : 'Our Team Members'}</span>
+          <TrendingUp className="w-3.5 h-3.5" />
+          <span>{language === 'ne' ? 'मौसम तथा बजार दर (Weather & Rates)' : 'Live Weather & Market Rates'}</span>
         </button>
       </div>
 
@@ -1559,7 +1803,7 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    नाम (नेपाली) *
+                    नाम (नेपाली)
                   </label>
                   <input
                     type="text"
@@ -1585,7 +1829,7 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
 
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    पद / Designation (नेपाली) *
+                    पद / Designation (नेपाली)
                   </label>
                   <input
                     type="text"
@@ -1626,17 +1870,82 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    फोटो URL (Avatar URL)
-                  </label>
-                  <input
-                    type="text"
-                    value={newMemberAvatarUrl}
-                    onChange={(e) => setNewMemberAvatarUrl(e.target.value)}
-                    placeholder="https://... वा /uploads/photo.jpg"
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                  />
+                <div className="sm:col-span-2 lg:col-span-3 bg-white dark:bg-slate-900/80 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      {language === 'ne' ? 'तस्बिर / फोटो (Staff Photo / Avatar)' : 'Staff Photo / Avatar'}
+                    </label>
+                    <span className="text-[10px] text-slate-400">
+                      कम्प्युटरबाट सिधै अपलोड गर्नुहोस् वा बाह्य URL राख्नुहोस्
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Direct Upload button with native label trigger */}
+                    <label className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 font-bold text-xs border border-red-200 dark:border-red-900/60 transition cursor-pointer shrink-0">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFileUpload}
+                        className="sr-only"
+                      />
+                      {uploadingAvatar ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                          <span>अपलोड हुँदैछ...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 text-red-600" />
+                          <span>कम्प्युटरबाट फोटो छान्नुहोस्</span>
+                        </>
+                      )}
+                    </label>
+
+                    {/* Or URL input */}
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        value={newMemberAvatarUrl}
+                        onChange={(e) => setNewMemberAvatarUrl(e.target.value)}
+                        placeholder="वा फोटोको URL / लिंक यहाँ राख्नुहोस् (उदा: https://...)"
+                        className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pr-8"
+                      />
+                      {newMemberAvatarUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setNewMemberAvatarUrl('')}
+                          title="हटाउनुहोस्"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Preview Thumbnail */}
+                    {newMemberAvatarUrl && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm bg-slate-100 dark:bg-slate-800">
+                          <img
+                            src={newMemberAvatarUrl}
+                            alt="Avatar Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">
+                          ✓ फोटो तयार छ
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {avatarUploadError && (
+                    <p className="text-[11px] text-red-600 dark:text-red-400 flex items-center gap-1 font-semibold">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{avatarUploadError}</span>
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1669,8 +1978,7 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                   <button
                     type="button"
                     onClick={handleAddMember}
-                    disabled={!newMemberNameNe.trim() || !newMemberRoleNe.trim()}
-                    className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm shadow-red-600/20 cursor-pointer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm shadow-red-600/20 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>सदस्य थप्नुहोस्</span>
@@ -1694,13 +2002,201 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                 </span>
               </div>
 
+
               {(!settings.team?.members || settings.team.members.length === 0) ? (
                 <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400">
                   कुनै टिम सदस्य थपिएको छैन। माथिको फारमबाट नयाँ सदस्य थप्नुहोस्।
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {settings.team.members.map((member, index) => (
+                  {settings.team.members.map((member, index) =>
+                    editingMemberId === member.id && editMemberForm ? (
+                      <div
+                        key={member.id}
+                        className="p-4 sm:p-5 rounded-2xl border-2 border-red-500 bg-white dark:bg-slate-900 shadow-md space-y-4"
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <Pencil className="w-3.5 h-3.5 text-red-600" />
+                            <span>सदस्यको विवरण सम्पादन (Edit Team Member)</span>
+                          </h4>
+                          <button
+                            type="button"
+                            onClick={handleCancelEditMember}
+                            className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                          >
+                            रद्द गर्नुहोस्
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              नाम (नेपाली)
+                            </label>
+                            <input
+                              type="text"
+                              value={editMemberForm.nameNe}
+                              onChange={(e) =>
+                                setEditMemberForm({ ...editMemberForm, nameNe: e.target.value })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              Name (English)
+                            </label>
+                            <input
+                              type="text"
+                              value={editMemberForm.nameEn || ''}
+                              onChange={(e) =>
+                                setEditMemberForm({ ...editMemberForm, nameEn: e.target.value })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              पद / Designation (नेपाली)
+                            </label>
+                            <input
+                              type="text"
+                              value={editMemberForm.roleNe}
+                              onChange={(e) =>
+                                setEditMemberForm({ ...editMemberForm, roleNe: e.target.value })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              Role (English)
+                            </label>
+                            <input
+                              type="text"
+                              value={editMemberForm.roleEn || ''}
+                              onChange={(e) =>
+                                setEditMemberForm({ ...editMemberForm, roleEn: e.target.value })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              शाखा / Department
+                            </label>
+                            <select
+                              value={editMemberForm.department}
+                              onChange={(e) =>
+                                setEditMemberForm({
+                                  ...editMemberForm,
+                                  department: e.target.value as TeamDepartment,
+                                })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                            >
+                              <option value="LEADERSHIP">सम्पादकीय नेतृत्व (Leadership)</option>
+                              <option value="EDITORIAL">सम्पादकीय डेस्क (Editorial)</option>
+                              <option value="REPORTING">समाचार तथा रिपोर्टिङ (Reporting)</option>
+                              <option value="MULTIMEDIA">मल्टिमिडिया तथा भिडियो (Multimedia)</option>
+                              <option value="TECHNICAL">प्राविधिक तथा डिजिटल (Technical)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              सम्पर्क नम्बर (Phone)
+                            </label>
+                            <input
+                              type="text"
+                              value={editMemberForm.phone || ''}
+                              onChange={(e) =>
+                                setEditMemberForm({ ...editMemberForm, phone: e.target.value })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              इमेल (Email)
+                            </label>
+                            <input
+                              type="email"
+                              value={editMemberForm.email || ''}
+                              onChange={(e) =>
+                                setEditMemberForm({ ...editMemberForm, email: e.target.value })
+                              }
+                              className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                            />
+                          </div>
+
+                          {/* Photo upload / URL */}
+                          <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                              फोटो (Photo / Avatar)
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <label className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 shrink-0 flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleEditAvatarUpload}
+                                  className="sr-only"
+                                />
+                                {uploadingEditAvatar ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                                ) : (
+                                  <Upload className="w-3.5 h-3.5 text-red-600" />
+                                )}
+                                <span>फोटो छान्नुहोस्</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={editMemberForm.avatarUrl || ''}
+                                onChange={(e) =>
+                                  setEditMemberForm({ ...editMemberForm, avatarUrl: e.target.value })
+                                }
+                                placeholder="वा फोटोको URL"
+                                className="flex-1 text-xs p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                              />
+                              {editMemberForm.avatarUrl && (
+                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-slate-300">
+                                  <img
+                                    src={editMemberForm.avatarUrl}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                          <button
+                            type="button"
+                            onClick={handleCancelEditMember}
+                            className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                          >
+                            रद्द गर्नुहोस् (Cancel)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveEditMember}
+                            className="px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                          >
+                            <Save className="w-3.5 h-3.5" />
+                            <span>बचत गर्नुहोस् (Save)</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
                     <div
                       key={member.id}
                       className={`p-3.5 sm:p-4 rounded-2xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
@@ -1716,18 +2212,32 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
                         </span>
 
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 overflow-hidden border border-slate-300 dark:border-slate-600">
-                          {member.avatarUrl ? (
-                            <img
-                              src={member.avatarUrl}
-                              alt={member.nameNe}
-                              className="w-full h-full object-cover"
+                        <div className="relative group/avatar shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 overflow-hidden border border-slate-300 dark:border-slate-600">
+                            {member.avatarUrl ? (
+                              <img
+                                src={member.avatarUrl}
+                                alt={member.nameNe}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                {member.nameNe.slice(0, 1)}
+                              </span>
+                            )}
+                          </div>
+                          <label
+                            title="फोटो फेर्नुहोस् (Upload from Computer)"
+                            className="absolute -bottom-1 -right-1 w-4.5 h-4.5 rounded-full bg-slate-800 hover:bg-red-600 text-white flex items-center justify-center text-[10px] shadow cursor-pointer transition border border-white dark:border-slate-800"
+                          >
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleExistingMemberAvatarUpload(member.id, e)}
+                              className="sr-only"
                             />
-                          ) : (
-                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                              {member.nameNe.slice(0, 1)}
-                            </span>
-                          )}
+                            <Camera className="w-2.5 h-2.5" />
+                          </label>
                         </div>
 
                         {/* Details */}
@@ -1768,6 +2278,16 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
 
                       {/* Controls */}
                       <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                        {/* Edit Member */}
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditMember(member)}
+                          title="विवरण सम्पादन गर्नुहोस् (Edit Member)"
+                          className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-950/40 transition cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+
                         {/* Toggle Active */}
                         <button
                           type="button"

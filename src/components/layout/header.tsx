@@ -164,11 +164,11 @@ export function Header({
       <TopUtilityBar />
 
       {/* 2. Main Branding & Leaderboard Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-1.5 sm:py-3.5 flex flex-col lg:flex-row items-center justify-between gap-2 lg:gap-4">
-        {/* Left: Logo & Official Tagline (Centered on Mobile, Left-aligned on Desktop) */}
-        <div className="flex items-center justify-center lg:justify-start w-full lg:w-auto gap-4 shrink-0">
-          <Link href="/" prefetch={true} className="flex items-center justify-center gap-3 sm:gap-4 group shrink-0">
-            <div className="relative h-14 sm:h-20 md:h-22 shrink-0 flex items-center justify-center bg-white rounded-xl px-2 py-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-1.5 sm:py-3.5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2 lg:gap-4">
+        {/* Left: Logo & Official Tagline (Left-aligned on Mobile and Desktop) */}
+        <div className="flex items-center justify-start w-full lg:w-auto gap-4 shrink-0">
+          <Link href="/" prefetch={true} className="flex items-center justify-start gap-3 sm:gap-4 group shrink-0">
+            <div className="relative h-14 sm:h-20 md:h-22 shrink-0 flex items-center justify-start bg-white rounded-xl px-1.5 sm:px-2 py-1">
               <Image
                 src="/logo-v2.jpg"
                 alt="SabaiChha.com - सबै छ डट कम"
