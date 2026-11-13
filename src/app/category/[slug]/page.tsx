@@ -97,6 +97,7 @@ export default async function CategoryArchivePage({ params }: PageProps) {
             subtitle: true,
             excerpt: true,
             featuredImage: true,
+            videoUrl: true,
             publishedAt: true,
             readTimeMinutes: true,
             isCategoryLead: true,
@@ -194,30 +195,43 @@ export default async function CategoryArchivePage({ params }: PageProps) {
             </Link>
           </div>
         ) : (
-          <div className="space-y-10">
-            {/* 1. Hero Lead (1 Large + 4 Secondary Stories) */}
-            <CategoryHeroSection
-              category={{
-                nameEn: category.nameEn,
-                nameNe: category.nameNe,
-                slug: category.slug,
-                layoutStyle: category.layoutStyle,
-              }}
-              articles={category.articles.slice(0, 5)}
-            />
+          (() => {
+            const heroCount =
+              category.layoutStyle === 'PHOTO_CAROUSEL'
+                ? 8
+                : category.layoutStyle === 'OPINION' || category.layoutStyle === 'GRID_3'
+                ? 3
+                : category.layoutStyle === 'VIDEO_GALLERY'
+                ? 4
+                : 5
 
-            {/* 2. Remaining Category Archive Articles */}
-            {category.articles.length > 5 && (
-              <div className="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white tracking-tight">
-                    {category.nameNe} : थप समाचारहरू
-                  </h3>
-                </div>
+            const remainingArticles = category.articles.slice(heroCount)
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {category.articles.slice(5).map((art) => (
+            return (
+              <div className="space-y-10">
+                {/* 1. Category-Specific Hero Layout */}
+                <CategoryHeroSection
+                  category={{
+                    nameEn: category.nameEn,
+                    nameNe: category.nameNe,
+                    slug: category.slug,
+                    layoutStyle: category.layoutStyle,
+                  }}
+                  articles={category.articles.slice(0, heroCount)}
+                />
+
+                {/* 2. Remaining Category Archive Articles */}
+                {remainingArticles.length > 0 && (
+                  <div className="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
+                      <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white tracking-tight">
+                        {category.nameNe} : थप समाचारहरू
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {remainingArticles.map((art) => (
                     <div
                       key={art.id}
                       className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col group"
@@ -266,6 +280,8 @@ export default async function CategoryArchivePage({ params }: PageProps) {
               </div>
             )}
           </div>
+            )
+          })()
         )}
       </main>
 

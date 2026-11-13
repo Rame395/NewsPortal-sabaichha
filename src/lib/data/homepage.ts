@@ -53,7 +53,7 @@ export async function getHomepageData() {
           layoutStyle: true,
           articles: {
             where: { status: ArticleStatus.PUBLISHED },
-            take: 5,
+            take: 8,
             orderBy: [
               { isCategoryLead: 'desc' },
               { publishedAt: 'desc' },

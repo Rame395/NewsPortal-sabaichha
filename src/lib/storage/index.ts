@@ -15,9 +15,10 @@ export interface UploadResult {
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
 
-// Whitelisted MIME types (Images + Short Looping Ad Videos)
+// Whitelisted MIME types (Images + Short Looping/News Videos)
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
+  'image/jpg',
   'image/png',
   'image/webp',
   'image/gif',
@@ -30,6 +31,7 @@ const ALLOWED_MIME_TYPES = new Set([
 const ALLOWED_EXTENSIONS = new Set([
   '.jpg',
   '.jpeg',
+  '.jfif',
   '.png',
   '.webp',
   '.gif',
@@ -38,11 +40,23 @@ const ALLOWED_EXTENSIONS = new Set([
   '.webm',
 ])
 
+const EXT_TO_MIME: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.jfif': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+}
+
 // Category-specific maximum file size ceilings
 export const MAX_IMAGE_RAW_SIZE = 10 * 1024 * 1024 // 10MB (Raw incoming image, will be compressed)
 export const MAX_GIF_SIZE_BYTES = 4 * 1024 * 1024  // 4MB for Animated GIFs
-export const MAX_VIDEO_SIZE_BYTES = 5 * 1024 * 1024 // 5MB for Short Looping Video Banners (MP4/WebM)
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // Overall fallback ceiling
+export const MAX_VIDEO_SIZE_BYTES = 25 * 1024 * 1024 // 25MB for News & Ad Videos (MP4/WebM)
+export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024 // Overall fallback ceiling
 
 /**
  * Ensures the uploads directory exists on disk.
@@ -61,35 +75,45 @@ async function ensureUploadDir(): Promise<void> {
  * Includes complete SVG sanitization and file extension/MIME verification.
  */
 export async function saveUploadedFile(file: File): Promise<UploadResult> {
-  const originalExt = path.extname(file.name).toLowerCase() || '.jpg'
+  const rawExt = path.extname(file.name).toLowerCase() || '.jpg'
+  const originalExt = rawExt === '.jfif' ? '.jpg' : rawExt
 
   // 1. Strict Extension and MIME Type Validation
-  if (!ALLOWED_EXTENSIONS.has(originalExt)) {
+  if (!ALLOWED_EXTENSIONS.has(rawExt)) {
     throw new Error(
-      `Disallowed file extension: "${originalExt}". Only JPG, PNG, WebP, GIF, SVG, MP4, and WebM are permitted.`
+      `Disallowed file extension: "${rawExt}". Only JPG, PNG, WebP, GIF, SVG, MP4, and WebM are permitted.`
     )
   }
 
-  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+  // Normalize missing or generic MIME types (e.g. Windows drag-and-drop or image/jpg)
+  const rawType = (file.type || '').toLowerCase()
+  const resolvedType =
+    !rawType || rawType === 'application/octet-stream'
+      ? EXT_TO_MIME[rawExt] || ''
+      : rawType === 'image/jpg'
+      ? 'image/jpeg'
+      : rawType
+
+  if (!ALLOWED_MIME_TYPES.has(resolvedType)) {
     throw new Error(
-      `Unsupported MIME type: ${file.type}. Allowed formats: JPG, PNG, WebP, GIF, SVG, MP4, WebM.`
+      `Unsupported MIME type: ${file.type || 'unknown'}. Allowed formats: JPG, PNG, WebP, GIF, SVG, MP4, WebM.`
     )
   }
 
   const isVideo =
-    file.type === 'video/mp4' ||
-    file.type === 'video/webm' ||
+    resolvedType === 'video/mp4' ||
+    resolvedType === 'video/webm' ||
     originalExt === '.mp4' ||
     originalExt === '.webm'
-  const isGif = file.type === 'image/gif' || originalExt === '.gif'
-  const isSvg = file.type === 'image/svg+xml' || originalExt === '.svg'
+  const isGif = resolvedType === 'image/gif' || originalExt === '.gif'
+  const isSvg = resolvedType === 'image/svg+xml' || originalExt === '.svg'
 
   // 2. Format-Specific Size Ceiling Validation
   if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
     throw new Error(
-      `Video file exceeds maximum allowed size of 5MB (${(file.size / (1024 * 1024)).toFixed(
+      `Video file exceeds maximum allowed size of 25MB (${(file.size / (1024 * 1024)).toFixed(
         1
-      )}MB provided). Please compress or trim the video banner.`
+      )}MB provided). Please compress or trim the video.`
     )
   }
 
@@ -101,15 +125,15 @@ export async function saveUploadedFile(file: File): Promise<UploadResult> {
     )
   }
 
-  if (file.size > MAX_IMAGE_RAW_SIZE) {
-    throw new Error('File exceeds maximum allowed raw upload size of 10MB.')
+  if (!isVideo && file.size > MAX_IMAGE_RAW_SIZE) {
+    throw new Error('Image file exceeds maximum allowed raw upload size of 10MB.')
   }
 
   const bytes = await file.arrayBuffer()
   let buffer = Buffer.from(bytes)
   const originalSize = file.size
   let effectiveSize = file.size
-  let mimeType = file.type
+  let mimeType = resolvedType
   let isCompressed = false
 
   // 3. SVG Vector Sanitization: Strip embedded script tags, foreignObject, or event handlers

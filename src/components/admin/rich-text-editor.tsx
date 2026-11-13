@@ -271,19 +271,24 @@ export function RichTextEditor({
   const handleMediaSelect = (mediaUrl: string, altText?: string) => {
     const cleanUrl = mediaUrl.toLowerCase().split('?')[0]
     const isVideo = cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm')
+    const safeAlt = (altText || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
 
     const mediaHtml = isVideo
       ? `
       <figure class="my-6 text-center">
         <video src="${mediaUrl}" controls playsinline class="rounded-2xl w-full max-w-full aspect-video mx-auto shadow-sm border border-slate-200 bg-black"></video>
-        ${altText ? `<figcaption class="text-xs text-slate-500 italic mt-2 text-center">${altText}</figcaption>` : ''}
+        ${safeAlt ? `<figcaption class="text-xs text-slate-500 italic mt-2 text-center">${safeAlt}</figcaption>` : ''}
       </figure>
       <p><br></p>
     `
       : `
       <figure class="my-6 text-center">
-        <img src="${mediaUrl}" alt="${altText || 'News story photo'}" class="rounded-2xl max-w-full h-auto mx-auto shadow-sm border border-slate-200" />
-        ${altText ? `<figcaption class="text-xs text-slate-500 italic mt-2 text-center">${altText}</figcaption>` : ''}
+        <img src="${mediaUrl}" alt="${safeAlt || 'News story photo'}" class="rounded-2xl max-w-full h-auto mx-auto shadow-sm border border-slate-200" />
+        ${safeAlt ? `<figcaption class="text-xs text-slate-500 italic mt-2 text-center">${safeAlt}</figcaption>` : ''}
       </figure>
       <p><br></p>
     `

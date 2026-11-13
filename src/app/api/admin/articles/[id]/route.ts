@@ -234,6 +234,21 @@ export async function PATCH(
       }
     }
 
+    // If setting as category spotlight lead, unset any previous spotlight lead in this category
+    if (updateData.isCategoryLead === true) {
+      const targetCategoryId = (updateData.categoryId as number) || article.categoryId
+      await prisma.article.updateMany({
+        where: {
+          categoryId: targetCategoryId,
+          id: { not: id },
+          isCategoryLead: true,
+        },
+        data: {
+          isCategoryLead: false,
+        },
+      })
+    }
+
     const updatedArticle = await prisma.article.update({
       where: { id },
       data: updateData,

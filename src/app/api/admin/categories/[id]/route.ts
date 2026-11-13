@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
@@ -62,6 +63,11 @@ export async function PATCH(
         details: `Updated category #${categoryId}: ${Object.keys(updateData).join(', ')}`,
       },
     }).catch(() => {})
+
+    try {
+      revalidatePath('/')
+      if (updated.slug) revalidatePath(`/category/${updated.slug}`)
+    } catch {}
 
     return NextResponse.json({ success: true, category: updated })
   } catch (error) {

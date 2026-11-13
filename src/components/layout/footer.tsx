@@ -233,8 +233,8 @@ export function Footer({ categories = [] }: FooterProps) {
               <Link href="/contact" className="hover:text-red-400 transition underline underline-offset-2">
                 {language === 'ne' ? 'सम्पर्क' : 'Contact'}
               </Link>
-              <span>•</span>
-              <Link href="/privacy" className="hover:text-red-400 transition underline underline-offset-2">
+              {/* <span>•</span> */}
+              <Link href="/privacy" className="hover:text-red-400 transition underline underline-offset-2 hidden">
                 {language === 'ne' ? 'गोपनीयता नीति' : 'Privacy Policy'}
               </Link>
             </div>
@@ -244,7 +244,7 @@ export function Footer({ categories = [] }: FooterProps) {
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-600"></span>
-              <span>{language === 'ne' ? 'कार्यालय सम्पर्क' : 'Contact Office'}</span>
+              <span>{language === 'ne' ? 'कार्यालय' : 'Office'}</span>
             </h4>
             <div className="space-y-2.5 text-slate-400 text-xs">
               <div className="flex items-start gap-2">
@@ -272,10 +272,10 @@ export function Footer({ categories = [] }: FooterProps) {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>{footerText.copyrightText}</p>
           <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-slate-300 transition">
+            <Link href="/privacy" className="hover:text-slate-300 transition hidden">
               गोपनीयता नीति (Privacy Policy)
             </Link>
-            <span>•</span>
+            {/* <span>•</span> */}
             <Link href="/contact" className="hover:text-slate-300 transition">
               सम्पर्क (Contact Us)
             </Link>

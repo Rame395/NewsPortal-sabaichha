@@ -37,6 +37,7 @@ interface ArticleSnippet {
   videoUrl?: string | null
   viewCount: number
   readTimeMinutes: number
+  isCategoryLead?: boolean
   publishedAt: string | null | Date
   author?: { fullName: string; avatarUrl: string | null }
   category: { nameEn: string; nameNe: string; slug: string }
@@ -168,7 +169,7 @@ export function PublicHomepage({
               >
                 {getLocalizedTitle(story, language)}
               </Link>
-              <span className="text-[10px] text-slate-400 mt-1 block">
+              <span className="text-[10px] text-slate-400 mt-1 block" suppressHydrationWarning>
                 {formatTimeAgo(story.publishedAt)}
               </span>
             </div>
@@ -206,7 +207,7 @@ export function PublicHomepage({
                       : `${story.viewCount.toLocaleString()} views`}
                   </span>
                 </span>
-                <span>{formatTimeAgo(story.publishedAt)}</span>
+                <span suppressHydrationWarning>{formatTimeAgo(story.publishedAt)}</span>
               </div>
             </div>
           </div>
@@ -521,13 +522,6 @@ export function PublicHomepage({
           </section>
         )}
 
-        {/* Mobile Only: Most Viewed / Trending placed above (right under Featured Stories) */}
-        {trendingArticles.length > 0 && (
-          <section className="block lg:hidden w-full">
-            {renderMostViewed(false)}
-          </section>
-        )}
-
         {/* Phase 6: Homepage Billboard Ad Slot (970x250) */}
         <AdBanner placement="HOMEPAGE_BILLBOARD" />
 
@@ -558,7 +552,7 @@ export function PublicHomepage({
 
             {/* After the 3rd category (or last if fewer than 3):
                 - Desktop: Most Read / Trending + Sidebar Ad
-                - Mobile: Latest Updates (moved down here) + Sidebar Ad */}
+                - Mobile: Sidebar Ad */}
             {index === Math.min(2, activeCategories.length - 1) && (
               <>
                 {trendingArticles.length > 0 && (
@@ -567,16 +561,26 @@ export function PublicHomepage({
                   </section>
                 )}
 
-                {topHighlights.length > 0 && (
-                  <section className="block lg:hidden space-y-6">
-                    {renderLatestUpdates()}
-                    <AdBanner placement="SIDEBAR_RECTANGLE" />
-                  </section>
-                )}
+                <div className="block lg:hidden">
+                  <AdBanner placement="SIDEBAR_RECTANGLE" />
+                </div>
               </>
             )}
           </React.Fragment>
         ))}
+
+        {/* Mobile Only: Most Read / Viewed and Latest Updates placed directly ABOVE Multimedia Showcase */}
+        {trendingArticles.length > 0 && (
+          <section className="block lg:hidden w-full">
+            {renderMostViewed(false)}
+          </section>
+        )}
+
+        {topHighlights.length > 0 && (
+          <section className="block lg:hidden w-full">
+            {renderLatestUpdates()}
+          </section>
+        )}
 
         {/* Multimedia Showcase: Photo Feature & Video Reports (मल्टिमिडिया) */}
         <MultimediaShowcase articles={allArticlesPool} />

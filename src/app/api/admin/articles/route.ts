@@ -247,6 +247,19 @@ export async function POST(request: NextRequest) {
       featuredImage
     )
 
+    // If setting as category spotlight lead, unset any previous spotlight lead in this category
+    if (Boolean(isCategoryLead)) {
+      await prisma.article.updateMany({
+        where: {
+          categoryId: Number(categoryId),
+          isCategoryLead: true,
+        },
+        data: {
+          isCategoryLead: false,
+        },
+      })
+    }
+
     const newArticle = await prisma.article.create({
       data: {
         title: cleanTitle,

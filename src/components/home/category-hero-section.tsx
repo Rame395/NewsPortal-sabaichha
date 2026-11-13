@@ -13,6 +13,7 @@ import {
   Film,
   Camera,
   Sparkles,
+  Pin,
 } from 'lucide-react'
 import { useLanguage } from '@/context/language-context'
 import {
@@ -33,6 +34,7 @@ export interface CategoryStorySnippet {
   videoUrl?: string | null
   publishedAt: string | null | Date
   readTimeMinutes: number
+  isCategoryLead?: boolean
   author?: { fullName: string; avatarUrl?: string | null }
   category?: { nameEn: string; nameNe: string; slug: string }
 }
@@ -91,9 +93,39 @@ export function CategoryHeroSection({
     }
   }
 
-  // Lead story is first, followed by up to 4 secondary stories
-  const leadStory = articles?.[0]
-  const secondaryStories = articles ? articles.slice(1, 5) : []
+  // Priority Spotlight Rule:
+  // 1. If any article in this category is marked isCategoryLead === true (Category Spotlight Lead),
+  //    it MUST be placed in the primary leadStory position.
+  // 2. If isCategoryLead is NOT checked on any story, the newest published story naturally occupies
+  //    the leadStory position, and all other stories follow in chronological order.
+  const displayArticles = React.useMemo(() => {
+    if (!articles || articles.length === 0) return []
+    const leadIndex = articles.findIndex((a) => a.isCategoryLead)
+    if (leadIndex > 0) {
+      const copy = [...articles]
+      const [lead] = copy.splice(leadIndex, 1)
+      return [lead, ...copy]
+    }
+    return articles
+  }, [articles])
+
+  const leadStory = displayArticles[0]
+  const secondaryStories = displayArticles.slice(1, 5)
+
+  const getEffectiveImage = (story: CategoryStorySnippet): string | null => {
+    if (story.featuredImage) return story.featuredImage
+    const url = story.videoUrl
+    if (!url) return null
+    try {
+      let ytId: string | null = null
+      if (url.includes('youtu.be/')) ytId = url.split('youtu.be/')[1].split(/[?&/"']/)[0]
+      else if (url.includes('youtube.com/watch')) ytId = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/)?.[1] || null
+      else if (url.includes('/embed/')) ytId = url.split('/embed/')[1].split(/[?&/"']/)[0]
+      else if (url.includes('/shorts/')) ytId = url.split('/shorts/')[1].split(/[?&/"']/)[0]
+      if (ytId) return `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
+    } catch {}
+    return null
+  }
 
   return (
     <section className={`space-y-4 sm:space-y-5 ${className}`}>
@@ -133,7 +165,7 @@ export function CategoryHeroSection({
            Clean editorial cards without awkward dummy avatars
            ======================================================== */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-          {articles.slice(0, 3).map((art) => (
+          {displayArticles.slice(0, 3).map((art) => (
             <div
               key={art.id}
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden hover:shadow-md hover:border-red-500/40 transition-all duration-300 flex flex-col justify-between group relative"
@@ -214,7 +246,7 @@ export function CategoryHeroSection({
            LAYOUT 2: 3-COLUMN EQUAL PHOTO CARDS
            ======================================================== */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {articles.slice(0, 3).map((art) => (
+          {displayArticles.slice(0, 3).map((art) => (
             <Link
               key={art.id}
               href={`/news/${art.slug}`}
@@ -266,15 +298,18 @@ export function CategoryHeroSection({
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Lead Video Story */}
-            {leadStory && (
-              <div className="lg:col-span-7 space-y-3 group">
+            {leadStory && (() => {
+              const leadThumb = getEffectiveImage(leadStory)
+              const hasPlaylist = secondaryStories.slice(0, 3).length > 0
+              return (
+              <div className={`${hasPlaylist ? 'lg:col-span-7' : 'lg:col-span-12 max-w-3xl'} space-y-3 group`}>
                 <Link
                   href={`/news/${leadStory.slug}`}
                   className="block relative aspect-16/9 rounded-2xl overflow-hidden bg-black/60 border border-slate-800/80 shadow-lg group"
                 >
-                  {leadStory.featuredImage ? (
+                  {leadThumb ? (
                     <Image
-                      src={leadStory.featuredImage}
+                      src={leadThumb}
                       alt={leadStory.title}
                       fill
                       priority
@@ -323,20 +358,24 @@ export function CategoryHeroSection({
                   </div>
                 </div>
               </div>
-            )}
+              )
+            })()}
 
             {/* Side Video Playlist (up to 3 items) */}
+            {secondaryStories.slice(0, 3).length > 0 && (
             <div className="lg:col-span-5 space-y-3.5">
-              {secondaryStories.slice(0, 3).map((video) => (
+              {secondaryStories.slice(0, 3).map((video) => {
+                const videoThumb = getEffectiveImage(video)
+                return (
                 <Link
                   key={video.id}
                   href={`/news/${video.slug}`}
                   className="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/60 hover:border-slate-700 transition flex items-center gap-3.5 group"
                 >
                   <div className="relative w-28 h-18 sm:w-32 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-black/50 border border-slate-800">
-                    {video.featuredImage ? (
+                    {videoThumb ? (
                       <Image
-                        src={video.featuredImage}
+                        src={videoThumb}
                         alt={video.title}
                         fill
                         className="object-cover group-hover:scale-105 transition duration-300"
@@ -362,8 +401,10 @@ export function CategoryHeroSection({
                     </span>
                   </div>
                 </Link>
-              ))}
+                )
+              })}
             </div>
+            )}
           </div>
         </div>
       ) : category.layoutStyle === 'MAGAZINE_SPLIT' ? (
@@ -373,8 +414,8 @@ export function CategoryHeroSection({
            ======================================================== */
         <div className="space-y-6">
           {/* Top Twin Feature Cards (50% / 50%) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {articles.slice(0, 2).map((story, idx) => (
+          <div className={`grid grid-cols-1 ${displayArticles.length > 1 ? 'md:grid-cols-2' : 'max-w-3xl'} gap-6`}>
+            {displayArticles.slice(0, 2).map((story, idx) => (
               <div
                 key={story.id}
                 className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition flex flex-col group"
@@ -396,14 +437,17 @@ export function CategoryHeroSection({
                       {categoryTitle}
                     </div>
                   )}
-                  <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-xs text-[10px] font-black uppercase tracking-wider text-white border border-white/10">
-                    {idx === 0
-                      ? language === 'ne'
-                        ? 'विशेष समाचार'
-                        : 'Featured Lead'
-                      : language === 'ne'
-                      ? 'प्रमुख चर्चा'
-                      : 'Spotlight'}
+                  <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-xs text-[10px] font-black uppercase tracking-wider text-white border border-white/10 flex items-center gap-1">
+                    {story.isCategoryLead ? (
+                      <>
+                        <Pin className="w-3 h-3 fill-red-500 text-red-500" />
+                        <span>{language === 'ne' ? 'मुख्य समाचार' : 'Spotlight Lead'}</span>
+                      </>
+                    ) : idx === 0 ? (
+                      language === 'ne' ? 'विशेष समाचार' : 'Featured Lead'
+                    ) : (
+                      language === 'ne' ? 'प्रमुख चर्चा' : 'Spotlight'
+                    )}
                   </span>
                 </Link>
 
@@ -453,9 +497,9 @@ export function CategoryHeroSection({
           </div>
 
           {/* Bottom 3-Card Strip for Articles 3 to 5 */}
-          {articles.length > 2 && (
+          {displayArticles.length > 2 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-              {articles.slice(2, 5).map((story) => (
+              {displayArticles.slice(2, 5).map((story) => (
                 <Link
                   key={story.id}
                   href={`/news/${story.slug}`}
@@ -525,7 +569,7 @@ export function CategoryHeroSection({
             className="flex gap-4 sm:gap-5 overflow-x-auto pb-3 pt-1 scroll-smooth no-scrollbar snap-x snap-mandatory"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {articles.slice(0, 8).map((art) => (
+            {displayArticles.slice(0, 8).map((art) => (
               <div
                 key={art.id}
                 className="snap-start shrink-0 w-[260px] sm:w-[300px] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col group"
@@ -586,9 +630,9 @@ export function CategoryHeroSection({
            LAYOUT 6 (DEFAULT): HERO + LIST LAYOUT
            User reference image: 1 Big Left (60%) + 4 List Right (40%)
            ======================================================== */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* Left Column: Big Lead Hero Story (~60% / 7 cols) */}
-          <div className="lg:col-span-7 flex flex-col group">
+        <div className={`grid grid-cols-1 ${secondaryStories.length > 0 ? 'lg:grid-cols-12 gap-6 lg:gap-8' : ''} items-start`}>
+          {/* Left Column: Big Lead Hero Story (~60% / 7 cols when list present, else clean max-w-3xl) */}
+          <div className={`${secondaryStories.length > 0 ? 'lg:col-span-7' : 'max-w-3xl'} flex flex-col group`}>
             <Link
               href={`/news/${leadStory.slug}`}
               className="block overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-xs relative aspect-16/10 w-full"
@@ -605,6 +649,16 @@ export function CategoryHeroSection({
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
                   {categoryTitle}
+                </div>
+              )}
+
+              {/* Category Spotlight Lead Badge (when checked in Admin) */}
+              {leadStory.isCategoryLead && (
+                <div className="absolute top-3 left-3 z-10">
+                  <span className="px-2.5 py-1 rounded-full bg-[#C10A1E]/95 backdrop-blur-xs text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-white shadow-md flex items-center gap-1.5 border border-white/20">
+                    <Pin className="w-3 h-3 fill-white" />
+                    <span>{language === 'ne' ? 'मुख्य समाचार' : 'Spotlight Lead'}</span>
+                  </span>
                 </div>
               )}
             </Link>
@@ -651,10 +705,10 @@ export function CategoryHeroSection({
             </div>
           </div>
 
-          {/* Right Column: Secondary Stories List (~40% / 5 cols) */}
-          <div className="lg:col-span-5 divide-y divide-slate-100 dark:divide-slate-800/80 flex flex-col justify-start">
-            {secondaryStories.length > 0 ? (
-              secondaryStories.map((story) => (
+          {/* Right Column: Secondary Stories List (~40% / 5 cols) - rendered only when secondary stories exist */}
+          {secondaryStories.length > 0 && (
+            <div className="lg:col-span-5 divide-y divide-slate-100 dark:divide-slate-800/80 flex flex-col justify-start">
+              {secondaryStories.map((story) => (
                 <Link
                   key={story.id}
                   href={`/news/${story.slug}`}
@@ -687,15 +741,9 @@ export function CategoryHeroSection({
                     </span>
                   </div>
                 </Link>
-              ))
-            ) : (
-              <p className="text-xs text-slate-400 py-6 text-center">
-                {language === 'ne'
-                  ? 'थप समाचार छिट्टै उपलब्ध हुनेछ'
-                  : 'More stories coming soon'}
-              </p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </section>

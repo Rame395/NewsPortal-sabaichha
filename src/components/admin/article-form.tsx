@@ -34,6 +34,47 @@ interface CategoryOption {
   id: number
   nameEn: string
   nameNe: string
+  slug?: string
+  layoutStyle?: string
+}
+
+const LAYOUT_STYLE_INFO: Record<string, { labelNe: string; labelEn: string; hintNe: string; hintEn: string }> = {
+  HERO_LIST: {
+    labelNe: 'हिरो + सूची (Hero + List)',
+    labelEn: 'Hero + List Layout',
+    hintNe: 'मुख्य समाचार बायाँतर्फ ठूलो र अन्य ४ समाचार दायाँ सूचीमा देखिनेछन्।',
+    hintEn: '1 big lead story on the left + 4 compact stories on the right.',
+  },
+  MAGAZINE_SPLIT: {
+    labelNe: 'म्यागजिन स्प्लिट (Magazine Split)',
+    labelEn: 'Magazine Split Layout',
+    hintNe: 'माथि २ प्रमुख समाचार बराबर आकारमा र तल ३ समाचार देखिनेछन्।',
+    hintEn: '2 twin hero cards on top + 3 secondary cards below.',
+  },
+  VIDEO_GALLERY: {
+    labelNe: 'भिडियो ग्यालरी (Video Gallery)',
+    labelEn: 'Video Gallery Layout',
+    hintNe: 'भिडियो समाचारको लागि तल Video URL (YouTube वा MP4/WebM) राख्नुहोस्; थम्बनेल स्वतः बन्नेछ।',
+    hintEn: 'Add a Video URL (YouTube or MP4/WebM) below; thumbnail auto-generates if omitted.',
+  },
+  PHOTO_CAROUSEL: {
+    labelNe: 'फोटो क्यारोसेल (Photo Carousel)',
+    labelEn: 'Photo Carousel Layout',
+    hintNe: 'स्लाइड हुने फोटो कार्डहरूको लागि स्पष्ट Featured Image अपलोड गर्नुहोस्।',
+    hintEn: 'Upload a clear Featured Image for horizontal swipeable photo cards.',
+  },
+  OPINION: {
+    labelNe: 'विचार / सम्पादकीय (Opinion Cards)',
+    labelEn: 'Opinion & Editorial Layout',
+    hintNe: 'विचार र विश्लेषण कार्डको रूपमा देखिनेछ (तस्बिर ऐच्छिक वा वैकल्पिक)।',
+    hintEn: 'Rendered as editorial quote cards (cover photo optional).',
+  },
+  GRID_3: {
+    labelNe: '३-स्तम्भ ग्रिड (3-Column Grid)',
+    labelEn: '3-Column Equal Grid',
+    hintNe: '३ वटा बराबर फोटो कार्डहरूको ग्रिडमा देखिनेछ।',
+    hintEn: 'Displayed in a balanced 3-column equal photo card grid.',
+  },
 }
 
 interface TagOption {
@@ -104,6 +145,7 @@ export function ArticleForm({
   const [mediaPickerTarget, setMediaPickerTarget] = React.useState<'image' | 'video'>('image')
   const [isUploadingFeatured, setIsUploadingFeatured] = React.useState(false)
   const featuredFileInputRef = React.useRef<HTMLInputElement | null>(null)
+  const userClearedFeaturedRef = React.useRef(false)
 
   // Auto-detect embedded YouTube video or image from RichTextEditor content / videoUrl
   React.useEffect(() => {
@@ -135,7 +177,7 @@ export function ArticleForm({
       }
     }
 
-    if (!featuredImage) {
+    if (!featuredImage && !userClearedFeaturedRef.current) {
       const imgMatch = content?.match(/<img[^>]+src=["']([^"']+)["']/i)
       if (imgMatch?.[1]) {
         setFeaturedImage(imgMatch[1])
@@ -162,6 +204,7 @@ export function ArticleForm({
       })
       const data = await res.json()
       if (res.ok && data.media) {
+        userClearedFeaturedRef.current = false
         setFeaturedImage(data.media.fileUrl)
         if (data.media.altText && !imageCaption) {
           setImageCaption(data.media.altText)
@@ -554,6 +597,22 @@ export function ArticleForm({
                   </option>
                 ))}
               </select>
+              {(() => {
+                const selectedCat = categories.find((c) => c.id === Number(categoryId))
+                const styleKey = selectedCat?.layoutStyle || 'HERO_LIST'
+                const info = LAYOUT_STYLE_INFO[styleKey] || LAYOUT_STYLE_INFO.HERO_LIST
+                if (!selectedCat) return null
+                return (
+                  <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 text-[11px] space-y-0.5">
+                    <div className="font-bold text-[#02267C] dark:text-blue-400">
+                      {language === 'ne' ? `लेआउट: ${info.labelNe}` : `Layout: ${info.labelEn}`}
+                    </div>
+                    <p className="text-slate-500 dark:text-slate-400 leading-snug">
+                      {language === 'ne' ? info.hintNe : info.hintEn}
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Province Dropdown (प्रदेश समाचार) */}
@@ -663,7 +722,10 @@ export function ArticleForm({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFeaturedImage('')}
+                    onClick={() => {
+                      userClearedFeaturedRef.current = true
+                      setFeaturedImage('')
+                    }}
                     className="text-[11px] text-red-600 hover:underline cursor-pointer"
                   >
                     {language === 'ne' ? 'तस्बिर हटाउनुहोस्' : 'Remove Image'}
@@ -839,6 +901,7 @@ export function ArticleForm({
           if (mediaPickerTarget === 'video') {
             setVideoUrl(url)
           } else {
+            userClearedFeaturedRef.current = false
             setFeaturedImage(url)
             if (alt && !imageCaption) {
               setImageCaption(alt)
