@@ -11,6 +11,7 @@ import { getLocalizedTitle, getLocalizedSubtitle, getLocalizedExcerpt } from '@/
 import { toNepaliNumerals } from '@/lib/utils/numerals'
 import { CommentSection } from '@/components/article/comment-section'
 import { LiveTimeline } from '@/components/article/live-timeline'
+import { ArticleAudioPlayer } from '@/components/article/article-audio-player'
 import { AdBanner } from '@/components/ads/ad-banner'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import {
@@ -487,6 +488,13 @@ export function ArticleReader({
                 )}
               </div>
             ) : null}
+
+            {/* Audio Article Player (समाचार सुन्नुहोस्) - Placed below featured image, slim & unobtrusive */}
+            <ArticleAudioPlayer
+              title={getLocalizedTitle(article, language)}
+              content={article.content}
+              language={language}
+            />
 
             {/* Live-Blogging Event Timeline */}
             <LiveTimeline articleId={article.id} initialUpdates={article.liveUpdates} />

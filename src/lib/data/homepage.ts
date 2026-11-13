@@ -93,13 +93,13 @@ export async function getHomepageData() {
         select: HOMEPAGE_ARTICLE_SELECT,
       }),
 
-      // 5. Trending / Most Read Articles (Top 5 by isTrending & viewCount)
+      // 5. Trending / Most Read Articles (Top 6 sorted by viewCount desc, then isTrending, then publishedAt)
       prisma.article.findMany({
         where: { status: ArticleStatus.PUBLISHED },
-        take: 5,
+        take: 6,
         orderBy: [
-          { isTrending: 'desc' },
           { viewCount: 'desc' },
+          { isTrending: 'desc' },
           { publishedAt: 'desc' },
         ],
         select: HOMEPAGE_ARTICLE_SELECT,

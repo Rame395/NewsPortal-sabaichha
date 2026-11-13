@@ -145,25 +145,35 @@ export default async function CategoryArchivePage({ params }: PageProps) {
       <Header categories={allCategories} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-12 space-y-8">
-        {/* Category Title Header with Red Accent */}
-        <div className="pb-4 border-b-2 border-red-600 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
-              <FolderTree className="w-4 h-4" />
-              <span>समाचार विधा</span>
+        {/* Category Title Header with Eye-Catching Red Accent Pillar */}
+        <div className="relative pb-5 border-b-2 border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <span className="absolute -bottom-[2px] left-0 w-36 sm:w-56 h-[2px] bg-red-600 rounded-full" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 flex items-center gap-1.5 shadow-2xs">
+                <FolderTree className="w-3.5 h-3.5" />
+                <span>समाचार विधा</span>
+              </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-950 dark:text-white tracking-tight">
-              {category.nameNe} <span className="text-xl sm:text-2xl font-bold text-slate-400 font-sans">({category.nameEn})</span>
-            </h1>
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-9 sm:h-11 rounded-full bg-gradient-to-b from-red-600 via-rose-600 to-red-700 shadow-sm shadow-red-600/30 shrink-0" />
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-950 dark:text-white tracking-tight flex flex-wrap items-baseline gap-2.5 sm:gap-3">
+                <span>{category.nameNe}</span>
+                <span className="text-lg sm:text-2xl font-bold text-slate-400 dark:text-slate-500 font-sans">
+                  ({category.nameEn})
+                </span>
+              </h1>
+            </div>
             {category.description && (
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-2xl">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5 max-w-2xl pl-5 sm:pl-6 leading-relaxed">
                 {category.description}
               </p>
             )}
           </div>
 
-          <span className="text-xs font-bold text-slate-500 font-mono">
-            {category.articles.length} समाचार फेला परे
+          <span className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 font-mono shadow-2xs self-start sm:self-end">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+            {toNepaliNumerals(category.articles.length)} समाचार प्रकाशित
           </span>
         </div>
 
@@ -223,9 +233,9 @@ export default async function CategoryArchivePage({ params }: PageProps) {
                 {/* 2. Remaining Category Archive Articles */}
                 {remainingArticles.length > 0 && (
                   <div className="pt-8 border-t border-slate-200 dark:border-slate-800 space-y-6">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-600"></span>
-                      <h3 className="text-lg sm:text-xl font-black text-slate-950 dark:text-white tracking-tight">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-2 sm:w-2.5 h-6 rounded-full bg-gradient-to-b from-red-600 via-rose-600 to-red-700 shadow-sm shadow-red-600/30 shrink-0" />
+                      <h3 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
                         {category.nameNe} : थप समाचारहरू
                       </h3>
                     </div>

@@ -182,31 +182,40 @@ export function PublicHomepage({
   // Reusable Most Viewed / Trending (धेरै पढिएको) block
   const renderMostViewed = (includeSidebarAd = false) => {
     const listGrid = (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 shadow-2xs">
-        {trendingArticles.map((story, i) => (
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 shadow-2xs">
+        {trendingArticles.slice(0, 6).map((story, i) => (
           <div
             key={story.id}
-            className="flex items-start gap-3 group p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition"
+            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 border border-transparent hover:border-slate-200/70 dark:hover:border-slate-700/60 transition group"
           >
-            <span className="text-xl font-mono font-black text-red-600 shrink-0">
-              {language === 'ne' ? toNepaliNumerals(i + 1) : i + 1}
+            {/* Styled Rank Number Badge */}
+            <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 border border-red-200/80 dark:border-red-900/50 font-mono font-black text-xs sm:text-sm flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-red-600 group-hover:text-white transition-colors">
+              {language === 'ne' ? toNepaliNumerals(i + 1) : String(i + 1).padStart(2, '0')}
             </span>
-            <div className="min-w-0">
+
+            <div className="min-w-0 flex-1 space-y-1">
+              {story.category && (
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-600 dark:text-red-400 block">
+                  {language === 'ne' ? story.category.nameNe : story.category.nameEn}
+                </span>
+              )}
               <Link
                 href={`/news/${story.slug}`}
-                className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
+                className="block text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition line-clamp-2 leading-snug"
               >
                 {getLocalizedTitle(story, language)}
               </Link>
-              <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3 text-red-500" />
-                  <span>
-                    {language === 'ne'
-                      ? `${toNepaliNumerals(story.viewCount)} पटक पढिएको`
-                      : `${story.viewCount.toLocaleString()} views`}
+              <div className="flex items-center gap-3 text-[10px] text-slate-400 pt-0.5">
+                {story.viewCount > 0 ? (
+                  <span className="flex items-center gap-1 font-medium">
+                    <Eye className="w-3 h-3 text-red-500" />
+                    <span>
+                      {language === 'ne'
+                        ? `${toNepaliNumerals(story.viewCount)} पटक पढिएको`
+                        : `${story.viewCount.toLocaleString()} views`}
+                    </span>
                   </span>
-                </span>
+                ) : null}
                 <span suppressHydrationWarning>{formatTimeAgo(story.publishedAt)}</span>
               </div>
             </div>
@@ -217,11 +226,22 @@ export function PublicHomepage({
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b-2 border-red-600">
-          <h3 className="text-base sm:text-lg font-black text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-red-600" />
-            <span>{language === 'ne' ? 'धेरै पढिएको' : 'Most Read / Trending'}</span>
-          </h3>
+        {/* Eye-catching Section Header with Brand Accent Pillar and Underline */}
+        <div className="relative flex items-center justify-between pb-3 border-b-2 border-slate-200/90 dark:border-slate-800 gap-3">
+          <span className="absolute -bottom-[2px] left-0 w-32 sm:w-44 h-[2px] bg-red-600 rounded-full" />
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <span className="w-2 sm:w-2.5 h-6 sm:h-7.5 rounded-full bg-gradient-to-b from-red-600 via-rose-600 to-red-700 shadow-sm shadow-red-600/30 shrink-0" />
+            <div className="flex items-center gap-2 min-w-0">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-red-600" />
+                <span>{language === 'ne' ? 'धेरै पढिएको' : 'Most Read / Trending'}</span>
+              </h3>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 shadow-2xs">
+            <Flame className="w-3.5 h-3.5 fill-red-600/30 text-red-600" />
+            <span>{language === 'ne' ? 'सर्वाधिक लोकप्रिय' : 'Top Stories'}</span>
+          </span>
         </div>
 
         {includeSidebarAd ? (
@@ -528,14 +548,13 @@ export function PublicHomepage({
         {/* ========================================================= */}
         {/* ALL CATEGORIES IN EXACT ADMIN-CONFIGURED ORDER (orderIndex) */}
         {/* Automatically hides any category with 0 published articles */}
-        {/* Excludes 'video' and 'photo-feature' since they are showcased in MultimediaShowcase below */}
+        {/* Includes 'video' category so it displays in its configured spot as well as in MultimediaShowcase */}
         {/* ========================================================= */}
         {categorySections
           .filter(
             (cat) =>
               cat.articles &&
               cat.articles.length > 0 &&
-              cat.slug !== 'video' &&
               cat.slug !== 'photo-feature'
           )
           .map((cat, index, activeCategories) => (

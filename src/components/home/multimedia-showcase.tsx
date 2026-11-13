@@ -49,7 +49,7 @@ export function MultimediaShowcase({ articles = [], className = '' }: Multimedia
     return tB - tA
   }
 
-  // 1. Prioritize stories with genuine videoUrl or in 'video' category (newest first)
+  // 1. Strictly filter stories with genuine videoUrl or in 'video' category (newest first)
   const videoCandidates = articles
     .filter((a) => Boolean(a.videoUrl) || a.category?.slug === 'video')
     .sort((a, b) => {
@@ -59,11 +59,10 @@ export function MultimediaShowcase({ articles = [], className = '' }: Multimedia
       }
       return byNewest(a, b)
     })
-  const videoStories =
-    videoCandidates.length > 0 ? videoCandidates.slice(0, 3) : articles.slice(2, 5)
+  const videoStories = videoCandidates.slice(0, 3)
 
-  // 2. Strictly prioritize stories in 'photo-feature' category first, then fallback to other high-res photo stories
-  const dedicatedPhotoFeature = articles
+  // 2. Strictly filter stories in 'photo-feature' category only (never borrow from Sports/Entertainment)
+  const photoStories = articles
     .filter(
       (a) =>
         a.category?.slug === 'photo-feature' ||
@@ -71,24 +70,27 @@ export function MultimediaShowcase({ articles = [], className = '' }: Multimedia
         a.category?.slug === 'photos'
     )
     .sort(byNewest)
+    .slice(0, 3)
 
-  const fallbackPhotoArticles = articles
-    .filter(
-      (a) =>
-        a.category?.slug !== 'photo-feature' &&
-        a.category?.slug !== 'photo' &&
-        a.category?.slug !== 'photos' &&
-        a.category?.slug !== 'video' &&
-        Boolean(a.featuredImage) &&
-        !a.videoUrl
-    )
-    .sort(byNewest)
+  // If no photo features and no videos exist, do not render the section
+  if (photoStories.length === 0 && videoStories.length === 0) {
+    return null
+  }
 
-  const combinedPhotoCandidates = [...dedicatedPhotoFeature, ...fallbackPhotoArticles]
-  const photoStories =
-    combinedPhotoCandidates.length > 0
-      ? combinedPhotoCandidates.slice(0, 3)
-      : articles.slice(0, 3)
+  const hasBoth = photoStories.length > 0 && videoStories.length > 0
+  const columnClass = hasBoth ? 'lg:col-span-6' : 'lg:col-span-12 w-full max-w-4xl mx-auto'
+
+  const sectionTitle = hasBoth
+    ? language === 'ne'
+      ? 'मल्टिमिडिया : फोटो फिचर र भिडियो'
+      : 'Multimedia : Photos & Videos'
+    : photoStories.length > 0
+    ? language === 'ne'
+      ? 'मल्टिमिडिया : फोटो फिचर'
+      : 'Multimedia : Photo Feature'
+    : language === 'ne'
+    ? 'मल्टिमिडिया : भिडियो समाचार'
+    : 'Multimedia : Video Reports'
 
   const formatTimeAgo = (dateStr: string | null | Date) => {
     if (!dateStr) return ''
@@ -133,7 +135,7 @@ export function MultimediaShowcase({ articles = [], className = '' }: Multimedia
             <Film className="w-4 h-4" />
           </span>
           <h3 className="text-base sm:text-xl font-black text-slate-950 dark:text-white uppercase tracking-tight">
-            {language === 'ne' ? 'मल्टिमिडिया : फोटो फिचर र भिडियो' : 'Multimedia : Photos & Videos'}
+            {sectionTitle}
           </h3>
         </div>
         <span className="text-xs text-slate-400 hidden sm:inline">
@@ -143,195 +145,203 @@ export function MultimediaShowcase({ articles = [], className = '' }: Multimedia
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* ========================================================= */}
-        {/* LEFT 6 COLS: PHOTO FEATURE (फोटो फिचर) */}
+        {/* PHOTO FEATURE (फोटो फिचर) - Strict mode: only photo stories */}
         {/* ========================================================= */}
-        <div className="lg:col-span-6 bg-slate-900 rounded-3xl p-5 sm:p-6 text-white space-y-4 shadow-sm border border-slate-800 flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
-              <Camera className="w-4 h-4" />
-              <span>{language === 'ne' ? 'फोटो फिचर' : 'Photo Feature'}</span>
-            </span>
-            <span className="text-[10px] text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full font-bold">
-              {language === 'ne' ? 'तस्बिरमा समाचार' : 'Visual Journalism'}
-            </span>
-          </div>
+        {photoStories.length > 0 && (
+          <div className={`${columnClass} bg-slate-900 rounded-3xl p-5 sm:p-6 text-white space-y-4 shadow-sm border border-slate-800 flex flex-col justify-between`}>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
+                <Camera className="w-4 h-4" />
+                <span>{language === 'ne' ? 'फोटो फिचर' : 'Photo Feature'}</span>
+              </span>
+              <span className="text-[10px] text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full font-bold">
+                {language === 'ne' ? 'तस्बिरमा समाचार' : 'Visual Journalism'}
+              </span>
+            </div>
 
-          {photoStories[0] && (
-            <Link
-              href={`/news/${photoStories[0].slug}`}
-              className="relative aspect-16/10 rounded-2xl overflow-hidden group block shadow-md"
-            >
-              {photoStories[0].featuredImage ? (
-                <Image
-                  src={photoStories[0].featuredImage}
-                  alt={photoStories[0].title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition duration-500"
-                />
-              ) : (
-                <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                  <Camera className="w-10 h-10 opacity-30" />
+            {photoStories[0] && (
+              <Link
+                href={`/news/${photoStories[0].slug}`}
+                className="relative aspect-16/10 rounded-2xl overflow-hidden group block shadow-md"
+              >
+                {photoStories[0].featuredImage ? (
+                  <Image
+                    src={photoStories[0].featuredImage}
+                    alt={photoStories[0].title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                    <Camera className="w-10 h-10 opacity-30" />
+                  </div>
+                )}
+                {/* Dark Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4 sm:p-5">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold w-fit mb-2 shadow-xs">
+                    <Camera className="w-3 h-3" />
+                    <span>{language === 'ne' ? 'फोटो कथा' : 'Photo Story'}</span>
+                  </span>
+                  <h4 className="text-base sm:text-lg font-black text-white group-hover:text-red-400 transition leading-snug line-clamp-2">
+                    {getLocalizedTitle(photoStories[0], language)}
+                  </h4>
+                  <div className="flex items-center gap-2 text-[10px] text-slate-300 mt-2">
+                    <Clock className="w-3 h-3 text-red-400 shrink-0" />
+                    <span>{formatTimeAgo(photoStories[0].publishedAt)}</span>
+                    {photoStories[0].category && (
+                      <>
+                        <span>•</span>
+                        <span className="text-amber-400 font-bold">
+                          {language === 'ne'
+                            ? photoStories[0].category.nameNe
+                            : photoStories[0].category.nameEn}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
-              )}
-              {/* Dark Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4 sm:p-5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-[10px] font-bold w-fit mb-2 shadow-xs">
-                  <Camera className="w-3 h-3" />
-                  <span>{language === 'ne' ? 'फोटो कथा' : 'Photo Story'}</span>
-                </span>
-                <h4 className="text-base sm:text-lg font-black text-white group-hover:text-red-400 transition leading-snug line-clamp-2">
-                  {getLocalizedTitle(photoStories[0], language)}
-                </h4>
-                <div className="flex items-center gap-2 text-[10px] text-slate-300 mt-2">
-                  <Clock className="w-3 h-3 text-red-400 shrink-0" />
-                  <span>{formatTimeAgo(photoStories[0].publishedAt)}</span>
-                  {photoStories[0].category && (
-                    <>
-                      <span>•</span>
-                      <span className="text-amber-400 font-bold">
-                        {language === 'ne'
-                          ? photoStories[0].category.nameNe
-                          : photoStories[0].category.nameEn}
+              </Link>
+            )}
+
+            {/* Sub Photo Stories List (only renders if more than 1 photo story exists) */}
+            {photoStories.length > 1 && (
+              <div className="space-y-2">
+                {photoStories.slice(1, 3).map((pStory) => (
+                  <Link
+                    key={pStory.id}
+                    href={`/news/${pStory.slug}`}
+                    className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition group"
+                  >
+                    <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0">
+                      {pStory.featuredImage ? (
+                        <Image
+                          src={pStory.featuredImage}
+                          alt={pStory.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-700 flex items-center justify-center">
+                          <Camera className="w-5 h-5 opacity-40" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h5 className="text-xs font-bold text-slate-200 group-hover:text-amber-400 transition line-clamp-2 leading-snug">
+                        {getLocalizedTitle(pStory, language)}
+                      </h5>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        {formatTimeAgo(pStory.publishedAt)}
                       </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Link>
-          )}
-
-          {/* Sub Photo Stories List */}
-          <div className="space-y-2">
-            {photoStories.slice(1, 3).map((pStory) => (
-              <Link
-                key={pStory.id}
-                href={`/news/${pStory.slug}`}
-                className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition group"
-              >
-                <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0">
-                  {pStory.featuredImage ? (
-                    <Image
-                      src={pStory.featuredImage}
-                      alt={pStory.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-                      <Camera className="w-5 h-5 opacity-40" />
                     </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h5 className="text-xs font-bold text-slate-200 group-hover:text-amber-400 transition line-clamp-2 leading-snug">
-                    {getLocalizedTitle(pStory, language)}
-                  </h5>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    {formatTimeAgo(pStory.publishedAt)}
-                  </span>
-                </div>
-              </Link>
-            ))}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* ========================================================= */}
-        {/* RIGHT 6 COLS: VIDEO NEWS & INTERVIEWS (भिडियो समाचार) */}
+        {/* VIDEO NEWS & INTERVIEWS (भिडियो समाचार) - Strict mode */}
         {/* ========================================================= */}
-        <div className="lg:col-span-6 bg-slate-900 rounded-3xl p-5 sm:p-6 text-white space-y-4 shadow-sm border border-slate-800 flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-red-500">
-              <Play className="w-4 h-4 fill-red-500" />
-              <span>{language === 'ne' ? 'भिडियो तथा अन्तर्वार्ता' : 'Video & Interviews'}</span>
-            </span>
-            <span className="text-[10px] text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full font-bold">
-              {language === 'ne' ? 'दृश्यकथा' : 'Video Reports'}
-            </span>
-          </div>
+        {videoStories.length > 0 && (
+          <div className={`${columnClass} bg-slate-900 rounded-3xl p-5 sm:p-6 text-white space-y-4 shadow-sm border border-slate-800 flex flex-col justify-between`}>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-red-500">
+                <Play className="w-4 h-4 fill-red-500" />
+                <span>{language === 'ne' ? 'भिडियो तथा अन्तर्वार्ता' : 'Video & Interviews'}</span>
+              </span>
+              <span className="text-[10px] text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full font-bold">
+                {language === 'ne' ? 'दृश्यकथा' : 'Video Reports'}
+              </span>
+            </div>
 
-          {videoStories[0] && (
-            <Link
-              href={`/news/${videoStories[0].slug}`}
-              onClick={(e) => handleVideoClick(e, videoStories[0])}
-              className="relative aspect-16/10 rounded-2xl overflow-hidden group block shadow-md cursor-pointer"
-            >
-              {videoStories[0].featuredImage ? (
-                <Image
-                  src={videoStories[0].featuredImage}
-                  alt={videoStories[0].title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition duration-500"
-                />
-              ) : (
-                <div className="w-full h-full bg-slate-800 flex items-center justify-center">
-                  <Film className="w-10 h-10 opacity-30" />
-                </div>
-              )}
-              {/* Centered Glowing Play Button */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition duration-300 backdrop-blur-xs">
-                  <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white translate-x-0.5" />
-                </div>
-              </div>
-              {/* Bottom Caption Overlay */}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 sm:p-5 pt-8">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold w-fit mb-1.5">
-                  <Play className="w-2.5 h-2.5 fill-white" />
-                  <span>
-                    {videoStories[0].videoUrl
-                      ? language === 'ne'
-                        ? 'भिडियो हेर्नुहोस् (लाइभ)'
-                        : 'Watch Video'
-                      : language === 'ne'
-                      ? 'भिडियो हेर्नुहोस्'
-                      : 'Watch Video'}
-                  </span>
-                </span>
-                <h4 className="text-base sm:text-lg font-black text-white group-hover:text-red-400 transition leading-snug line-clamp-2">
-                  {getLocalizedTitle(videoStories[0], language)}
-                </h4>
-              </div>
-            </Link>
-          )}
-
-          {/* Sub Video Stories List */}
-          <div className="space-y-2">
-            {videoStories.slice(1, 3).map((vStory) => (
+            {videoStories[0] && (
               <Link
-                key={vStory.id}
-                href={`/news/${vStory.slug}`}
-                onClick={(e) => handleVideoClick(e, vStory)}
-                className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition group cursor-pointer"
+                href={`/news/${videoStories[0].slug}`}
+                onClick={(e) => handleVideoClick(e, videoStories[0])}
+                className="relative aspect-16/10 rounded-2xl overflow-hidden group block shadow-md cursor-pointer"
               >
-                <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0">
-                  {vStory.featuredImage ? (
-                    <Image
-                      src={vStory.featuredImage}
-                      alt={vStory.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-                      <Film className="w-5 h-5 opacity-40" />
-                    </div>
-                  )}
-                  <span className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <Play className="w-4 h-4 fill-white text-white" />
-                  </span>
+                {videoStories[0].featuredImage ? (
+                  <Image
+                    src={videoStories[0].featuredImage}
+                    alt={videoStories[0].title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+                    <Film className="w-10 h-10 opacity-30" />
+                  </div>
+                )}
+                {/* Centered Glowing Play Button */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition duration-300 backdrop-blur-xs">
+                    <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white translate-x-0.5" />
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h5 className="text-xs font-bold text-slate-200 group-hover:text-red-400 transition line-clamp-2 leading-snug">
-                    {getLocalizedTitle(vStory, language)}
-                  </h5>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
-                    {formatTimeAgo(vStory.publishedAt)}
+                {/* Bottom Caption Overlay */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 sm:p-5 pt-8">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold w-fit mb-1.5">
+                    <Play className="w-2.5 h-2.5 fill-white" />
+                    <span>
+                      {videoStories[0].videoUrl
+                        ? language === 'ne'
+                          ? 'भिडियो हेर्नुहोस् (लाइभ)'
+                          : 'Watch Video'
+                        : language === 'ne'
+                        ? 'भिडियो हेर्नुहोस्'
+                        : 'Watch Video'}
+                    </span>
                   </span>
+                  <h4 className="text-base sm:text-lg font-black text-white group-hover:text-red-400 transition leading-snug line-clamp-2">
+                    {getLocalizedTitle(videoStories[0], language)}
+                  </h4>
                 </div>
               </Link>
-            ))}
+            )}
+
+            {/* Sub Video Stories List (only renders if more than 1 video story exists) */}
+            {videoStories.length > 1 && (
+              <div className="space-y-2">
+                {videoStories.slice(1, 3).map((vStory) => (
+                  <Link
+                    key={vStory.id}
+                    href={`/news/${vStory.slug}`}
+                    onClick={(e) => handleVideoClick(e, vStory)}
+                    className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition group cursor-pointer"
+                  >
+                    <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0">
+                      {vStory.featuredImage ? (
+                        <Image
+                          src={vStory.featuredImage}
+                          alt={vStory.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-700 flex items-center justify-center">
+                          <Film className="w-5 h-5 opacity-40" />
+                        </div>
+                      )}
+                      <span className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <Play className="w-4 h-4 fill-white text-white" />
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h5 className="text-xs font-bold text-slate-200 group-hover:text-red-400 transition line-clamp-2 leading-snug">
+                        {getLocalizedTitle(vStory, language)}
+                      </h5>
+                      <span className="text-[10px] text-slate-400 mt-1 block">
+                        {formatTimeAgo(vStory.publishedAt)}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Interactive Video Lightbox Modal */}

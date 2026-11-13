@@ -129,26 +129,39 @@ export function CategoryHeroSection({
 
   return (
     <section className={`space-y-4 sm:space-y-5 ${className}`}>
-      {/* Section Header: Category Title + Pink/Red Accent Bar + Circular Arrow Link */}
-      <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800 gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      {/* Section Header: Eye-catching Category Title + Brand Accent Pillar + View All Button */}
+      <div className="relative flex items-center justify-between pb-3 border-b-2 border-slate-200/90 dark:border-slate-800 gap-3">
+        {/* Red underline accent bar spanning the title area */}
+        <span className="absolute -bottom-[2px] left-0 w-28 sm:w-40 h-[2px] bg-red-600 rounded-full" />
+
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          {/* Glowing Red Brand Pillar */}
+          <span className="w-2 sm:w-2.5 h-6 sm:h-7.5 rounded-full bg-gradient-to-b from-red-600 via-rose-600 to-red-700 shadow-sm shadow-red-600/30 shrink-0" />
+
           <Link
             href={`/category/${category.slug}`}
-            className="text-lg sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight hover:text-red-600 dark:hover:text-red-400 transition truncate"
+            className="group flex items-center gap-2 sm:gap-3 min-w-0"
           >
-            {categoryTitle}
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-950 dark:text-white tracking-tight group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors drop-shadow-xs truncate">
+              {categoryTitle}
+            </h2>
+
+            {category.nameEn && language === 'ne' && (
+              <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-sans group-hover:text-red-600 dark:group-hover:text-red-400 group-hover:border-red-200 transition-colors shrink-0">
+                {category.nameEn}
+              </span>
+            )}
           </Link>
-          {/* Horizontal Accent Line matching reference design */}
-          <span className="hidden xs:inline-block w-8 sm:w-20 h-1 bg-rose-500/80 dark:bg-rose-400 rounded-full shrink-0" />
         </div>
 
-        {/* Circular Arrow Button ( > ) to open Category Archive */}
+        {/* Eye-catching "सबै हेर्नुहोस् (View All)" Action Button */}
         <Link
           href={`/category/${category.slug}`}
           aria-label={`View more in ${categoryTitle}`}
-          className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-red-500/80 dark:border-red-500 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white transition flex items-center justify-center shadow-2xs group"
+          className="shrink-0 flex items-center gap-1 sm:gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white border border-red-200 dark:border-red-900/50 shadow-2xs hover:shadow-xs transition-all duration-200 group"
         >
-          <ChevronRight className="w-4 h-4 stroke-[2.5] group-hover:translate-x-0.5 transition" />
+          <span>{language === 'ne' ? 'सबै हेर्नुहोस्' : 'View All'}</span>
+          <ChevronRight className="w-3.5 h-3.5 stroke-[2.5] group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
 
@@ -283,7 +296,7 @@ export function CategoryHeroSection({
             </Link>
           ))}
         </div>
-      ) : category.layoutStyle === 'VIDEO_GALLERY' ? (
+      ) : category.layoutStyle === 'VIDEO_GALLERY' || category.slug === 'video' ? (
         /* ========================================================
            LAYOUT 3: VIDEO GALLERY / MULTIMEDIA THEATER
            Dark cinematic container, play overlays, 1 lead + 3 items
