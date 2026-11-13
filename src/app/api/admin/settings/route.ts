@@ -92,6 +92,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (body.team) {
+      upserts.push(
+        prisma.siteSetting.upsert({
+          where: { key: 'team_members' },
+          update: { value: JSON.stringify(body.team) },
+          create: { key: 'team_members', value: JSON.stringify(body.team) },
+        })
+      )
+    }
+
     await prisma.$transaction(upserts)
     invalidateSiteSettingsCache()
 

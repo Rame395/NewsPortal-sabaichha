@@ -25,6 +25,7 @@ import {
   Info,
   ExternalLink,
   MapPin,
+  Users,
 } from 'lucide-react'
 import { PROVINCES } from '@/lib/constants/provinces'
 import {
@@ -353,6 +354,15 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
 
               {/* Portal Information & Policies */}
               <div className="pt-4 space-y-1">
+                <Link
+                  href="/our-team"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-700 transition"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{isNe ? 'हाम्रो टिम (Our Team)' : 'Our Team'}</span>
+                </Link>
+
                 <Link
                   href="/contact"
                   onClick={() => setIsOpen(false)}

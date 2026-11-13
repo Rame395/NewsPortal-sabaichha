@@ -6,6 +6,9 @@ import {
   FooterSettings,
   TrendingTopicItem,
   TrendingTopicsSettings,
+  TeamMemberItem,
+  TeamSettings,
+  TeamDepartment,
   AllSettings,
 } from './types'
 
@@ -16,10 +19,13 @@ export type {
   FooterSettings,
   TrendingTopicItem,
   TrendingTopicsSettings,
+  TeamMemberItem,
+  TeamSettings,
+  TeamDepartment,
   AllSettings,
 }
 
-export { DEFAULT_TRENDING_TOPICS, DEFAULT_SITE_SETTINGS } from './defaults'
+export { DEFAULT_TRENDING_TOPICS, DEFAULT_TEAM_SETTINGS, DEFAULT_SITE_SETTINGS } from './defaults'
 import { DEFAULT_SITE_SETTINGS } from './defaults'
 
 let cachedSettings: { data: AllSettings; timestamp: number } | null = null
@@ -68,6 +74,7 @@ export async function getSiteSettings(): Promise<AllSettings> {
       liveTickers: { ...DEFAULT_SITE_SETTINGS.liveTickers, ...(map.get('live_tickers') || {}) },
       trendingTopics: { ...DEFAULT_SITE_SETTINGS.trendingTopics, ...(map.get('trending_topics') || {}) },
       footer: { ...DEFAULT_SITE_SETTINGS.footer, ...(map.get('footer_info') || {}) },
+      team: { ...DEFAULT_SITE_SETTINGS.team, ...(map.get('team_members') || {}) },
     }
 
     cachedSettings = { data: settings, timestamp: now }

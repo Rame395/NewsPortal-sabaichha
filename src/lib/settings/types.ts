@@ -61,10 +61,38 @@ export interface TrendingTopicsSettings {
   items: TrendingTopicItem[]
 }
 
+export type TeamDepartment = 'LEADERSHIP' | 'EDITORIAL' | 'REPORTING' | 'MULTIMEDIA' | 'TECHNICAL'
+
+export interface TeamMemberItem {
+  id: string
+  nameNe: string
+  nameEn: string
+  roleNe: string
+  roleEn: string
+  department: TeamDepartment
+  avatarUrl?: string
+  phone?: string
+  email?: string
+  bioNe?: string
+  bioEn?: string
+  orderIndex: number
+  isActive: boolean
+}
+
+export interface TeamSettings {
+  enabled: boolean
+  titleNe: string
+  titleEn: string
+  subtitleNe?: string
+  subtitleEn?: string
+  members: TeamMemberItem[]
+}
+
 export interface AllSettings {
   siteInfo: SiteInfoSettings
   socialLinks: SocialLinksSettings
   liveTickers: LiveTickersSettings
   trendingTopics: TrendingTopicsSettings
   footer: FooterSettings
+  team?: TeamSettings
 }

@@ -372,6 +372,26 @@ export function Header({
               </Link>
             )
           })()}
+
+          {/* Our Team Page Link */}
+          {(() => {
+            const isTeamActive = pathname === '/our-team' || pathname === '/team'
+            return (
+              <Link
+                href="/our-team"
+                prefetch={true}
+                data-nav-active={isTeamActive ? 'true' : undefined}
+                onClick={handleNavScroll}
+                className={`shrink-0 px-3.5 py-2.5 text-xs sm:text-sm font-bold whitespace-nowrap transition ${
+                  isTeamActive
+                    ? 'bg-[#C10A1E] text-white shadow-xs'
+                    : 'text-amber-200 hover:bg-[#011C5E] hover:text-white font-bold'
+                }`}
+              >
+                {language === 'ne' ? 'हाम्रो टिम' : 'Our Team'}
+              </Link>
+            )
+          })()}
         </div>
       </nav>
 
