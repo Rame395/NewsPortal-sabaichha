@@ -570,12 +570,12 @@ export function PublicHomepage({
             />
 
             {/* After the 3rd category (or last if fewer than 3):
-                - Desktop: Video feature (MultimediaShowcase) ABOVE Most Viewed
+                - Desktop: Video feature (भिडियो तथा अन्तर्वार्ता) placed ABOVE Most Viewed
                 - Desktop: Most Read / Trending + Sidebar Ad
                 - Mobile: Sidebar Ad */}
             {index === Math.min(2, activeCategories.length - 1) && (
               <>
-                {/* Desktop: Video feature (मल्टिमिडिया तथा भिडियो) placed ABOVE Most Viewed */}
+                {/* Desktop: Video feature placed ABOVE Most Viewed */}
                 <div className="hidden lg:block space-y-8">
                   <MultimediaShowcase articles={allArticlesPool} />
                 </div>
@@ -594,7 +594,7 @@ export function PublicHomepage({
           </React.Fragment>
         ))}
 
-        {/* Mobile Only: Most Read / Viewed and Latest Updates placed directly ABOVE Multimedia Showcase */}
+        {/* Mobile Only: Most Read / Viewed and Latest Updates */}
         {trendingArticles.length > 0 && (
           <section className="block lg:hidden w-full">
             {renderMostViewed(false)}
@@ -607,7 +607,7 @@ export function PublicHomepage({
           </section>
         )}
 
-        {/* Mobile Only: Multimedia Showcase at the bottom */}
+        {/* Mobile Only: Video feature (भिडियो तथा अन्तर्वार्ता) at the bottom */}
         <div className="block lg:hidden">
           <MultimediaShowcase articles={allArticlesPool} />
         </div>

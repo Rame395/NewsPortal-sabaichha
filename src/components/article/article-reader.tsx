@@ -16,6 +16,7 @@ import { AdBanner } from '@/components/ads/ad-banner'
 import { BookmarkButton } from '@/components/bookmarks/bookmark-button'
 import {
   FacebookIcon,
+  YoutubeIcon,
   TikTokIcon,
   WhatsAppIcon,
 } from '@/components/ui/social-icons'
@@ -127,7 +128,7 @@ export function ArticleReader({
   // Real-time total share count state
   const [shareCount, setShareCount] = React.useState<number>(article.shareCount || 0)
 
-  const handleShare = (platform: 'facebook' | 'tiktok' | 'whatsapp' | 'copy') => {
+  const handleShare = (platform: 'facebook' | 'youtube' | 'tiktok' | 'whatsapp' | 'copy') => {
     setShareCount((prev) => prev + 1)
     if (article?.id) {
       fetch(`/api/public/articles/${article.id}/share`, {
@@ -136,6 +137,7 @@ export function ArticleReader({
     }
 
     if (platform === 'facebook') shareOnFacebook()
+    else if (platform === 'youtube') shareOnYouTube()
     else if (platform === 'tiktok') shareOnTikTok()
     else if (platform === 'whatsapp') shareOnWhatsApp()
     else if (platform === 'copy') copyUrlToClipboard()
@@ -180,6 +182,16 @@ export function ArticleReader({
         '_blank',
         'width=600,height=400'
       )
+    }
+  }
+
+  const shareOnYouTube = () => {
+    if (typeof window !== 'undefined') {
+      if (article.videoUrl && (article.videoUrl.includes('youtube.com') || article.videoUrl.includes('youtu.be'))) {
+        window.open(article.videoUrl, '_blank', 'noopener,noreferrer')
+      } else {
+        window.open('https://youtube.com/@sabaichha', '_blank', 'noopener,noreferrer')
+      }
     }
   }
 
@@ -358,65 +370,76 @@ export function ArticleReader({
             </div>
 
             {/* Social Sharing Bar: Total Share Count + Actual Branded Social Icons */}
-            <div className="flex items-center justify-between py-3 border-y border-slate-200 dark:border-slate-800 text-xs gap-3">
+            <div className="flex items-center justify-between py-2 sm:py-3 border-y border-slate-200 dark:border-slate-800 text-xs gap-1.5 sm:gap-3">
               {/* Left: Share Label & Total Share Count Badge */}
-              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs sm:text-sm shrink-0">
-                  <Share2 className="w-4 h-4 text-[#C10A1E]" />
+              <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm shrink-0">
+                  <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C10A1E]" />
                   <span>{language === 'ne' ? 'साझा गर्नुहोस्:' : 'Share:'}</span>
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-black text-[11px] sm:text-xs border border-red-200 dark:border-red-900/50 shadow-2xs font-mono shrink-0">
+                <span className="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 font-black text-[10px] sm:text-xs border border-red-200 dark:border-red-900/50 shadow-2xs font-mono shrink-0">
                   {language === 'ne' ? toNepaliNumerals(shareCount) : shareCount} {language === 'ne' ? 'सेयर' : 'shares'}
                 </span>
               </div>
 
-              {/* Right: Actual Branded Social Icons */}
-              <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              {/* Right: Actual Branded Social Icons (Compact on mobile for perfect fit) */}
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 {/* Facebook */}
                 <button
                   type="button"
                   onClick={() => handleShare('facebook')}
-                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#1877F2] hover:bg-[#1565C0] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer"
+                  className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-[#1877F2] hover:bg-[#1565C0] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer shrink-0"
                   title="Share on Facebook"
                   aria-label="Share on Facebook"
                 >
-                  <FacebookIcon className="w-4 h-4 fill-white" />
+                  <FacebookIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
+                </button>
+
+                {/* YouTube */}
+                <button
+                  type="button"
+                  onClick={() => handleShare('youtube')}
+                  className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-[#FF0000] hover:bg-[#CC0000] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer shrink-0"
+                  title="YouTube"
+                  aria-label="YouTube"
+                >
+                  <YoutubeIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
                 </button>
 
                 {/* TikTok */}
                 <button
                   type="button"
                   onClick={() => handleShare('tiktok')}
-                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-black dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer border border-slate-800 dark:border-slate-700"
+                  className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-black dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer border border-slate-800 dark:border-slate-700 shrink-0"
                   title="TikTok"
                   aria-label="TikTok"
                 >
-                  <TikTokIcon className="w-4 h-4 fill-white" />
+                  <TikTokIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
                 </button>
 
                 {/* WhatsApp */}
                 <button
                   type="button"
                   onClick={() => handleShare('whatsapp')}
-                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer"
+                  className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer shrink-0"
                   title="Share on WhatsApp"
                   aria-label="Share on WhatsApp"
                 >
-                  <WhatsAppIcon className="w-4 h-4 fill-white" />
+                  <WhatsAppIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white" />
                 </button>
 
                 {/* Copy Link */}
                 <button
                   type="button"
                   onClick={() => handleShare('copy')}
-                  className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer"
+                  className="w-7 h-7 sm:w-8.5 sm:h-8.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-200 shadow-2xs hover:scale-105 cursor-pointer shrink-0"
                   title={copied ? (language === 'ne' ? 'लिङ्क कपी भयो!' : 'Link copied!') : (language === 'ne' ? 'लिङ्क कपी गर्नुहोस्' : 'Copy link')}
                   aria-label="Copy link"
                 >
                   {copied ? (
-                    <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-emerald-400" />
                   ) : (
-                    <Link2 className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                    <Link2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-700 dark:text-slate-300" />
                   )}
                 </button>
               </div>
