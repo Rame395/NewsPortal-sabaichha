@@ -1,12 +1,12 @@
 import * as React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import prisma from '@/lib/prisma'
 import { getSiteSettings } from '@/lib/settings'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ChevronRight } from 'lucide-react'
+import { TeamDepartment, TeamMemberItem } from '@/lib/settings/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +30,21 @@ export const metadata: Metadata = {
   },
 }
 
+const DEPARTMENT_ORDER: TeamDepartment[] = [
+  'EDITORIAL',
+  'REPORTING',
+  'MULTIMEDIA',
+  'TECHNICAL',
+]
+
+const DEPARTMENT_NAMES: Record<TeamDepartment, { ne: string; en: string }> = {
+  LEADERSHIP: { ne: 'नेतृत्व तथा सञ्चालक', en: 'Leadership' },
+  EDITORIAL: { ne: 'सम्पादकीय समूह', en: 'Editorial Team' },
+  REPORTING: { ne: 'संवाददाता तथा रिपोर्टिङ समूह', en: 'Reporting Team' },
+  MULTIMEDIA: { ne: 'मल्टिमिडिया तथा भिडियो शाखा', en: 'Multimedia Desk' },
+  TECHNICAL: { ne: 'प्राविधिक तथा डिजिटल शाखा', en: 'Technical & Digital Desk' },
+}
+
 export default async function OurTeamPage() {
   const [categories, settings] = await Promise.all([
     prisma.category.findMany({
@@ -44,19 +59,48 @@ export default async function OurTeamPage() {
   const siteInfo = settings.siteInfo
   const members = (team?.members || []).filter((m) => m.isActive)
 
-  // Group members into Leadership (Top Box) vs Team (Grid below) matching client sample
-  const leadership = members.filter((m) => m.department === 'LEADERSHIP')
-  const others = members.filter((m) => m.department !== 'LEADERSHIP')
+  // Group members into Leadership (Top Box) vs Other Teams (Grid below)
+  const leadershipMembers = members.filter((m) => m.department === 'LEADERSHIP')
+  const nonLeadershipMembers = members.filter((m) => m.department !== 'LEADERSHIP')
 
-  // If no leadership explicitly tagged, use the first 1-2 members as top leads
-  const topLeaders = leadership.length > 0 ? leadership : members.slice(0, 1)
-  const gridMembers = leadership.length > 0 ? others : members.slice(1)
+  // Top Leaders: explicitly LEADERSHIP tagged, or fallback to first member
+  const topLeaders = leadershipMembers.length > 0 ? leadershipMembers : members.slice(0, 1)
+  const otherMembers = leadershipMembers.length > 0 ? nonLeadershipMembers : members.slice(1)
+
+  // Group other members by department
+  const departmentGroups: { dept: TeamDepartment; titleNe: string; titleEn: string; items: TeamMemberItem[] }[] = []
+
+  // Check defined department buckets in order
+  for (const dept of DEPARTMENT_ORDER) {
+    const items = otherMembers.filter((m) => m.department === dept)
+    if (items.length > 0) {
+      departmentGroups.push({
+        dept,
+        titleNe: DEPARTMENT_NAMES[dept]?.ne || dept,
+        titleEn: DEPARTMENT_NAMES[dept]?.en || dept,
+        items,
+      })
+    }
+  }
+
+  // Any remaining members not in the standard 4 departments
+  const uncategorizedItems = otherMembers.filter(
+    (m) => !DEPARTMENT_ORDER.includes(m.department as TeamDepartment)
+  )
+  if (uncategorizedItems.length > 0) {
+    departmentGroups.push({
+      dept: 'EDITORIAL',
+      titleNe: 'टिम सदस्यहरू',
+      titleEn: 'Team Members',
+      items: uncategorizedItems,
+    })
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       <Header categories={categories} />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-10 sm:space-y-14">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-14 space-y-12 sm:space-y-16">
         {/* Breadcrumb Navigation */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-slate-400 font-medium">
           <Link href="/" className="hover:text-red-600 transition">
@@ -69,7 +113,7 @@ export default async function OurTeamPage() {
         </nav>
 
         {/* Clean Page Title */}
-        <div className="text-center space-y-1 pb-4">
+        <div className="text-center space-y-1.5 pb-2">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {team?.titleNe || 'हाम्रो टिम'}
           </h1>
@@ -78,7 +122,7 @@ export default async function OurTeamPage() {
           </p>
         </div>
 
-        {/* 1. TOP FEATURED LEADER CARD (Matching sample top card with blue accent) */}
+        {/* 1. TOP FEATURED LEADER CARD (Clean card with blue accent bar) */}
         {topLeaders.length > 0 && (
           <div
             className={`mx-auto ${
@@ -118,96 +162,70 @@ export default async function OurTeamPage() {
                     {leader.roleNe}
                   </p>
                 )}
-
-                {/* Contact Phone */}
-                {leader.phone && (
-                  <a
-                    href={`tel:${leader.phone}`}
-                    className="text-xs font-mono text-slate-500 dark:text-slate-400 hover:text-blue-600 transition mt-1.5 block"
-                  >
-                    {leader.phone}
-                  </a>
-                )}
-
-                {/* Email */}
-                {leader.email && (
-                  <a
-                    href={`mailto:${leader.email}`}
-                    className="text-xs font-mono text-slate-400 hover:text-blue-600 transition mt-0.5 block"
-                  >
-                    {leader.email}
-                  </a>
-                )}
               </div>
             ))}
           </div>
         )}
 
-        {/* 2. TEAM MEMBERS GRID BELOW (3-column circular photo grid matching client sample) */}
-        {gridMembers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10 sm:gap-14 max-w-4xl mx-auto pt-4 sm:pt-6">
-            {gridMembers.map((member) => (
-              <div key={member.id} className="flex flex-col items-center text-center group">
-                {/* Circular Photo */}
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 shrink-0">
-                  {member.avatarUrl ? (
-                    <img
-                      src={member.avatarUrl}
-                      alt={member.nameNe}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-2xl">
-                      {member.nameNe.slice(0, 1)}
-                    </div>
+        {/* 2. OTHER TEAMS & DEPARTMENTS (अरू टिमहरू) */}
+        {departmentGroups.length > 0 && (
+          <div className="space-y-12 sm:space-y-14 pt-2">
+            {departmentGroups.map((group) => (
+              <section key={group.dept + group.titleNe} className="space-y-6">
+                {/* Department Section Header */}
+                <div className="text-center space-y-1 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                    {group.titleNe}
+                  </h3>
+                  {group.titleEn && (
+                    <p className="text-[11px] text-slate-400 font-sans tracking-wide">
+                      {group.titleEn}
+                    </p>
                   )}
                 </div>
 
-                {/* Name */}
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-3.5 leading-snug">
-                  {member.nameNe}
-                </h3>
+                {/* 3-Column Circular Photo Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 max-w-4xl mx-auto">
+                  {group.items.map((member) => (
+                    <div key={member.id} className="flex flex-col items-center text-center group">
+                      {/* Circular Photo */}
+                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 shrink-0">
+                        {member.avatarUrl ? (
+                          <img
+                            src={member.avatarUrl}
+                            alt={member.nameNe}
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-2xl">
+                            {member.nameNe.slice(0, 1)}
+                          </div>
+                        )}
+                      </div>
 
-                {/* Designation / Role */}
-                {member.roleNe && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
-                    {member.roleNe}
-                  </p>
-                )}
+                      {/* Name */}
+                      <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-3.5 leading-snug">
+                        {member.nameNe}
+                      </h4>
 
-                {/* Contact Phone */}
-                {member.phone && (
-                  <a
-                    href={`tel:${member.phone}`}
-                    className="text-xs font-mono text-slate-500 dark:text-slate-400 hover:text-blue-600 transition mt-1 block"
-                  >
-                    {member.phone.toLowerCase().startsWith('contact')
-                      ? member.phone
-                      : member.phone}
-                  </a>
-                )}
-
-                {/* Email */}
-                {member.email && (
-                  <a
-                    href={`mailto:${member.email}`}
-                    className="text-xs font-mono text-slate-400 hover:text-blue-600 transition mt-0.5 block"
-                  >
-                    {member.email}
-                  </a>
-                )}
-              </div>
+                      {/* Designation / Role */}
+                      {member.roleNe && (
+                        <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
+                          {member.roleNe}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}
 
         {/* Minimal Legal Footer Strip */}
-        <div className="pt-10 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400 space-y-1">
+        <div className="pt-8 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-400 space-y-1">
           <p>
             सूचना विभाग दर्ता नं. <span className="font-mono font-bold text-slate-600 dark:text-slate-300">{siteInfo.deptOfInfoNo || '५३२७'}</span> | {siteInfo.portalName || 'SabaiChha.com'}
-          </p>
-          <p className="text-[11px] text-slate-400">
-            कार्यालय सम्पर्क: {siteInfo.phone || '9860207171'} | {siteInfo.email || 'info@sabaichha.com'}
           </p>
         </div>
       </main>

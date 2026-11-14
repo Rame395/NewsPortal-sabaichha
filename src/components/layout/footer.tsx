@@ -211,7 +211,7 @@ export function Footer({ categories = [] }: FooterProps) {
                 )}
                 {siteInfo.publisherName && (
                   <p>
-                    <span className="text-slate-500">{language === 'ne' ? 'अध्यक्ष/प्रकाशक:' : 'Publisher:'}</span>{' '}
+                    <span className="text-slate-500">{language === 'ne' ? 'प्रकाशक:' : 'Publisher:'}</span>{' '}
                     <span className="text-slate-300 font-semibold">{siteInfo.publisherName}</span>
                   </p>
                 )}
