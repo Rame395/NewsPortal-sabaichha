@@ -42,7 +42,20 @@ export async function getSiteSettings(): Promise<AllSettings> {
   }
 
   try {
-    const records = await prisma.siteSetting.findMany()
+    const records = await prisma.siteSetting.findMany({
+      where: {
+        key: {
+          in: [
+            'site_info',
+            'social_links',
+            'live_tickers',
+            'trending_topics',
+            'footer_info',
+            'team_members',
+          ],
+        },
+      },
+    })
     const map = new Map<string, any>()
     for (const r of records) {
       try {

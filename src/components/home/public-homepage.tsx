@@ -548,14 +548,16 @@ export function PublicHomepage({
         {/* ========================================================= */}
         {/* ALL CATEGORIES IN EXACT ADMIN-CONFIGURED ORDER (orderIndex) */}
         {/* Automatically hides any category with 0 published articles */}
-        {/* Includes 'video' category so it displays in its configured spot as well as in MultimediaShowcase */}
+        {/* Excludes 'photo-feature' and 'video' (videos are showcased exclusively in MultimediaShowcase) */}
         {/* ========================================================= */}
         {categorySections
           .filter(
             (cat) =>
               cat.articles &&
               cat.articles.length > 0 &&
-              cat.slug !== 'photo-feature'
+              cat.slug !== 'photo-feature' &&
+              cat.slug !== 'video' &&
+              cat.layoutStyle !== 'VIDEO_GALLERY'
           )
           .map((cat, index, activeCategories) => (
           <React.Fragment key={cat.id}>
@@ -594,6 +596,11 @@ export function PublicHomepage({
           </React.Fragment>
         ))}
 
+        {/* Mobile Only: Video feature (भिडियो तथा अन्तर्वार्ता) placed ABOVE Most Viewed */}
+        <div className="block lg:hidden">
+          <MultimediaShowcase articles={allArticlesPool} />
+        </div>
+
         {/* Mobile Only: Most Read / Viewed and Latest Updates */}
         {trendingArticles.length > 0 && (
           <section className="block lg:hidden w-full">
@@ -606,11 +613,6 @@ export function PublicHomepage({
             {renderLatestUpdates()}
           </section>
         )}
-
-        {/* Mobile Only: Video feature (भिडियो तथा अन्तर्वार्ता) at the bottom */}
-        <div className="block lg:hidden">
-          <MultimediaShowcase articles={allArticlesPool} />
-        </div>
       </main>
 
       {/* Phase 6: Sticky Bottom Floating Ad Banner */}
