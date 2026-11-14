@@ -364,15 +364,6 @@ export function MobileNavDrawer({ categories }: MobileNavDrawerProps) {
                 </Link>
 
                 <Link
-                  href="/contact"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
-                >
-                  <PhoneCall className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{isNe ? 'सम्पर्क तथा सम्पादकीय (Contact)' : 'Contact Us'}</span>
-                </Link>
-
-                <Link
                   href="/privacy"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"

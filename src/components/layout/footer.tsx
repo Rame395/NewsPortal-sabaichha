@@ -233,14 +233,6 @@ export function Footer({ categories = [] }: FooterProps) {
               <Link href="/our-team" className="hover:text-red-400 transition underline underline-offset-2 font-bold text-red-400">
                 {language === 'ne' ? 'हाम्रो टिम (Our Team)' : 'Our Team'}
               </Link>
-              <span>•</span>
-              <Link href="/contact" className="hover:text-red-400 transition underline underline-offset-2">
-                {language === 'ne' ? 'सम्पर्क' : 'Contact'}
-              </Link>
-              {/* <span>•</span> */}
-              <Link href="/privacy" className="hover:text-red-400 transition underline underline-offset-2 hidden">
-                {language === 'ne' ? 'गोपनीयता नीति' : 'Privacy Policy'}
-              </Link>
             </div>
           </div>
 
@@ -278,13 +270,6 @@ export function Footer({ categories = [] }: FooterProps) {
           <div className="flex items-center gap-3">
             <Link href="/our-team" className="hover:text-slate-300 transition text-slate-400">
               हाम्रो टिम (Our Team)
-            </Link>
-            <span>•</span>
-            <Link href="/privacy" className="hover:text-slate-300 transition hidden">
-              गोपनीयता नीति (Privacy Policy)
-            </Link>
-            <Link href="/contact" className="hover:text-slate-300 transition">
-              सम्पर्क (Contact Us)
             </Link>
           </div>
         </div>
