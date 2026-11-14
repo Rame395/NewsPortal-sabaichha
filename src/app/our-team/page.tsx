@@ -8,7 +8,7 @@ import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { ChevronRight } from 'lucide-react'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sabaichha.com'
 
@@ -95,11 +95,10 @@ export default async function OurTeamPage() {
                 {/* Circular Photo */}
                 <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 shrink-0">
                   {leader.avatarUrl ? (
-                    <Image
+                    <img
                       src={leader.avatarUrl}
                       alt={leader.nameNe}
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-3xl">
@@ -152,11 +151,10 @@ export default async function OurTeamPage() {
                 {/* Circular Photo */}
                 <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 shrink-0">
                   {member.avatarUrl ? (
-                    <Image
+                    <img
                       src={member.avatarUrl}
                       alt={member.nameNe}
-                      fill
-                      className="object-cover group-hover:scale-105 transition duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-2xl">

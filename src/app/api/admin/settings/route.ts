@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
 import { hasPermission } from '@/lib/auth/permissions'
@@ -104,6 +105,10 @@ export async function POST(request: NextRequest) {
 
     await prisma.$transaction(upserts)
     invalidateSiteSettingsCache()
+    try {
+      revalidatePath('/our-team')
+      revalidatePath('/')
+    } catch {}
 
     // Audit log
     await prisma.auditLog.create({

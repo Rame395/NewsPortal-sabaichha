@@ -203,6 +203,9 @@ export function hasPermission(
     return true
   }
 
+  const roleDefaults = ROLE_DEFAULT_PERMISSIONS[userRole] || []
+  const effective = new Set<string>([...roleDefaults, ...(userPermissions || [])])
+
   const required = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission]
-  return required.some((perm) => userPermissions.includes(perm))
+  return required.some((perm) => effective.has(perm))
 }

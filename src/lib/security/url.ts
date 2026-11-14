@@ -48,7 +48,8 @@ export function safeLinkUrl(value: unknown): string | null {
   }
 }
 
-const DANGEROUS_SCHEME = /^\s*(javascript|vbscript|data|file):/i
+const DANGEROUS_SCHEME = /^\s*(javascript|vbscript|file):/i
+const SAFE_DATA_IMAGE = /^\s*data:image\/(jpeg|jpg|png|webp|gif|svg\+xml);base64,[a-zA-Z0-9+/=\s]+$/i
 
 /**
  * Recursively walks a JSON-like settings object and blanks out any string value that
@@ -59,6 +60,10 @@ export function neutralizeDangerousUrls<T>(input: T, depth = 0): T {
   if (typeof input === 'string') {
     const cleaned = input.replace(/[\u0000-\u001F\u007F]/g, '')
     if (DANGEROUS_SCHEME.test(cleaned)) return '' as unknown as T
+    if (/^\s*data:/i.test(cleaned)) {
+      if (!SAFE_DATA_IMAGE.test(cleaned)) return '' as unknown as T
+      return input.slice(0, 5 * 1024 * 1024) as unknown as T
+    }
     return input.slice(0, 5000) as unknown as T
   }
   if (Array.isArray(input)) {
