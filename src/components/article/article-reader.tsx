@@ -523,6 +523,7 @@ export function ArticleReader({
                     alt={article.title}
                     fill
                     priority
+                    fetchPriority="high"
                     className="object-cover object-center"
                   />
                 </div>

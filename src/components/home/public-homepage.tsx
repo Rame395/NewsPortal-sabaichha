@@ -356,6 +356,7 @@ export function PublicHomepage({
                       alt={firstFeatured.title}
                       fill
                       priority
+                      fetchPriority="high"
                       className="object-cover object-center group-hover:scale-102 transition duration-500"
                       sizes="(max-width: 1024px) 100vw, 800px"
                     />

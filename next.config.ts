@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  compress: true,
   poweredByHeader: false,
   allowedDevOrigins: ['192.168.100.27', 'localhost', '127.0.0.1'],
   serverExternalPackages: ['@prisma/client', 'prisma'],
@@ -32,6 +33,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       {
         // Apply security headers to all routes
         source: '/:path*',
