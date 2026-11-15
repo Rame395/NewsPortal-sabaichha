@@ -358,7 +358,7 @@ export function PublicHomepage({
                       priority
                       fetchPriority="high"
                       className="object-cover object-center group-hover:scale-102 transition duration-500"
-                      sizes="(max-width: 1024px) 100vw, 800px"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 800px"
                     />
                   </Link>
                 )}
@@ -488,7 +488,7 @@ export function PublicHomepage({
                       alt={story.title}
                       fill
                       className="object-cover object-center group-hover:scale-102 transition duration-500"
-                      sizes="(max-width: 1280px) 100vw, 1200px"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
                     />
                   </Link>
                 )}

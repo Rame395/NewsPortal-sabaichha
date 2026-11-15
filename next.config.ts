@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.100.27', 'localhost', '127.0.0.1'],
   serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
-    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2678400,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [

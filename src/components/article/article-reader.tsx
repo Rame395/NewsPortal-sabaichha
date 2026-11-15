@@ -524,6 +524,7 @@ export function ArticleReader({
                     fill
                     priority
                     fetchPriority="high"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 850px"
                     className="object-cover object-center"
                   />
                 </div>
