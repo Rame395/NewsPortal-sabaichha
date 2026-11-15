@@ -105,6 +105,10 @@ export async function POST(request: NextRequest) {
 
     await prisma.$transaction(upserts)
     invalidateSiteSettingsCache()
+    if (body.team) {
+      const { syncTeamMembersAndGetAuthors } = await import('@/lib/settings/team-sync')
+      await syncTeamMembersAndGetAuthors().catch(console.error)
+    }
     try {
       revalidatePath('/our-team')
       revalidatePath('/')

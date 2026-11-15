@@ -85,9 +85,13 @@ interface TagOption {
 
 interface AuthorOption {
   id: string
+  teamMemberId?: string
   fullName: string
   avatarUrl: string | null
   email: string
+  role?: string
+  department?: string
+  source?: 'TEAM' | 'STAFF'
 }
 
 interface InitialArticleData {
@@ -654,38 +658,78 @@ export function ArticleForm({
 
             {/* Author Dropdown (लेखक / प्रतिनिधि) */}
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                {language === 'ne' ? 'लेखक / प्रतिनिधि (Author)' : 'Author / Reporter'}
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1 flex items-center justify-between">
+                <span>{language === 'ne' ? 'लेखक / प्रतिनिधि (Author)' : 'Author / Reporter'}</span>
+                <span className="text-[10px] text-red-600 dark:text-red-400 font-bold">हाम्रो टिम प्रोफाइल</span>
               </label>
               <select
                 value={authorId}
                 onChange={(e) => setAuthorId(e.target.value)}
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
               >
-                <option value="">{language === 'ne' ? '-- हाल लगइन प्रयोगकर्ता (Default) --' : '-- Current Logged In User --'}</option>
-                {authors.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.fullName} ({a.email})
-                  </option>
-                ))}
+                <option value="">
+                  {language === 'ne' ? '-- हाल लगइन प्रयोगकर्ता (Default) --' : '-- Current Logged In User --'}
+                </option>
+
+                {/* Our Team Members */}
+                {authors.some((a) => a.source === 'TEAM') && (
+                  <optgroup label={language === 'ne' ? '★ हाम्रो टिमका प्रतिनिधिहरू (Our Team)' : '★ Our Team Members'}>
+                    {authors
+                      .filter((a) => a.source === 'TEAM')
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.fullName} {a.role ? `(${a.role})` : ''}
+                        </option>
+                      ))}
+                  </optgroup>
+                )}
+
+                {/* Staff / System accounts */}
+                {authors.some((a) => a.source !== 'TEAM') && (
+                  <optgroup label={language === 'ne' ? 'कर्मचारी लगइन खाता (Staff Users)' : 'Staff Accounts'}>
+                    {authors
+                      .filter((a) => a.source !== 'TEAM')
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.fullName} ({a.email})
+                        </option>
+                      ))}
+                  </optgroup>
+                )}
               </select>
+
+              {/* Selected Author Preview with Avatar & Role */}
               {(() => {
                 const selectedAuthor = authors.find((a) => a.id === authorId)
                 if (!selectedAuthor) return null
                 return (
-                  <div className="mt-2 flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 text-xs">
-                    <div className="relative w-6 h-6 rounded-full overflow-hidden bg-slate-200 shrink-0">
+                  <div className="mt-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 text-xs shadow-2xs">
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border border-red-500">
                       {selectedAuthor.avatarUrl ? (
-                        <Image src={selectedAuthor.avatarUrl} alt="" fill className="object-cover" />
+                        <Image src={selectedAuthor.avatarUrl} alt={selectedAuthor.fullName} fill className="object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-[10px]">
+                        <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-xs uppercase">
                           {selectedAuthor.fullName.charAt(0)}
                         </div>
                       )}
                     </div>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedAuthor.fullName}
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900 dark:text-white truncate">
+                          {selectedAuthor.fullName}
+                        </span>
+                        {selectedAuthor.source === 'TEAM' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 shrink-0">
+                            हाम्रो टिम
+                          </span>
+                        )}
+                      </div>
+                      {selectedAuthor.role && (
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          {selectedAuthor.role}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )
               })()}

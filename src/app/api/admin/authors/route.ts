@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth/session'
+import { syncTeamMembersAndGetAuthors } from '@/lib/settings/team-sync'
 
 export async function GET() {
   try {
@@ -9,16 +9,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const authors = await prisma.user.findMany({
-      where: { isActive: true },
-      select: {
-        id: true,
-        fullName: true,
-        avatarUrl: true,
-        email: true,
-      },
-      orderBy: { fullName: 'asc' },
-    })
+    const authors = await syncTeamMembersAndGetAuthors()
 
     return NextResponse.json({ authors })
   } catch (error) {
