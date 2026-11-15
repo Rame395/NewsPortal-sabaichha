@@ -104,8 +104,8 @@ export const DEFAULT_SITE_SETTINGS: AllSettings = {
     email: 'info@sabaichha.com',
     pressCouncilNo: '',
     deptOfInfoNo: '५३२७',
-    editorName: 'जुनमायाँ पुन मगर',
-    coEditorName: 'बिरेन्द्र घर्ति',
+    editorName: '',
+    coEditorName: '',
     publisherName: '',
   },
   socialLinks: {

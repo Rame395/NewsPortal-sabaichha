@@ -83,6 +83,13 @@ interface TagOption {
   slug: string
 }
 
+interface AuthorOption {
+  id: string
+  fullName: string
+  avatarUrl: string | null
+  email: string
+}
+
 interface InitialArticleData {
   id?: string
   title: string
@@ -95,6 +102,7 @@ interface InitialArticleData {
   videoUrl?: string | null
   categoryId: number
   province?: string | null
+  authorId?: string
   status: 'DRAFT' | 'REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED'
   isBreaking: boolean
   isFeatured: boolean
@@ -122,6 +130,7 @@ export function ArticleForm({
   const [videoUrl, setVideoUrl] = React.useState(initialData?.videoUrl || '')
   const [categoryId, setCategoryId] = React.useState<number | ''>(initialData?.categoryId || '')
   const [province, setProvince] = React.useState(initialData?.province || '')
+  const [authorId, setAuthorId] = React.useState<string>(initialData?.authorId || '')
   const [status, setStatus] = React.useState(initialData?.status || 'PUBLISHED')
   const [isBreaking, setIsBreaking] = React.useState(initialData?.isBreaking || false)
   const [isFeatured, setIsFeatured] = React.useState(initialData?.isFeatured || false)
@@ -133,6 +142,7 @@ export function ArticleForm({
 
   const [categories, setCategories] = React.useState<CategoryOption[]>([])
   const [availableTags, setAvailableTags] = React.useState<TagOption[]>([])
+  const [authors, setAuthors] = React.useState<AuthorOption[]>([])
   const [selectedTagIds, setSelectedTagIds] = React.useState<number[]>(
     initialData?.tags?.map((t) => t.tag.id) || []
   )
@@ -224,12 +234,14 @@ export function ArticleForm({
   React.useEffect(() => {
     async function loadMeta() {
       try {
-        const [cRes, tRes] = await Promise.all([
+        const [cRes, tRes, aRes] = await Promise.all([
           fetch('/api/admin/categories'),
           fetch('/api/admin/tags'),
+          fetch('/api/admin/authors'),
         ])
         const cData = await cRes.json()
         const tData = await tRes.json()
+        const aData = await aRes.json()
 
         if (cRes.ok && cData.categories) {
           setCategories(cData.categories)
@@ -239,6 +251,9 @@ export function ArticleForm({
         }
         if (tRes.ok && tData.tags) {
           setAvailableTags(tData.tags)
+        }
+        if (aRes.ok && aData.authors) {
+          setAuthors(aData.authors)
         }
       } catch {
         console.error('Failed to load categories/tags')
@@ -322,6 +337,7 @@ export function ArticleForm({
         videoUrl,
         categoryId: Number(categoryId),
         province: province ? province.toLowerCase().trim() : null,
+        authorId: authorId || undefined,
         status,
         isBreaking,
         isFeatured,
@@ -634,6 +650,45 @@ export function ArticleForm({
                 <option value="karnali">कर्णाली प्रदेश (Karnali Province)</option>
                 <option value="sudurpashchim">सुदूरपश्चिम प्रदेश (Sudurpashchim Province)</option>
               </select>
+            </div>
+
+            {/* Author Dropdown (लेखक / प्रतिनिधि) */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                {language === 'ne' ? 'लेखक / प्रतिनिधि (Author)' : 'Author / Reporter'}
+              </label>
+              <select
+                value={authorId}
+                onChange={(e) => setAuthorId(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+              >
+                <option value="">{language === 'ne' ? '-- हाल लगइन प्रयोगकर्ता (Default) --' : '-- Current Logged In User --'}</option>
+                {authors.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.fullName} ({a.email})
+                  </option>
+                ))}
+              </select>
+              {(() => {
+                const selectedAuthor = authors.find((a) => a.id === authorId)
+                if (!selectedAuthor) return null
+                return (
+                  <div className="mt-2 flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 text-xs">
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden bg-slate-200 shrink-0">
+                      {selectedAuthor.avatarUrl ? (
+                        <Image src={selectedAuthor.avatarUrl} alt="" fill className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-[10px]">
+                          {selectedAuthor.fullName.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedAuthor.fullName}
+                    </span>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Flags (Breaking & Featured) */}

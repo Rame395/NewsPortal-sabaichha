@@ -332,23 +332,45 @@ export function ArticleReader({
               )}
 
               {/* Byline & Metadata Controls */}
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
-                {/* Brand Logo Emblem, Publication Date & Reading Time */}
-                <div className="flex items-center gap-2 sm:gap-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium py-1">
-                  <Image
-                    src="/logo-circle.png"
-                    alt="SabaiChha.com"
-                    width={28}
-                    height={28}
-                    className="w-7 h-7 rounded-full bg-white object-contain border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs"
-                  />
-                  <Calendar className="w-4 h-4 text-red-600 shrink-0" />
-                  <span suppressHydrationWarning>{formattedDate}</span>
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+                {/* Author Photo & Name, Publication Date & Reading Time */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-600 dark:text-slate-400 font-medium py-1">
+                  {/* Person Photo & Name */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
+                      {article.author.avatarUrl ? (
+                        <Image
+                          src={article.author.avatarUrl}
+                          alt={article.author.fullName}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-xs uppercase">
+                          {article.author.fullName.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                      {article.author.fullName}
+                    </span>
+                  </div>
+
                   <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span suppressHydrationWarning>
-                    {language === 'ne' ? toNepaliNumerals(article.readTimeMinutes) : article.readTimeMinutes} {t('readTime')}
-                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                    <span suppressHydrationWarning>{formattedDate}</span>
+                  </div>
+
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span suppressHydrationWarning>
+                      {language === 'ne' ? toNepaliNumerals(article.readTimeMinutes) : article.readTimeMinutes} {t('readTime')}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Accessibility: Font Size Scaler (A+ only per client request) */}
@@ -517,6 +539,7 @@ export function ArticleReader({
               title={getLocalizedTitle(article, language)}
               content={article.content}
               language={language}
+              articleSlug={article.slug}
             />
 
             {/* Live-Blogging Event Timeline */}
@@ -542,6 +565,34 @@ export function ArticleReader({
 
             {/* In-Article Inline Ad Slot */}
             <AdBanner placement="ARTICLE_INLINE" className="my-6" />
+
+            {/* Person / Author Card (Name and Photo) */}
+            <div className="my-6 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 sm:gap-4 shadow-2xs">
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 border-2 border-red-600 shrink-0 shadow-xs">
+                {article.author.avatarUrl ? (
+                  <Image
+                    src={article.author.avatarUrl}
+                    alt={article.author.fullName}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-base sm:text-lg uppercase">
+                    {article.author.fullName.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-base sm:text-lg font-black text-slate-950 dark:text-white truncate">
+                  {article.author.fullName}
+                </h4>
+                {article.author.bio && (
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed font-sans">
+                    {article.author.bio}
+                  </p>
+                )}
+              </div>
+            </div>
 
             {/* Tags */}
             {article.tags && article.tags.length > 0 && (

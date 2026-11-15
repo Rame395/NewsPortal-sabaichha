@@ -57,18 +57,10 @@ export function Footer({ categories = [] }: FooterProps) {
   const [settings, setSettings] = React.useState<SiteSettingsState | null>(null)
 
   React.useEffect(() => {
-    fetch('/api/public/market-weather')
-      .then((res) => res.json())
-      .then((resData) => {
-        if (!resData.error && resData.social) {
-          // Also fetch full settings if available
-          fetch('/api/settings')
-            .then((r) => r.json())
-            .then((sData) => {
-              if (sData.settings) setSettings(sData.settings)
-            })
-            .catch(() => {})
-        }
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((sData) => {
+        if (sData.settings) setSettings(sData.settings)
       })
       .catch(() => {})
   }, [])
@@ -86,8 +78,6 @@ export function Footer({ categories = [] }: FooterProps) {
     email: settings?.siteInfo?.email || 'info@sabaichha.com',
     pressCouncilNo: settings?.siteInfo?.pressCouncilNo || '',
     deptOfInfoNo: settings?.siteInfo?.deptOfInfoNo || '५३२७',
-    editorName: settings?.siteInfo?.editorName || 'जुनमायाँ पुन मगर',
-    coEditorName: settings?.siteInfo?.coEditorName || 'बिरेन्द्र घर्ति',
     publisherName: settings?.siteInfo?.publisherName || '',
   }
 
@@ -195,7 +185,7 @@ export function Footer({ categories = [] }: FooterProps) {
             <p className="text-slate-400 leading-relaxed font-serif text-xs">
               {language === 'ne' ? footerText.aboutNe : footerText.aboutEn}
             </p>
-            {(siteInfo.deptOfInfoNo || siteInfo.pressCouncilNo || siteInfo.publisherName || siteInfo.editorName || siteInfo.coEditorName) && (
+            {(siteInfo.deptOfInfoNo || siteInfo.pressCouncilNo || siteInfo.publisherName) && (
               <div className="pt-1 space-y-1 text-[11px] text-slate-400 border-t border-slate-800/80">
                 {siteInfo.deptOfInfoNo && (
                   <p>
@@ -213,18 +203,6 @@ export function Footer({ categories = [] }: FooterProps) {
                   <p>
                     <span className="text-slate-500">{language === 'ne' ? 'प्रकाशक:' : 'Publisher:'}</span>{' '}
                     <span className="text-slate-300 font-semibold">{siteInfo.publisherName}</span>
-                  </p>
-                )}
-                {siteInfo.editorName && (
-                  <p>
-                    <span className="text-slate-500">{language === 'ne' ? 'सम्पादक :' : 'Editor:'}</span>{' '}
-                    <span className="text-slate-300 font-semibold">{siteInfo.editorName}</span>
-                  </p>
-                )}
-                {siteInfo.coEditorName && (
-                  <p>
-                    <span className="text-slate-500">{language === 'ne' ? 'सह-सम्पादक :' : 'Co-Editor:'}</span>{' '}
-                    <span className="text-slate-300 font-semibold">{siteInfo.coEditorName}</span>
                   </p>
                 )}
               </div>
@@ -250,7 +228,7 @@ export function Footer({ categories = [] }: FooterProps) {
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>
-                  {language === 'ne' ? 'कार्यालय सम्पर्क न.' : 'Contact No:'}{' '}
+                  {language === 'ne' ? 'सम्पर्क न.' : 'Contact No:'}{' '}
                   <span className="font-mono text-slate-200 font-semibold">{siteInfo.phone}</span>
                 </span>
               </div>

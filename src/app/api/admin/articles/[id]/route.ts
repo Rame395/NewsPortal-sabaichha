@@ -150,6 +150,7 @@ export async function PATCH(
       isCategoryLead,
       scheduledFor,
       tags,
+      authorId,
     } = body
 
     const updateData: Record<string, unknown> = {}
@@ -161,6 +162,7 @@ export async function PATCH(
     if (imageCaption !== undefined) updateData.imageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
     if (videoUrl !== undefined) updateData.videoUrl = videoUrl ? String(videoUrl).trim() : null
     if (categoryId) updateData.categoryId = Number(categoryId)
+    if (authorId) updateData.authorId = String(authorId)
     if (province !== undefined) {
       updateData.province = province ? String(province).toLowerCase().trim() : null
     }

@@ -75,9 +75,9 @@ export async function getSiteSettings(): Promise<AllSettings> {
           rawSite.phone && rawSite.phone !== '+977 1-4240000 / 9851000000'
             ? rawSite.phone
             : DEFAULT_SITE_SETTINGS.siteInfo.phone,
-        deptOfInfoNo: rawSite.deptOfInfoNo || DEFAULT_SITE_SETTINGS.siteInfo.deptOfInfoNo,
-        editorName: rawSite.editorName || DEFAULT_SITE_SETTINGS.siteInfo.editorName,
-        coEditorName: rawSite.coEditorName || DEFAULT_SITE_SETTINGS.siteInfo.coEditorName,
+        deptOfInfoNo: rawSite.deptOfInfoNo !== undefined ? rawSite.deptOfInfoNo : DEFAULT_SITE_SETTINGS.siteInfo.deptOfInfoNo,
+        editorName: rawSite.editorName !== undefined ? rawSite.editorName : DEFAULT_SITE_SETTINGS.siteInfo.editorName,
+        coEditorName: rawSite.coEditorName !== undefined ? rawSite.coEditorName : DEFAULT_SITE_SETTINGS.siteInfo.coEditorName,
       },
       socialLinks: {
         ...DEFAULT_SITE_SETTINGS.socialLinks,

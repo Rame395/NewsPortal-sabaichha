@@ -199,6 +199,7 @@ export async function POST(request: NextRequest) {
       isCategoryLead = false,
       scheduledFor,
       tags = [],
+      authorId,
     } = body
 
     if (!title || !content || !categoryId) {
@@ -276,7 +277,7 @@ export async function POST(request: NextRequest) {
         isTrending: Boolean(isTrending),
         isCategoryLead: Boolean(isCategoryLead),
         readTimeMinutes,
-        authorId: currentUser.id,
+        authorId: authorId ? String(authorId) : currentUser.id,
         categoryId: Number(categoryId),
         province: province ? String(province).toLowerCase().trim() : null,
         publishedAt: finalStatus === 'PUBLISHED' ? new Date() : null,

@@ -1278,40 +1278,6 @@ export function SettingsManager({ initialSettings }: { initialSettings: AllSetti
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {language === 'ne' ? 'सम्पादक' : 'Editor'}
-                </label>
-                <input
-                  type="text"
-                  value={settings.siteInfo.editorName}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      siteInfo: { ...settings.siteInfo, editorName: e.target.value },
-                    })
-                  }
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  {language === 'ne' ? 'सह-सम्पादक' : 'Co-Editor'}
-                </label>
-                <input
-                  type="text"
-                  value={settings.siteInfo.coEditorName || ''}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      siteInfo: { ...settings.siteInfo, coEditorName: e.target.value },
-                    })
-                  }
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {language === 'ne' ? 'प्रकाशन संस्था / कम्पनी' : 'Publisher Network'}
                 </label>
                 <input

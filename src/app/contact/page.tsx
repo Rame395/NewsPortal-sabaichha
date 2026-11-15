@@ -168,16 +168,6 @@ export default async function ContactPage() {
                         सूचना विभाग दर्ता नं. : <span className="font-bold">{siteInfo.deptOfInfoNo}</span>
                       </p>
                     )}
-                    {siteInfo.editorName && (
-                      <p className="text-slate-600 dark:text-slate-300">
-                        सम्पादक : <span className="font-bold">{siteInfo.editorName}</span>
-                      </p>
-                    )}
-                    {siteInfo.coEditorName && (
-                      <p className="text-slate-600 dark:text-slate-300">
-                        सह-सम्पादक : <span className="font-bold">{siteInfo.coEditorName}</span>
-                      </p>
-                    )}
                     <p className="text-slate-500 dark:text-slate-400 pt-0.5">
                       समाचार, विचार तथा लेख पठाउन:
                     </p>
