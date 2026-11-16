@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma'
 import { getSiteSettings } from '@/lib/settings'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Phone } from 'lucide-react'
 import { TeamDepartment, TeamMemberItem } from '@/lib/settings/types'
 
 export const dynamic = 'force-dynamic'
@@ -162,6 +162,17 @@ export default async function OurTeamPage() {
                     {leader.roleNe}
                   </p>
                 )}
+
+                {/* Phone No */}
+                {leader.phone && (
+                  <a
+                    href={`tel:${leader.phone}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-mono mt-2"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{leader.phone}</span>
+                  </a>
+                )}
               </div>
             ))}
           </div>
@@ -213,6 +224,17 @@ export default async function OurTeamPage() {
                         <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
                           {member.roleNe}
                         </p>
+                      )}
+
+                      {/* Phone No */}
+                      {member.phone && (
+                        <a
+                          href={`tel:${member.phone}`}
+                          className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition font-mono mt-2"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>{member.phone}</span>
+                        </a>
                       )}
                     </div>
                   ))}

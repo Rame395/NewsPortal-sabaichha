@@ -668,7 +668,7 @@ export function ArticleForm({
                 className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
               >
                 <option value="">
-                  {language === 'ne' ? '-- हाल लगइन प्रयोगकर्ता (Default) --' : '-- Current Logged In User --'}
+                  {language === 'ne' ? '-- सबै छ डटकम (Default Desk) --' : '-- SabaiChha.com (Default Desk) --'}
                 </option>
 
                 {/* Our Team Members */}
@@ -701,7 +701,28 @@ export function ArticleForm({
               {/* Selected Author Preview with Avatar & Role */}
               {(() => {
                 const selectedAuthor = authors.find((a) => a.id === authorId)
-                if (!selectedAuthor) return null
+                if (!selectedAuthor) {
+                  return (
+                    <div className="mt-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 text-xs shadow-2xs">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-white shrink-0 border border-slate-300 dark:border-slate-700 p-0.5">
+                        <Image src="/logo-circle.png" alt="सबै छ डटकम" fill className="object-contain" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900 dark:text-white truncate">
+                            {language === 'ne' ? 'सबै छ डटकम' : 'SabaiChha.com'}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 shrink-0">
+                            {language === 'ne' ? 'डिफल्ट डेस्क' : 'Default Desk'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                          {language === 'ne' ? 'सबै छ डटकम समाचार डेस्क' : 'SabaiChha News Desk'}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                }
                 return (
                   <div className="mt-2 flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 text-xs shadow-2xs">
                     <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 shrink-0 border border-red-500">

@@ -162,7 +162,23 @@ export async function PATCH(
     if (imageCaption !== undefined) updateData.imageCaption = imageCaption ? sanitizePlainText(String(imageCaption)) : null
     if (videoUrl !== undefined) updateData.videoUrl = videoUrl ? String(videoUrl).trim() : null
     if (categoryId) updateData.categoryId = Number(categoryId)
-    if (authorId) updateData.authorId = String(authorId)
+    if (authorId !== undefined) {
+      if (authorId) {
+        updateData.authorId = String(authorId)
+      } else {
+        const defaultUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: 'admin@sabaichha.com' },
+              { fullName: 'सबै छ डटकम' },
+              { role: 'SUPER_ADMIN' },
+            ],
+          },
+          select: { id: true },
+        })
+        updateData.authorId = defaultUser?.id || currentUser.id
+      }
+    }
     if (province !== undefined) {
       updateData.province = province ? String(province).toLowerCase().trim() : null
     }

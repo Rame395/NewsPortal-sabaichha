@@ -237,6 +237,54 @@ export function ArticleReader({
     return `${num} ${language === 'ne' ? 'दिन अगाडि' : 'd ago'}`
   }
 
+  // Check if article is authored by the default portal/desk vs a specific team reporter
+  const isDefaultAuthor = React.useMemo(() => {
+    if (!article.author) return true
+    const name = (article.author.fullName || '').trim().toLowerCase()
+    const avatar = (article.author.avatarUrl || '').trim()
+
+    // If avatar explicitly points to the portal logo
+    if (
+      avatar === '/logo-circle.png' ||
+      avatar === '/logo.jpg' ||
+      avatar === '/logo-v2.jpg' ||
+      avatar === '/logo-transparent.png' ||
+      avatar.endsWith('/logo-circle.png') ||
+      avatar.endsWith('/logo.jpg') ||
+      avatar.endsWith('/logo-v2.jpg') ||
+      avatar.endsWith('/logo-transparent.png')
+    ) {
+      return true
+    }
+
+    // Default portal/desk names
+    const defaultNames = [
+      'सबै छ डटकम',
+      'sabaichha.com',
+      'sabaichha',
+      'chief editor',
+      'super administrator',
+      'सम्पादकीय',
+      'सम्पादकीय डेस्क',
+      'सम्पादक',
+      'admin',
+      'editorial desk',
+      'news desk',
+      'डेस्क',
+    ]
+
+    if (defaultNames.includes(name)) {
+      return true
+    }
+
+    // If no avatar is uploaded, fallback to default desk branding
+    if (!avatar) {
+      return true
+    }
+
+    return false
+  }, [article.author])
+
   const fontClasses: Record<string, string> = {
     base: 'text-[16px] sm:text-[17px] leading-[1.8]',
     lg: 'text-[18px] sm:text-[19px] leading-[1.85]',
@@ -335,10 +383,21 @@ export function ArticleReader({
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
                 {/* Author Photo & Name, Publication Date & Reading Time */}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-600 dark:text-slate-400 font-medium py-1">
-                  {/* Person Photo & Name */}
+                  {/* Person Photo & Name or Default Desk Brand */}
                   <div className="flex items-center gap-2">
-                    <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
-                      {article.author.avatarUrl ? (
+                    <div
+                      className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden shrink-0 shadow-2xs border border-slate-200 dark:border-slate-700 ${
+                        isDefaultAuthor ? 'bg-white p-0.5' : 'bg-slate-100 dark:bg-slate-800'
+                      }`}
+                    >
+                      {isDefaultAuthor ? (
+                        <Image
+                          src="/logo-circle.png"
+                          alt={language === 'ne' ? 'सबै छ डटकम' : 'SabaiChha.com'}
+                          fill
+                          className="object-contain"
+                        />
+                      ) : article.author.avatarUrl ? (
                         <Image
                           src={article.author.avatarUrl}
                           alt={article.author.fullName}
@@ -352,7 +411,11 @@ export function ArticleReader({
                       )}
                     </div>
                     <span className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
-                      {article.author.fullName}
+                      {isDefaultAuthor
+                        ? language === 'ne'
+                          ? 'सबै छ डटकम'
+                          : 'SabaiChha.com'
+                        : article.author.fullName}
                     </span>
                   </div>
 
@@ -568,33 +631,35 @@ export function ArticleReader({
             {/* In-Article Inline Ad Slot */}
             <AdBanner placement="ARTICLE_INLINE" className="my-6" />
 
-            {/* Person / Author Card (Name and Photo) */}
-            <div className="my-6 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 sm:gap-4 shadow-2xs">
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 border-2 border-red-600 shrink-0 shadow-xs">
-                {article.author.avatarUrl ? (
-                  <Image
-                    src={article.author.avatarUrl}
-                    alt={article.author.fullName}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-base sm:text-lg uppercase">
-                    {article.author.fullName.charAt(0)}
-                  </div>
-                )}
+            {/* Person / Author Card (Name and Photo) - Hidden for default portal desk */}
+            {!isDefaultAuthor && (
+              <div className="my-6 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 sm:gap-4 shadow-2xs">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 border-2 border-red-600 shrink-0 shadow-xs">
+                  {article.author.avatarUrl ? (
+                    <Image
+                      src={article.author.avatarUrl}
+                      alt={article.author.fullName}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-red-600 text-white font-bold text-base sm:text-lg uppercase">
+                      {article.author.fullName.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base sm:text-lg font-black text-slate-950 dark:text-white truncate">
+                    {article.author.fullName}
+                  </h4>
+                  {article.author.bio && (
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed font-sans">
+                      {article.author.bio}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="text-base sm:text-lg font-black text-slate-950 dark:text-white truncate">
-                  {article.author.fullName}
-                </h4>
-                {article.author.bio && (
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed font-sans">
-                    {article.author.bio}
-                  </p>
-                )}
-              </div>
-            </div>
+            )}
 
             {/* Tags */}
             {article.tags && article.tags.length > 0 && (

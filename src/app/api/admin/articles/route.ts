@@ -261,6 +261,21 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    let finalAuthorId = authorId ? String(authorId) : null
+    if (!finalAuthorId) {
+      const defaultUser = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: 'admin@sabaichha.com' },
+            { fullName: 'सबै छ डटकम' },
+            { role: 'SUPER_ADMIN' },
+          ],
+        },
+        select: { id: true },
+      })
+      finalAuthorId = defaultUser?.id || currentUser.id
+    }
+
     const newArticle = await prisma.article.create({
       data: {
         title: cleanTitle,
@@ -277,7 +292,7 @@ export async function POST(request: NextRequest) {
         isTrending: Boolean(isTrending),
         isCategoryLead: Boolean(isCategoryLead),
         readTimeMinutes,
-        authorId: authorId ? String(authorId) : currentUser.id,
+        authorId: finalAuthorId,
         categoryId: Number(categoryId),
         province: province ? String(province).toLowerCase().trim() : null,
         publishedAt: finalStatus === 'PUBLISHED' ? new Date() : null,
